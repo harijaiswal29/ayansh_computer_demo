@@ -1,0 +1,1677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ayansh's Computer World</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: a toy-box map of 8 levels. Each level is one big play stage, with Bit the robot talking from above.
+   Colour is information: IN = blue, THINK = orange, OUT = green, STORE = yellow, HELPER = teal. */
+:root{
+  --ink:#1E2340; --paper:#FFFFFF; --ground:#E2F3EF; --dot:#C3E2DB; --muted:#4D5578; --wash:#EEF0F7;
+  --in:#2F9BEA; --think:#FF7A45; --out:#3DBB5E; --store:#F5B300; --help:#21B3A0;
+  --rose:#FF5C7A; --grape:#8C6BEB; --cobalt:#3E5BD8;
+  --in-soft:#DCEFFF; --think-soft:#FFE5D9; --out-soft:#DDF5E2; --store-soft:#FFF1C7; --help-soft:#D6F3EF;
+  --wood:#E6A873; --wood-dark:#C9864F;
+  --display:"Baloo 2","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --body:"Andika","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{
+  background-color:var(--ground);
+  background-image:radial-gradient(circle,var(--dot) 1.4px,transparent 1.7px);
+  background-size:22px 22px;
+  color:var(--ink);font-family:var(--body);font-size:19px;line-height:1.5;
+}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 48px}
+h1,h2,h3{font-family:var(--display);line-height:1.08;text-wrap:balance;margin:0}
+svg *{vector-effect:non-scaling-stroke}
+button{font:inherit;color:inherit}
+:focus-visible{outline:4px solid var(--cobalt);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:4px 10px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--display);font-weight:700;font-size:17px;line-height:1}
+.brand svg{width:40px;height:48px;flex:none}
+.brand b{display:block;font-size:26px;font-weight:800}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:3px 14px 3px 8px;box-shadow:0 3px 0 var(--ink);font-family:var(--display);font-weight:800}
+.starcount{font-size:22px;font-variant-numeric:tabular-nums}
+.starcount svg{width:28px;height:28px}
+.starcount.bump{animation:bump .7s}
+.tool{cursor:pointer;font-size:16px;font-weight:700;padding:4px 12px 4px 8px}
+.tool svg{width:24px;height:24px}
+.tool[aria-pressed="false"]{background:var(--wash);color:var(--muted)}
+.tool[aria-pressed="false"] .on-only{display:none}
+.tool[aria-pressed="true"] .off-only{display:none}
+
+/* ---------- Bit the guide ---------- */
+.guide{display:flex;align-items:flex-end;gap:14px;margin-block:2px 18px}
+.guide .bot{width:84px;height:100px;flex:none;overflow:visible}
+.bubble{position:relative;flex:1;min-width:0;background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:12px 16px;box-shadow:0 4px 0 var(--ink);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bubble::before{content:"";position:absolute;left:-13px;bottom:24px;width:20px;height:20px;background:var(--paper);border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
+.bubble p{margin:0;flex:1 1 280px;min-width:0;font-size:21px}
+.bubble.pop{animation:pop .35s}
+.again{flex:none;display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--in-soft);border:3px solid var(--ink);border-radius:999px;padding:3px 12px 3px 8px;font-family:var(--display);font-weight:700;font-size:16px}
+.again svg{width:22px;height:22px}
+.bot .eye{animation:blink 4s infinite;transform-box:fill-box;transform-origin:center}
+.bot .arm-r{transform-box:view-box;transform-origin:78px 88px;animation:wave 2.4s ease-in-out infinite}
+.bot .antenna{animation:glow 1.6s ease-in-out infinite}
+.bot.talk .mouth{animation:talk .22s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+.bot.hop{animation:hop .5s}
+
+/* ---------- shared blocks ---------- */
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink)}
+.btn{--c:var(--paper);display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--c);color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:8px 18px;min-height:52px;font-family:var(--display);font-weight:800;font-size:20px;line-height:1.1;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s;text-decoration:none}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:0 4px 0 var(--ink)}
+.btn svg{width:26px;height:26px;flex:none}
+.k{display:inline-block;font-family:var(--display);font-weight:800;font-size:.78em;letter-spacing:.06em;padding:0 .7em;border-radius:999px;border:2px solid var(--ink);line-height:1.6;white-space:nowrap;color:var(--ink);vertical-align:middle}
+.k-in{background:var(--in)} .k-think{background:var(--think)} .k-out{background:var(--out)} .k-store{background:var(--store)} .k-help{background:var(--help)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted)}
+
+/* ---------- home ---------- */
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:center;padding:22px 24px}
+.hero h1{font-size:clamp(40px,6.4vw,66px);font-weight:800}
+.hero h1 .blk{display:inline-block;background:var(--in);border:3px solid var(--ink);border-radius:14px;padding:0 .18em;box-shadow:0 5px 0 var(--ink);transform:rotate(-2deg)}
+.hero p{font-size:22px;max-width:32ch;margin:.5em 0 .7em}
+.hero-art{width:100%;height:auto;display:block;overflow:visible}
+.drop{animation:drop .75s cubic-bezier(.3,1.4,.6,1) both;animation-delay:var(--d,0s)}
+.appear{animation:appear .5s ease both;animation-delay:var(--d,0s)}
+.levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:24px}
+.level{--c:var(--in);position:relative;display:flex;flex-direction:column;gap:4px;padding:14px;background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);color:var(--ink);text-decoration:none;transition:transform .15s}
+.level:hover{transform:translateY(-4px) rotate(-.8deg)}
+.level .ibox{width:78px;height:78px;border-radius:16px;background:var(--c);border:3px solid var(--ink);display:grid;place-items:center;margin-bottom:6px}
+.level .ibox svg{width:58px;height:58px}
+.lv{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.level h3{font-size:24px;font-weight:800}
+.level p{margin:0;font-size:17px;color:var(--muted)}
+.level .star{position:absolute;top:12px;right:12px;width:42px;height:42px}
+.dim{filter:grayscale(1);opacity:.28}
+.cert{margin-top:28px;padding:26px;text-align:center;background:var(--store-soft);border-width:5px;position:relative}
+.cert h2{font-size:clamp(32px,5vw,50px);font-weight:800}
+.cert .who{font-family:var(--display);font-size:clamp(40px,7vw,72px);font-weight:800;color:var(--cobalt);line-height:1}
+.cert ul{list-style:none;padding:0;margin:14px auto;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:720px}
+.cert li{background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:2px 12px;font-size:17px}
+.cert .stars{display:flex;gap:4px;justify-content:center}
+.cert .stars svg{width:38px;height:38px}
+.reset{text-align:center;margin-top:26px}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:16px;padding:8px}
+
+/* ---------- chapter frame ---------- */
+.ch-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.lvchip{background:var(--c);border:3px solid var(--ink);border-radius:999px;padding:1px 14px;font-family:var(--display);font-weight:800;font-size:18px}
+.ch-head h2{font-size:clamp(30px,4.6vw,46px);font-weight:800}
+.ch-head .star{width:42px;height:42px;margin-left:auto}
+.ch-foot{display:flex;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap}
+.btn.next.ready{--c:var(--store);animation:nudge 1.8s ease-in-out infinite}
+.stage{padding:10px;overflow:hidden}
+.scene{display:block;width:100%;height:auto}
+.lbl{font-family:var(--display);font-weight:800}
+.hot{cursor:pointer;transform-box:fill-box;transform-origin:50% 100%;transition:transform .15s}
+.hot:hover{transform:translateY(-5px)}
+.hot:focus{outline:none}
+.hot:focus-visible{filter:drop-shadow(0 0 5px var(--cobalt)) drop-shadow(0 0 2px var(--cobalt))}
+.hot.boing{animation:boing .55s}
+.hot[data-part="board"]:hover{transform:none}
+.hot[data-part="board"].boing{animation:none}
+.hot[data-part="board"].boing .trace{stroke:var(--store)}
+.tag{opacity:0;transform-box:fill-box;transform-origin:center bottom;transition:opacity .2s,transform .3s cubic-bezier(.3,1.6,.6,1);transform:scale(.4);pointer-events:none}
+.tag.show{opacity:1;transform:scale(1)}
+.tag rect{stroke:var(--ink);stroke-width:2.5}
+.tag text{font-family:var(--display);font-weight:800;font-size:17px;fill:var(--ink);text-anchor:middle}
+.found{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fchip{display:flex;align-items:center;gap:6px;padding:3px 12px 3px 6px;border:3px dashed var(--muted);border-radius:999px;font-family:var(--display);font-weight:700;font-size:17px;background:rgba(255,255,255,.65);color:var(--muted)}
+.fchip svg{width:30px;height:30px}
+.fchip:not(.got) svg{opacity:.22;filter:grayscale(1)}
+.fchip.got{border-style:solid;border-color:var(--ink);background:var(--paper);color:var(--ink);animation:pop .4s}
+.info{--soft:var(--wash);display:grid;grid-template-columns:120px minmax(0,1fr);gap:18px;align-items:center;padding:18px;margin-top:16px}
+.info .big{width:120px;height:120px;border-radius:20px;border:3px solid var(--ink);display:grid;place-items:center;background:var(--soft)}
+.info .big svg{width:90px;height:90px}
+.info h3{font-size:34px;font-weight:800}
+.info p{margin:.25em 0 0;font-size:21px;max-width:60ch}
+.info .like{color:var(--muted);font-style:italic}
+.info.pop{animation:pop .35s}
+.info .empty{grid-column:1/-1;margin:0;color:var(--muted);text-align:center;font-size:21px}
+
+/* ---------- level 2: flow ---------- */
+.wire{fill:none;stroke:var(--ink);stroke-width:10;stroke-linecap:round}
+.wire-core{fill:none;stroke:#9AA3C7;stroke-width:4;stroke-linecap:round;stroke-dasharray:3 11}
+.wire-core.live{stroke:var(--store);animation:dash .45s linear infinite}
+.phase{transform-box:fill-box;transform-origin:center;transition:transform .2s}
+.phase rect{fill:var(--wash);stroke:var(--ink);stroke-width:3}
+.phase text{font-family:var(--display);font-weight:800;font-size:20px;fill:var(--ink);text-anchor:middle}
+.phase.on{transform:scale(1.14)}
+#phIn.on rect{fill:var(--in)} #phThink.on rect{fill:var(--think)} #phOut.on rect{fill:var(--out)}
+.glowing{filter:drop-shadow(0 0 10px var(--think))}
+.spinner{transform-box:fill-box;transform-origin:center}
+.spinner.go{animation:spin .5s linear infinite}
+.caption{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px}
+.caption span{border:3px solid var(--ink);border-radius:999px;padding:2px 14px;font-family:var(--display);font-weight:700;font-size:18px;background:var(--wash);opacity:.55;transition:all .2s}
+.caption span.on{opacity:1;transform:scale(1.06)}
+.caption .c-in.on{background:var(--in)} .caption .c-think.on{background:var(--think)} .caption .c-out.on{background:var(--out)}
+.keys{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.key{width:46px;height:50px;font-family:var(--display);font-weight:800;font-size:22px;border:3px solid var(--ink);border-radius:10px;background:var(--paper);box-shadow:0 4px 0 var(--ink);cursor:pointer;padding:0}
+.key:active,.key.down{transform:translateY(3px);box-shadow:0 1px 0 var(--ink);background:var(--in-soft)}
+.keyhint{text-align:center;margin:8px 0 0;color:var(--muted);font-size:17px}
+.analogy{padding:16px 18px;margin-top:18px}
+.analogy h3{font-size:26px;margin-bottom:10px}
+.an-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.an{--soft:var(--wash);--glow:var(--in);border:3px solid var(--ink);border-radius:18px;padding:10px;text-align:center;background:var(--soft);animation:anGlow 6s infinite;animation-delay:var(--d)}
+.an svg{width:86px;height:86px;display:block;margin:0 auto}
+.an b{display:block;font-family:var(--display);font-size:20px}
+.an span{font-size:17px}
+.arr{width:40px;height:40px}
+
+/* ---------- level 3: inside ---------- */
+.door{transform-box:fill-box;transform-origin:left center;transition:transform .9s cubic-bezier(.5,0,.3,1.2),opacity .9s}
+.door.open{transform:scaleX(.04) skewY(8deg);opacity:.0;pointer-events:none}
+.trace{fill:none;stroke:#A8EFC4;stroke-width:3;stroke-dasharray:6 8;stroke-linecap:round;animation:dash 1s linear infinite}
+.slowspin{transform-box:fill-box;transform-origin:center;animation:spin 3s linear infinite}
+.fastspin{transform-box:fill-box;transform-origin:center;animation:spin .8s linear infinite}
+.inside-tools{display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+
+/* ---------- level 4: speed ---------- */
+.race{padding:18px;display:grid;gap:14px;position:relative}
+.lane{display:grid;grid-template-columns:96px minmax(0,1fr) 84px;gap:12px;align-items:center}
+.who{display:flex;flex-direction:column;align-items:center;font-family:var(--display);font-weight:800;font-size:18px;line-height:1.1;text-align:center}
+.who svg{width:54px;height:54px}
+.track{position:relative;height:70px;border:3px solid var(--ink);border-radius:999px;overflow:hidden;background:repeating-linear-gradient(90deg,var(--paper) 0 30px,var(--wash) 30px 60px)}
+.track::after{content:"";position:absolute;right:0;top:0;bottom:0;width:22px;border-left:3px solid var(--ink);background:conic-gradient(var(--ink) 25%,var(--paper) 0 50%,var(--ink) 0 75%,var(--paper) 0) 0 0/11px 11px}
+.runner{--p:0;position:absolute;top:50%;left:calc(6px + var(--p) * (100% - 90px));translate:0 -50%;width:58px;height:58px;transition:left .12s}
+.runner svg{width:100%;height:100%}
+.count{font-family:var(--display);font-weight:800;font-size:42px;text-align:center;font-variant-numeric:tabular-nums}
+.tapbtn{--c:var(--rose);width:100%;min-height:110px;font-size:34px}
+.cdown{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:120px;color:var(--ink);background:rgba(255,255,255,.75);border-radius:19px;pointer-events:none}
+.cdown span{animation:pop .5s}
+.meter{padding:16px 18px;margin-top:16px}
+.meter .bign{font-family:var(--display);font-weight:800;font-size:clamp(26px,5.4vw,48px);line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:var(--think)}
+.meter p{margin:.2em 0}
+.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.res{padding:14px;text-align:center;border:3px solid var(--ink);border-radius:18px}
+.res b{display:block;font-family:var(--display);font-size:34px;line-height:1.1}
+
+/* ---------- level 5: memory ---------- */
+.steps{display:flex;gap:8px;flex-wrap:wrap;list-style:none;padding:0;margin:0 0 14px}
+.steps li{border:3px solid var(--ink);border-radius:999px;padding:1px 12px;background:var(--paper);font-family:var(--display);font-weight:700;font-size:17px;opacity:.45}
+.steps li.now{opacity:1;background:var(--store);animation:nudge 1.8s ease-in-out infinite}
+.steps li.done{opacity:1;background:var(--out-soft)}
+.mem{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
+.mem-card{padding:16px}
+.mem-card h3{font-size:28px;font-weight:800}
+.mem-card .sub{margin:0;color:var(--muted);font-size:18px}
+.desk{position:relative;background:var(--wood);border:3px solid var(--ink);border-radius:16px;padding:16px;margin-top:10px}
+.paper{background:var(--paper);border:3px solid var(--ink);border-radius:6px;aspect-ratio:3/2;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));padding:6px;gap:2px;transform:rotate(-1.2deg)}
+.slot{display:grid;place-items:center;min-width:0;min-height:0}
+.slot svg{width:82%;height:82%;transform:rotate(var(--r,0deg))}
+.slot.new svg{animation:popIn .4s}
+.slot.leave svg{animation:fall .8s forwards}
+.dark{position:absolute;inset:0;background:rgba(30,35,64,.9);border-radius:13px;display:grid;place-items:center;align-content:center;gap:4px;color:var(--paper);font-family:var(--display);font-size:26px;font-weight:800;text-align:center;opacity:0;pointer-events:none;transition:opacity .5s}
+.dark small{font-size:17px;font-weight:600;opacity:.85}
+.mem.off .dark{opacity:1;pointer-events:auto}
+.palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.palette button{width:62px;height:62px;padding:6px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink);cursor:pointer}
+.palette button:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.palette svg{width:100%;height:100%}
+.memtools{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.cupboard{background:var(--wood-dark);border:3px solid var(--ink);border-radius:14px;padding:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.shelf{min-width:0;aspect-ratio:3/2;background:#8A5530;border:3px solid var(--ink);border-radius:8px;display:grid;place-items:center;padding:6px;color:#F2D3B3;font-family:var(--display);font-size:15px}
+.saved{width:100%;height:100%;background:var(--paper);border:2px solid var(--ink);border-radius:4px;cursor:pointer;padding:2px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));overflow:hidden}
+.saved:hover{transform:scale(1.04)}
+.saved svg{width:100%;height:100%;min-width:0;min-height:0}
+.safe{display:inline-block;margin-top:10px;background:var(--out);border:3px solid var(--ink);border-radius:999px;padding:1px 12px;font-family:var(--display);font-weight:800;opacity:0;transition:opacity .4s}
+.mem.off .safe{opacity:1}
+.power{--c:var(--out);min-width:170px}
+.mem.off .power{--c:#C8CCDA}
+.memrule{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.memrule .res{text-align:left}
+.memrule .res b{font-size:24px}
+
+/* ---------- level 6: binary ---------- */
+.bin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:18px}
+.bin .card{padding:16px}
+.bin h3{font-size:26px;font-weight:800}
+.swrap{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:10px}
+.switch{width:96px;height:150px;border:3px solid var(--ink);border-radius:18px;background:var(--wash);position:relative;cursor:pointer;box-shadow:0 4px 0 var(--ink);padding:0}
+.switch .knob{position:absolute;left:14px;right:14px;height:58px;bottom:14px;background:#9AA3C7;border:3px solid var(--ink);border-radius:12px;transition:bottom .2s,background .2s}
+.switch[aria-pressed="true"] .knob{bottom:72px;background:var(--store)}
+.switch .knob::after{content:"OFF";position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:18px}
+.switch[aria-pressed="true"] .knob::after{content:"ON"}
+.bulbbig{width:120px;height:160px}
+.digit{font-family:var(--display);font-weight:800;font-size:80px;line-height:1;width:1ch;text-align:center}
+.bulb .glass{fill:#E9ECF5;transition:fill .2s}
+.bulb .rays{opacity:0;transition:opacity .2s}
+.bulb.on .glass{fill:#FFD43B}
+.bulb.on .rays{opacity:1}
+.bulb.on{filter:drop-shadow(0 0 8px #FFC233)}
+.letterbox{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.bigletter{width:86px;height:86px;border:3px solid var(--ink);border-radius:16px;background:var(--grape);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:56px;color:var(--paper)}
+.bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:12px}
+.bit{text-align:center}
+.bit svg{width:100%;max-width:58px;height:auto;display:block;margin:0 auto}
+.bit b{display:block;font-family:var(--display);font-size:26px;line-height:1.1}
+.namegrid{margin-top:16px;overflow-x:auto}
+.namegrid table{border-collapse:separate;border-spacing:5px 4px}
+.namegrid th{font-family:var(--display);font-size:24px;padding-right:6px}
+.ndot{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);background:var(--wash)}
+.ndot.on{background:#FFD43B;box-shadow:0 0 7px #FFC233}
+.namegrid td.code{font-family:var(--display);font-size:16px;color:var(--muted);padding-left:8px;font-variant-numeric:tabular-nums;letter-spacing:.08em}
+
+/* ---------- level 7: code ---------- */
+.code{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.code .card{padding:16px}
+.board{position:relative;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);aspect-ratio:1;width:100%;max-width:460px;margin:0 auto;border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#BDE7B0}
+.cell{border:1px dashed rgba(30,35,64,.22);display:grid;place-items:center;min-width:0;min-height:0}
+.cell svg{width:74%;height:74%}
+.cell.goal svg{animation:twinkle 1.6s ease-in-out infinite}
+.robot{--x:0;--y:0;position:absolute;left:0;top:0;width:20%;height:20%;display:grid;place-items:center;transform:translate(calc(var(--x) * 100%),calc(var(--y) * 100%));transition:transform .35s ease}
+.robot svg{width:82%;height:82%;transition:transform .2s}
+.robot.flip svg{transform:scaleX(-1)}
+.robot.bump svg{animation:shake .45s}
+.robot.win svg{animation:hop .5s 2}
+.lvls{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.lvdot{border:3px solid var(--ink);border-radius:999px;padding:0 12px;font-family:var(--display);font-weight:800;background:var(--paper);opacity:.5}
+.lvdot.now{opacity:1;background:var(--out)} .lvdot.done{opacity:1;background:var(--out-soft)}
+.cmds{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.cmd{--c:var(--out-soft);width:72px;height:72px;padding:0}
+.cmd svg{width:42px;height:42px}
+.r-up svg,svg.r-up{transform:rotate(-90deg)} .r-down svg,svg.r-down{transform:rotate(90deg)} .r-left svg,svg.r-left{transform:rotate(180deg)}
+.prog{display:flex;flex-wrap:wrap;gap:6px;min-height:72px;padding:10px;border:3px dashed var(--muted);border-radius:14px;background:var(--paper);margin-top:12px;align-content:flex-start}
+.prog .ph{color:var(--muted);align-self:center;font-size:17px}
+.pchip{width:46px;height:46px;border:3px solid var(--ink);border-radius:10px;background:var(--out-soft);display:grid;place-items:center;transition:transform .15s}
+.pchip svg{width:28px;height:28px}
+.pchip.now{background:var(--store);transform:scale(1.15)}
+.pchip.bad{background:var(--rose)}
+.ptools{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.go{--c:var(--store);font-size:24px;min-width:120px}
+.recipe{margin:12px 0 0;padding-left:1.4em;font-size:18px}
+.recipe li{margin-bottom:2px}
+
+/* ---------- level 8: quiz ---------- */
+.quiz{padding:22px;text-align:center}
+.qdots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.qdot{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);background:var(--paper);transition:transform .2s}
+.qdot.cur{transform:scale(1.35);background:var(--in-soft)}
+.qdot.ok{background:var(--out)} .qdot.try{background:var(--store)}
+.q{font-family:var(--display);font-size:clamp(26px,4.2vw,38px);font-weight:700;line-height:1.15;margin:14px auto 18px;max-width:24ch;text-wrap:balance}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.choice{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);cursor:pointer;font-family:var(--display);font-weight:800;font-size:22px;transition:transform .1s}
+.choice:hover{transform:translateY(-3px)}
+.choice svg{width:110px;height:96px}
+.choice.right{background:var(--out-soft);animation:pop .4s}
+.choice.wrong{background:#FFE1E6;animation:shake .45s}
+.qend .stars{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.qend .stars svg{width:46px;height:46px}
+.qend h3{font-size:clamp(30px,5vw,44px)}
+
+/* ---------- celebration ---------- */
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));translate:-50% 0;z-index:61;display:flex;align-items:center;gap:10px;background:var(--store);border:3px solid var(--ink);border-radius:999px;padding:8px 22px 8px 10px;box-shadow:0 5px 0 var(--ink);font-family:var(--display);font-weight:800;font-size:24px;animation:toast 2.8s forwards;pointer-events:none;white-space:nowrap}
+.toast svg{width:40px;height:40px}
+
+/* ---------- motion ---------- */
+@keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(0) rotate(var(--r,0deg))}70%{transform:scale(1.2) rotate(var(--r,0deg))}100%{transform:scale(1) rotate(var(--r,0deg))}}
+@keyframes bump{0%,100%{transform:scale(1)}30%{transform:scale(1.35) rotate(-6deg)}60%{transform:scale(.95)}}
+@keyframes boing{0%{transform:scale(1,1)}25%{transform:scale(1.12,.86)}50%{transform:scale(.92,1.12) translateY(-12px)}75%{transform:scale(1.04,.96)}100%{transform:scale(1,1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(5px)}}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-22deg)}80%{transform:rotate(8deg)}90%{transform:rotate(-16deg)}}
+@keyframes talk{from{transform:scaleY(1)}to{transform:scaleY(.3)}}
+@keyframes glow{0%,100%{fill:#FF7A45}50%{fill:#FFD43B}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes dash{to{stroke-dashoffset:-28}}
+@keyframes drop{0%{transform:translateY(-190px)}100%{transform:translateY(0)}}
+@keyframes appear{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes anGlow{0%,28%{transform:scale(1.06);box-shadow:0 0 0 6px var(--glow)}34%,100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
+@keyframes fall{to{transform:translateY(140px) rotate(60deg);opacity:0}}
+@keyframes floatUp{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--dx,10px),-90px);opacity:0}}
+@keyframes ring{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.8);opacity:0}}
+@keyframes eq{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+@keyframes sheetOut{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.12) rotate(8deg)}}
+@keyframes toast{0%{transform:translateY(40px) scale(.6);opacity:0}12%{transform:translateY(0) scale(1.05);opacity:1}20%{transform:scale(1)}85%{opacity:1}100%{opacity:0;transform:translateY(10px)}}
+.note{animation:floatUp 1.5s ease-out forwards}
+.ringfx{transform-box:fill-box;transform-origin:center;animation:ring 1s ease-out forwards;fill:none;stroke:var(--out);stroke-width:4}
+.eqbar{transform-box:fill-box;transform-origin:bottom;animation:eq .45s ease-in-out infinite alternate;animation-delay:var(--d)}
+.sheet{transform-box:fill-box;transform-origin:top;transform:scaleY(0)}
+.sheet.out{animation:sheetOut 1.6s ease-out forwards}
+.blinky{animation:blinkFill .3s steps(2) infinite}
+@keyframes blinkFill{50%{opacity:.15}}
+.minute{transform-box:view-box;transform-origin:100px 74px;animation:spin 12s linear infinite}
+.cloud{animation:nudge 5s ease-in-out infinite}
+
+/* ---------- small screens ---------- */
+@media (max-width:900px){.levels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:780px){
+  .hero{grid-template-columns:1fr}
+  .mem,.bin,.code{grid-template-columns:1fr}
+  .an-row{grid-template-columns:1fr}
+  .an-row .arr{transform:rotate(90deg);justify-self:center}
+}
+@media (max-width:560px){
+  body{font-size:18px}
+  .choices{grid-template-columns:1fr}
+  .choice{flex-direction:row;justify-content:flex-start;text-align:left}
+  .choice svg{width:72px;height:62px}
+  .info{grid-template-columns:76px minmax(0,1fr);gap:12px;padding:14px}
+  .info .big{width:76px;height:76px}.info .big svg{width:58px;height:58px}
+  .info h3{font-size:28px}
+  .lane{grid-template-columns:62px minmax(0,1fr) 56px;gap:8px}
+  .who svg{width:42px;height:42px}
+  .count{font-size:32px}
+  .guide .bot{width:62px;height:76px}
+  .bubble p{font-size:19px}
+  .memrule,.results{grid-template-columns:1fr}
+  .bit b{font-size:20px}
+}
+@media (max-width:420px){.levels{grid-template-columns:1fr}.level{flex-direction:row;align-items:center;gap:12px}.level .ibox{margin:0;flex:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= drawings (reused everywhere) ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="s-monitor" viewBox="0 0 120 100">
+      <rect x="52" y="74" width="16" height="16" fill="#9AA3C7" stroke="#1E2340" stroke-width="3"/>
+      <rect x="32" y="87" width="56" height="9" rx="4.5" fill="#9AA3C7" stroke="#1E2340" stroke-width="3"/>
+      <rect x="4" y="4" width="112" height="72" rx="9" fill="#2B3156" stroke="#1E2340" stroke-width="3"/>
+      <rect x="12" y="12" width="96" height="56" rx="4" fill="#8FD3FF"/>
+      <path d="M20 20 L36 20" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+    <symbol id="s-keyboard" viewBox="0 0 140 60">
+      <rect x="3" y="6" width="134" height="50" rx="9" fill="#DDE3F5" stroke="#1E2340" stroke-width="3"/>
+      <g fill="#FFFFFF" stroke="#1E2340" stroke-width="2">
+        <rect x="12" y="14" width="12" height="10" rx="2"/><rect x="28" y="14" width="12" height="10" rx="2"/><rect x="44" y="14" width="12" height="10" rx="2"/><rect x="60" y="14" width="12" height="10" rx="2"/><rect x="76" y="14" width="12" height="10" rx="2"/><rect x="92" y="14" width="12" height="10" rx="2"/><rect x="108" y="14" width="20" height="10" rx="2"/>
+        <rect x="12" y="28" width="18" height="10" rx="2"/><rect x="34" y="28" width="12" height="10" rx="2"/><rect x="50" y="28" width="12" height="10" rx="2"/><rect x="66" y="28" width="12" height="10" rx="2"/><rect x="82" y="28" width="12" height="10" rx="2"/><rect x="98" y="28" width="12" height="10" rx="2"/><rect x="114" y="28" width="14" height="10" rx="2"/>
+        <rect x="12" y="42" width="18" height="9" rx="2"/><rect x="36" y="42" width="66" height="9" rx="2"/><rect x="108" y="42" width="20" height="9" rx="2"/>
+      </g>
+    </symbol>
+    <symbol id="s-mouse" viewBox="0 0 60 90">
+      <path d="M30 22 C30 12 40 10 44 4" fill="none" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/>
+      <rect x="10" y="20" width="40" height="64" rx="20" fill="#F3F5FF" stroke="#1E2340" stroke-width="3"/>
+      <path d="M30 20 V46 M10 46 H50" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="26.5" y="27" width="7" height="12" rx="3.5" fill="#FF7A45" stroke="#1E2340" stroke-width="2"/>
+    </symbol>
+    <symbol id="s-tower" viewBox="0 0 70 120">
+      <rect x="4" y="4" width="62" height="112" rx="8" fill="#C9D0EA" stroke="#1E2340" stroke-width="3"/>
+      <rect x="13" y="15" width="44" height="9" rx="2" fill="#8C95BF" stroke="#1E2340" stroke-width="2"/>
+      <rect x="13" y="29" width="44" height="9" rx="2" fill="#8C95BF" stroke="#1E2340" stroke-width="2"/>
+      <path d="M17 52 H53 M17 60 H53 M17 68 H53 M17 76 H53" stroke="#8C95BF" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="35" cy="96" r="9" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="35" cy="96" r="3.5" fill="#3DBB5E"/>
+    </symbol>
+    <symbol id="s-speaker" viewBox="0 0 50 90">
+      <rect x="4" y="4" width="42" height="82" rx="8" fill="#3B4270" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="25" cy="26" r="10" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5"/>
+      <circle cx="25" cy="60" r="15" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5"/>
+      <circle cx="25" cy="60" r="6" fill="#1E2340"/>
+    </symbol>
+    <symbol id="s-printer" viewBox="0 0 110 90">
+      <rect x="28" y="4" width="54" height="26" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/>
+      <rect x="4" y="24" width="102" height="44" rx="9" fill="#E8ECF8" stroke="#1E2340" stroke-width="3"/>
+      <rect x="22" y="54" width="66" height="7" rx="2" fill="#1E2340"/>
+      <rect x="26" y="61" width="58" height="24" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/>
+      <path d="M36 70 H70 M36 77 H60" stroke="#2F9BEA" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="92" cy="37" r="4.5" fill="#3DBB5E" stroke="#1E2340" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="s-chip" viewBox="0 0 80 80">
+      <g fill="#E5B93C" stroke="#1E2340" stroke-width="1.5">
+        <rect x="23" y="4" width="5" height="11"/><rect x="33" y="4" width="5" height="11"/><rect x="43" y="4" width="5" height="11"/><rect x="53" y="4" width="5" height="11"/>
+        <rect x="23" y="65" width="5" height="11"/><rect x="33" y="65" width="5" height="11"/><rect x="43" y="65" width="5" height="11"/><rect x="53" y="65" width="5" height="11"/>
+        <rect x="4" y="23" width="11" height="5"/><rect x="4" y="33" width="11" height="5"/><rect x="4" y="43" width="11" height="5"/><rect x="4" y="53" width="11" height="5"/>
+        <rect x="65" y="23" width="11" height="5"/><rect x="65" y="33" width="11" height="5"/><rect x="65" y="43" width="11" height="5"/><rect x="65" y="53" width="11" height="5"/>
+      </g>
+      <rect x="14" y="14" width="52" height="52" rx="6" fill="#3A3F5C" stroke="#1E2340" stroke-width="3"/>
+      <rect x="23" y="23" width="34" height="34" rx="4" fill="#5E6590" stroke="#1E2340" stroke-width="2"/>
+      <text x="40" y="45" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, sans-serif" font-weight="800" font-size="13" fill="#FFFFFF">CPU</text>
+    </symbol>
+    <symbol id="s-ram" viewBox="0 0 140 44">
+      <rect x="3" y="3" width="134" height="30" rx="3" fill="#2FA36B" stroke="#1E2340" stroke-width="3"/>
+      <g fill="#262A40"><rect x="12" y="9" width="24" height="17" rx="2"/><rect x="43" y="9" width="24" height="17" rx="2"/><rect x="74" y="9" width="24" height="17" rx="2"/><rect x="105" y="9" width="24" height="17" rx="2"/></g>
+      <rect x="8" y="33" width="124" height="8" fill="#E5B93C" stroke="#1E2340" stroke-width="2"/>
+      <path d="M22 33 V41 M38 33 V41 M54 33 V41 M86 33 V41 M102 33 V41 M118 33 V41" stroke="#1E2340" stroke-width="1"/>
+      <rect x="66" y="33" width="8" height="8" fill="#2FA36B" stroke="#1E2340" stroke-width="2"/>
+    </symbol>
+    <symbol id="s-disk" viewBox="0 0 90 110">
+      <rect x="4" y="4" width="82" height="102" rx="8" fill="#B8C0DC" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="45" cy="44" r="30" fill="#E9EDF8" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="45" cy="44" r="18" fill="none" stroke="#C9D0EA" stroke-width="2"/>
+      <circle cx="45" cy="44" r="6" fill="#1E2340"/>
+      <path d="M72 92 L52 54" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="72" cy="92" r="7" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+    </symbol>
+    <symbol id="s-fan" viewBox="0 0 80 80">
+      <rect x="3" y="3" width="74" height="74" rx="10" fill="#4A5180" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="40" cy="40" r="32" fill="#2B3156" stroke="#1E2340" stroke-width="2"/>
+      <g fill="#9AD8FF" stroke="#1E2340" stroke-width="2">
+        <ellipse cx="40" cy="22" rx="8" ry="15"/><ellipse cx="40" cy="22" rx="8" ry="15" transform="rotate(90 40 40)"/><ellipse cx="40" cy="22" rx="8" ry="15" transform="rotate(180 40 40)"/><ellipse cx="40" cy="22" rx="8" ry="15" transform="rotate(270 40 40)"/>
+      </g>
+      <circle cx="40" cy="40" r="7" fill="#9AA3C7" stroke="#1E2340" stroke-width="2"/>
+    </symbol>
+    <symbol id="s-psu" viewBox="0 0 100 70">
+      <rect x="3" y="3" width="94" height="64" rx="6" fill="#8C95BF" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="28" cy="35" r="18" fill="#5E6590" stroke="#1E2340" stroke-width="2.5"/>
+      <path d="M16 35 H40 M28 23 V47 M20 27 L36 43 M36 27 L20 43" stroke="#1E2340" stroke-width="1.5"/>
+      <path d="M70 10 L56 37 L67 37 L61 60 L82 30 L70 30 Z" fill="#FFC233" stroke="#1E2340" stroke-width="2.5" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="s-board" viewBox="0 0 100 80">
+      <rect x="4" y="4" width="92" height="72" rx="6" fill="#2E9E62" stroke="#1E2340" stroke-width="3"/>
+      <path d="M40 30 H70 M40 40 H70 M30 52 V66 M52 52 V62 H80" fill="none" stroke="#A8EFC4" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="16" y="16" width="26" height="26" rx="3" fill="#3A3F5C" stroke="#1E2340" stroke-width="2"/>
+      <rect x="72" y="14" width="8" height="40" fill="#262A40"/><rect x="84" y="14" width="8" height="40" fill="#262A40"/>
+      <circle cx="20" cy="60" r="5" fill="#5E6590" stroke="#1E2340" stroke-width="1.5"/><circle cx="40" cy="64" r="5" fill="#5E6590" stroke="#1E2340" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="s-bulb" viewBox="-12 -12 74 94">
+      <g stroke="#F5B300" stroke-width="3" stroke-linecap="round"><path d="M25 1 V-6 M40.6 8.4 L45.5 3.5 M9.4 8.4 L4.5 3.5 M47 24 H54 M3 24 H-4"/></g>
+      <circle cx="25" cy="24" r="18" fill="#FFD43B" stroke="#1E2340" stroke-width="3"/>
+      <path d="M19 31 Q25 21 31 31" fill="none" stroke="#1E2340" stroke-width="2"/>
+      <rect x="17" y="41" width="16" height="6" fill="#9AA3C7" stroke="#1E2340" stroke-width="2"/>
+      <rect x="18" y="47" width="14" height="6" rx="2" fill="#9AA3C7" stroke="#1E2340" stroke-width="2"/>
+      <rect x="21" y="53" width="8" height="4" rx="2" fill="#1E2340"/>
+    </symbol>
+    <symbol id="s-star" viewBox="0 0 60 60">
+      <polygon points="30,5 36.5,22.1 54.7,23 40.5,34.4 45.3,52 30,42 14.7,52 19.5,34.4 5.3,23 23.5,22.1" fill="#FFC233" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M24 26 L28 25" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+    </symbol>
+    <symbol id="s-bot" viewBox="0 0 100 120">
+      <line x1="50" y1="8" x2="50" y2="20" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="50" cy="8" r="6" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="6" y="38" width="9" height="18" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="85" y="38" width="9" height="18" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="14" y="20" width="72" height="54" rx="16" fill="#5ED3C3" stroke="#1E2340" stroke-width="3"/>
+      <rect x="24" y="30" width="52" height="34" rx="10" fill="#1E2340"/>
+      <circle cx="40" cy="45" r="5" fill="#9AF0FF"/><circle cx="60" cy="45" r="5" fill="#9AF0FF"/>
+      <path d="M41 54 Q50 61 59 54" fill="none" stroke="#9AF0FF" stroke-width="3" stroke-linecap="round"/>
+      <rect x="43" y="74" width="14" height="7" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5"/>
+      <path d="M24 88 L10 104 M76 88 L90 104" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
+      <rect x="22" y="80" width="56" height="34" rx="10" fill="#5ED3C3" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="50" cy="97" r="7" fill="#FFC233" stroke="#1E2340" stroke-width="2.5"/>
+    </symbol>
+    <symbol id="s-kid" viewBox="0 0 60 60">
+      <circle cx="30" cy="33" r="21" fill="#F2C29B" stroke="#1E2340" stroke-width="3"/>
+      <path d="M9 31 C8 12 52 10 51 31 C45 22 37 21 31 24 C25 20 15 22 9 31 Z" fill="#2B2238" stroke="#1E2340" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="23" cy="35" r="2.6" fill="#1E2340"/><circle cx="37" cy="35" r="2.6" fill="#1E2340"/>
+      <path d="M23 42 Q30 48 37 42" fill="none" stroke="#1E2340" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="s-gear" viewBox="0 0 40 40">
+      <g fill="#FFC233" stroke="#1E2340" stroke-width="2">
+        <rect x="16.5" y="1" width="7" height="9" rx="1.5"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(45 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(90 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(135 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(180 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(225 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(270 20 20)"/><rect x="16.5" y="1" width="7" height="9" rx="1.5" transform="rotate(315 20 20)"/>
+        <circle cx="20" cy="20" r="12"/>
+      </g>
+      <circle cx="20" cy="20" r="4.5" fill="#1E2340"/>
+    </symbol>
+    <symbol id="s-arrow" viewBox="0 0 40 40">
+      <path d="M6 15 H22 V7 L36 20 L22 33 V25 H6 Z" fill="#3DBB5E" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="s-rock" viewBox="0 0 60 60">
+      <path d="M8 46 L14 24 L28 12 L44 16 L54 34 L50 48 Z" fill="#9AA3C7" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M22 28 L30 22 M38 34 L44 30" stroke="#6B7399" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="s-list" viewBox="0 0 60 60">
+      <rect x="10" y="4" width="40" height="52" rx="5" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/>
+      <g fill="#3DBB5E" stroke="#1E2340" stroke-width="1.5"><path d="M16 13 h8 v-3 l6 6 l-6 6 v-3 h-8z"/><path d="M16 28 h8 v-3 l6 6 l-6 6 v-3 h-8z"/><path d="M16 43 h8 v-3 l6 6 l-6 6 v-3 h-8z"/></g>
+      <path d="M34 16 H44 M34 31 H44 M34 46 H44" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="s-redblue" viewBox="0 0 60 60">
+      <circle cx="19" cy="30" r="14" fill="#FF5C7A" stroke="#1E2340" stroke-width="3"/><circle cx="42" cy="30" r="14" fill="#2F9BEA" stroke="#1E2340" stroke-width="3"/>
+    </symbol>
+    <symbol id="s-bigsmall" viewBox="0 0 60 60">
+      <rect x="5" y="12" width="32" height="36" rx="4" fill="#8C6BEB" stroke="#1E2340" stroke-width="3"/><rect x="41" y="30" width="15" height="18" rx="3" fill="#8C6BEB" stroke="#1E2340" stroke-width="3"/>
+    </symbol>
+    <!-- stickers for the memory game -->
+    <symbol id="s-stk-sun" viewBox="0 0 60 60">
+      <g stroke="#FF9F1C" stroke-width="3.5" stroke-linecap="round"><path d="M46 30 H54 M41.3 41.3 L47 47 M30 46 V54 M18.7 41.3 L13 47 M14 30 H6 M18.7 18.7 L13 13 M30 14 V6 M41.3 18.7 L47 13"/></g>
+      <circle cx="30" cy="30" r="12" fill="#FFC233" stroke="#1E2340" stroke-width="3"/>
+    </symbol>
+    <symbol id="s-stk-tree" viewBox="0 0 60 60">
+      <rect x="26" y="34" width="8" height="20" fill="#B87743" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="30" cy="24" r="17" fill="#3DBB5E" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="24" cy="20" r="3" fill="#FF5C7A"/><circle cx="36" cy="28" r="3" fill="#FF5C7A"/>
+    </symbol>
+    <symbol id="s-stk-house" viewBox="0 0 60 60">
+      <rect x="12" y="28" width="36" height="26" fill="#FF7A45" stroke="#1E2340" stroke-width="3"/>
+      <polygon points="7,30 30,9 53,30" fill="#E0503A" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="25" y="38" width="10" height="16" fill="#FFC233" stroke="#1E2340" stroke-width="2.5"/>
+    </symbol>
+    <symbol id="s-stk-car" viewBox="0 0 60 60">
+      <path d="M16 30 L22 19 H40 L46 30 Z" fill="#9AD8FF" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="5" y="29" width="50" height="16" rx="6" fill="#2F9BEA" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="18" cy="46" r="6.5" fill="#1E2340"/><circle cx="42" cy="46" r="6.5" fill="#1E2340"/>
+      <circle cx="18" cy="46" r="2.2" fill="#FFFFFF"/><circle cx="42" cy="46" r="2.2" fill="#FFFFFF"/>
+    </symbol>
+    <symbol id="s-stk-flower" viewBox="0 0 60 60">
+      <path d="M30 32 V56" stroke="#3DBB5E" stroke-width="4" stroke-linecap="round"/>
+      <path d="M30 46 Q40 38 44 44 Q38 50 30 48" fill="#3DBB5E" stroke="#1E2340" stroke-width="2"/>
+      <g fill="#FF5C7A" stroke="#1E2340" stroke-width="2.5"><circle cx="30" cy="14" r="8"/><circle cx="39.5" cy="21" r="8"/><circle cx="36" cy="32" r="8"/><circle cx="24" cy="32" r="8"/><circle cx="20.5" cy="21" r="8"/></g>
+      <circle cx="30" cy="24" r="6" fill="#FFC233" stroke="#1E2340" stroke-width="2.5"/>
+    </symbol>
+    <symbol id="s-stk-fish" viewBox="0 0 60 60">
+      <polygon points="42,30 56,18 56,42" fill="#8C6BEB" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="27" cy="30" rx="19" ry="12" fill="#8C6BEB" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="17" cy="27" r="2.8" fill="#1E2340"/>
+      <path d="M28 22 Q32 30 28 38" fill="none" stroke="#1E2340" stroke-width="2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header class="top">
+    <a class="brand" href="#home" aria-label="Back to the map">
+      <svg aria-hidden="true"><use href="#s-bot"/></svg>
+      <span>Ayansh's<b>Computer World</b></span>
+    </a>
+    <div class="tools">
+      <div class="pill starcount" id="starcount" title="Stars you have won"><svg aria-hidden="true"><use href="#s-star"/></svg><span id="starnum">0</span>&nbsp;/&nbsp;8<span class="sr"> stars</span></div>
+      <button class="pill tool" id="voiceBtn" type="button" aria-pressed="true" title="Bit reads everything out loud">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4" fill="#FFC233" stroke="#1E2340" stroke-width="2"/><path d="M2 21 C2 15 16 15 16 21" fill="#5ED3C3" stroke="#1E2340" stroke-width="2"/><g class="on-only" stroke="#1E2340" stroke-width="2" stroke-linecap="round" fill="none"><path d="M17 6 Q19 8 17 10"/><path d="M19.5 4 Q23 8 19.5 12"/></g><path class="off-only" d="M17 5 L23 11 M23 5 L17 11" stroke="#1E2340" stroke-width="2" stroke-linecap="round"/></svg>
+        Read to me
+      </button>
+      <button class="pill tool" id="soundBtn" type="button" aria-pressed="true" title="Beeps and music">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9 H7 L12 5 V19 L7 15 H3 Z" fill="#FF7A45" stroke="#1E2340" stroke-width="2" stroke-linejoin="round"/><g class="on-only" stroke="#1E2340" stroke-width="2" stroke-linecap="round" fill="none"><path d="M15 9 Q17 12 15 15"/><path d="M18 6 Q22 12 18 18"/></g><path class="off-only" d="M15 9 L21 15 M21 9 L15 15" stroke="#1E2340" stroke-width="2" stroke-linecap="round"/></svg>
+        Sounds
+      </button>
+    </div>
+  </header>
+
+  <section class="guide" aria-live="polite">
+    <svg class="bot" id="bit" viewBox="0 0 100 120" aria-hidden="true">
+      <line x1="50" y1="8" x2="50" y2="20" stroke="#1E2340" stroke-width="3"/>
+      <circle class="antenna" cx="50" cy="8" r="6" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="6" y="38" width="9" height="18" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="85" y="38" width="9" height="18" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="14" y="20" width="72" height="54" rx="16" fill="#5ED3C3" stroke="#1E2340" stroke-width="3"/>
+      <rect x="24" y="30" width="52" height="34" rx="10" fill="#1E2340"/>
+      <circle class="eye" cx="40" cy="45" r="5" fill="#9AF0FF"/><circle class="eye" cx="60" cy="45" r="5" fill="#9AF0FF"/>
+      <path class="mouth" d="M41 54 Q50 61 59 54" fill="none" stroke="#9AF0FF" stroke-width="3" stroke-linecap="round"/>
+      <rect x="43" y="74" width="14" height="7" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5"/>
+      <path d="M24 88 L10 104" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
+      <path class="arm-r" d="M76 88 L92 72" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
+      <rect x="22" y="80" width="56" height="34" rx="10" fill="#5ED3C3" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="50" cy="97" r="7" fill="#FFC233" stroke="#1E2340" stroke-width="2.5"/>
+    </svg>
+    <div class="bubble" id="bubble">
+      <p id="sayText">Hi Ayansh! I am Bit, a little robot.</p>
+      <button class="again" id="againBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9 H7 L12 5 V19 L7 15 H3 Z" fill="#FF7A45" stroke="#1E2340" stroke-width="2" stroke-linejoin="round"/><path d="M15 9 Q17 12 15 15 M18 6 Q22 12 18 18" stroke="#1E2340" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Say it again</button>
+    </div>
+  </section>
+
+  <main>
+    <!-- ================= HOME / MAP ================= -->
+    <section class="view" id="v-home">
+      <div class="card hero">
+        <div>
+          <h1>How does a <span class="blk">computer</span> work?</h1>
+          <p>A computer is made of small building blocks. Let's open them up one by one, and play with each one!</p>
+          <div class="row">
+            <span class="k k-in">IN</span><span class="k k-think">THINK</span><span class="k k-out">OUT</span><span class="k k-store">STORE</span>
+          </div>
+          <p style="font-size:18px;margin-top:.6em" class="muted">Every colour means a job. You will see these colours in every level.</p>
+          <a class="btn" href="#parts" style="--c:var(--store);font-size:24px"><svg aria-hidden="true"><use href="#s-star"/></svg>Start Level 1</a>
+        </div>
+         <svg class="hero-art" viewBox="0 0 440 372" role="img" aria-label="Computer parts dropping into place like building blocks">
+          <polygon points="10,280 430,280 440,340 0,340" fill="#E6A873" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+          <rect x="0" y="340" width="440" height="16" rx="3" fill="#C9864F" stroke="#1E2340" stroke-width="3"/>
+          <g class="drop" style="--d:.1s"><use href="#s-tower" x="22" y="112" width="98" height="168"/></g>
+          <g class="drop" style="--d:.35s"><use href="#s-monitor" x="140" y="105" width="210" height="175"/>
+            <g class="appear" style="--d:1.45s;transform-origin:245px 175px"><circle cx="245" cy="175" r="30" fill="#FFC233" stroke="#1E2340" stroke-width="3"/><circle cx="235" cy="168" r="4" fill="#1E2340"/><circle cx="255" cy="168" r="4" fill="#1E2340"/><path d="M231 182 Q245 196 259 182" fill="none" stroke="#1E2340" stroke-width="3.5" stroke-linecap="round"/></g>
+          </g>
+          <g class="drop" style="--d:.6s"><use href="#s-speaker" x="362" y="172" width="60" height="108"/></g>
+          <g class="drop" style="--d:.85s"><use href="#s-keyboard" x="168" y="282" width="136" height="58"/></g>
+          <g class="drop" style="--d:1.05s"><use href="#s-mouse" x="322" y="290" width="30" height="45"/></g>
+          <g class="appear" style="--d:1.6s;transform-origin:71px 92px"><rect x="31" y="78" width="80" height="28" rx="14" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/><text x="71" y="98" text-anchor="middle" class="lbl" font-size="17" fill="#1E2340">THINK</text></g>
+          <g class="appear" style="--d:1.8s;transform-origin:245px 86px"><rect x="215" y="72" width="60" height="28" rx="14" fill="#3DBB5E" stroke="#1E2340" stroke-width="2.5"/><text x="245" y="92" text-anchor="middle" class="lbl" font-size="17" fill="#1E2340">OUT</text></g>
+          <g class="appear" style="--d:2s;transform-origin:236px 358px"><rect x="212" y="344" width="48" height="28" rx="14" fill="#2F9BEA" stroke="#1E2340" stroke-width="2.5"/><text x="236" y="364" text-anchor="middle" class="lbl" font-size="17" fill="#1E2340">IN</text></g>
+        </svg>
+      </div>
+      <div class="levels" id="levels"></div>
+      <div class="card cert" id="cert" hidden>
+        <div class="stars" id="certStars"></div>
+        <h2>Certificate</h2>
+        <p style="margin:.2em 0">This is to say that</p>
+        <div class="who">Ayansh</div>
+        <p style="font-size:24px;margin:.3em 0" class="lbl">is a Computer Explorer!</p>
+        <ul>
+          <li>Knows the 6 parts</li><li>In, Think, Out</li><li>Found the CPU chip</li><li>Raced the computer</li><li>RAM and hard disk</li><li>Speaks ON and OFF</li><li>Wrote a program</li><li>Won the Big Quiz</li>
+        </ul>
+        <p class="muted" id="certDate" style="margin:0"></p>
+      </div>
+      <p class="reset"><button class="linkbtn" id="resetBtn" type="button">Play again from the start</button></p>
+    </section>
+
+    <!-- ================= LEVEL 1: PARTS ================= -->
+    <section class="view" id="v-parts" data-ch="parts" hidden>
+      <div class="card stage">
+        <svg class="scene" id="partsScene" viewBox="0 0 800 440" role="group" aria-label="A computer on a desk. Tap each part.">
+          <defs><clipPath id="scrClip"><rect x="281" y="93" width="234" height="136" rx="6"/></clipPath></defs>
+          <rect width="800" height="300" fill="#CFE6FF"/>
+          <rect y="300" width="800" height="140" fill="#BFE0D4"/>
+          <g transform="translate(610,26)">
+            <rect width="140" height="112" rx="8" fill="#9FD8FF" stroke="#1E2340" stroke-width="3"/>
+            <circle cx="104" cy="32" r="15" fill="#FFC233" stroke="#1E2340" stroke-width="2.5"/>
+            <g class="cloud"><ellipse cx="42" cy="78" rx="24" ry="11" fill="#FFFFFF"/><ellipse cx="56" cy="70" rx="15" ry="12" fill="#FFFFFF"/></g>
+            <path d="M70 0 V112 M0 56 H140" stroke="#1E2340" stroke-width="3"/>
+          </g>
+          <circle cx="100" cy="74" r="32" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/>
+          <path d="M100 74 L100 56" stroke="#1E2340" stroke-width="4" stroke-linecap="round"/>
+          <path class="minute" d="M100 74 L120 74" stroke="#FF5C7A" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="100" cy="74" r="3.5" fill="#1E2340"/>
+          <polygon points="40,300 760,300 784,356 16,356" fill="#E6A873" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+          <rect x="16" y="356" width="768" height="22" rx="4" fill="#C9864F" stroke="#1E2340" stroke-width="3"/>
+          <rect x="40" y="378" width="24" height="58" fill="#B87743" stroke="#1E2340" stroke-width="3"/>
+          <rect x="736" y="378" width="24" height="58" fill="#B87743" stroke="#1E2340" stroke-width="3"/>
+          <path d="M586 316 C586 302 566 300 540 304" fill="none" stroke="#1E2340" stroke-width="3"/>
+
+          <g class="hot" data-part="tower" tabindex="0" role="button" aria-label="CPU box">
+            <use href="#s-tower" x="62" y="146" width="92" height="158"/>
+            <circle id="pwrLight" cx="108" cy="267" r="5" fill="#3DBB5E"/>
+          </g>
+          <g class="hot" data-part="speaker" tabindex="0" role="button" aria-label="Left speaker"><use href="#s-speaker" x="186" y="196" width="60" height="108"/></g>
+          <g class="hot" data-part="monitor" tabindex="0" role="button" aria-label="Monitor">
+            <use href="#s-monitor" x="252" y="64" width="292" height="243"/>
+            <g id="scr" clip-path="url(#scrClip)"></g>
+          </g>
+          <g class="hot" data-part="speaker" tabindex="0" role="button" aria-label="Right speaker"><use href="#s-speaker" x="552" y="196" width="60" height="108"/></g>
+          <g class="hot" data-part="printer" tabindex="0" role="button" aria-label="Printer">
+            <use href="#s-printer" x="630" y="196" width="132" height="108"/>
+            <g class="sheet" id="sheet"><rect x="662" y="268" width="68" height="62" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/><circle cx="696" cy="298" r="15" fill="#FFC233" stroke="#1E2340" stroke-width="2"/><circle cx="691" cy="294" r="2" fill="#1E2340"/><circle cx="701" cy="294" r="2" fill="#1E2340"/><path d="M689 303 Q696 309 703 303" fill="none" stroke="#1E2340" stroke-width="2"/></g>
+          </g>
+          <g class="hot" data-part="keyboard" tabindex="0" role="button" aria-label="Keyboard">
+            <polygon points="282,312 518,312 530,352 270,352" fill="#DDE3F5" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+            <g id="kbKeys"></g>
+          </g>
+          <g class="hot" data-part="mouse" tabindex="0" role="button" aria-label="Mouse">
+            <rect x="570" y="314" width="32" height="42" rx="16" fill="#F3F5FF" stroke="#1E2340" stroke-width="3"/>
+            <path d="M586 314 V330 M570 330 H602" stroke="#1E2340" stroke-width="2"/>
+            <rect id="mouseBtn" x="571.5" y="315.5" width="14" height="14" rx="6" fill="transparent"/>
+            <rect x="583" y="318" width="6" height="9" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="1.5"/>
+          </g>
+          <g id="fx"></g>
+
+          <g class="tag" data-tag="tower"><rect x="58" y="114" width="100" height="28" rx="14" fill="#FF7A45"/><text x="108" y="134">CPU box</text></g>
+          <g class="tag" data-tag="speaker"><rect x="168" y="164" width="96" height="28" rx="14" fill="#3DBB5E"/><text x="216" y="184">Speakers</text></g>
+          <g class="tag" data-tag="monitor"><rect x="348" y="30" width="100" height="28" rx="14" fill="#3DBB5E"/><text x="398" y="50">Monitor</text></g>
+          <g class="tag" data-tag="printer"><rect x="650" y="162" width="92" height="28" rx="14" fill="#3DBB5E"/><text x="696" y="182">Printer</text></g>
+          <g class="tag" data-tag="keyboard"><rect x="346" y="386" width="108" height="28" rx="14" fill="#2F9BEA"/><text x="400" y="406">Keyboard</text></g>
+          <g class="tag" data-tag="mouse"><rect x="546" y="386" width="80" height="28" rx="14" fill="#2F9BEA"/><text x="586" y="406">Mouse</text></g>
+        </svg>
+      </div>
+      <div class="found" id="partsFound"></div>
+      <div class="card info" id="partsInfo"><p class="empty">Tap any part of the computer to find out what it does.</p></div>
+    </section>
+
+    <!-- ================= LEVEL 2: IN THINK OUT ================= -->
+    <section class="view" id="v-flow" data-ch="flow" hidden>
+      <div class="card stage">
+        <svg class="scene" id="flowScene" viewBox="0 0 800 322" role="img" aria-label="A letter travels from the keyboard, into the CPU box, and out to the monitor">
+          <defs><clipPath id="fClip"><rect x="582" y="66" width="173" height="101" rx="4"/></clipPath></defs>
+          <path class="wire" d="M232 222 C 290 222, 300 160, 352 160"/>
+          <path class="wire-core" id="core1" d="M232 222 C 290 222, 300 160, 352 160"/>
+          <path id="wire1" d="M232 222 C 290 222, 300 160, 352 160" fill="none" stroke="none"/>
+          <path class="wire" d="M448 160 C 500 160, 520 170, 568 170"/>
+          <path class="wire-core" id="core2" d="M448 160 C 500 160, 520 170, 568 170"/>
+          <path id="wire2" d="M448 160 C 500 160, 520 170, 568 170" fill="none" stroke="none"/>
+          <g id="fKb"><use href="#s-keyboard" x="24" y="182" width="210" height="90"/></g>
+          <g id="fTower">
+            <use href="#s-tower" x="352" y="70" width="96" height="165"/>
+            <circle cx="400" cy="158" r="22" fill="#2B3156" stroke="#1E2340" stroke-width="3"/>
+            <g class="spinner" id="fGear"><use href="#s-gear" x="384" y="142" width="32" height="32"/></g>
+          </g>
+          <g id="fMon">
+            <use href="#s-monitor" x="560" y="44" width="216" height="180"/>
+            <g clip-path="url(#fClip)">
+              <text id="fBig" x="668" y="128" text-anchor="middle" class="lbl" font-size="54" fill="#1E2340"></text>
+              <text id="fLine" x="592" y="158" class="lbl" font-size="22" fill="#1E2340"></text>
+            </g>
+          </g>
+          <g class="phase" id="phIn"><rect x="79" y="284" width="100" height="32" rx="16"/><text x="129" y="306">IN</text></g>
+          <g class="phase" id="phThink"><rect x="335" y="284" width="130" height="32" rx="16"/><text x="400" y="306">THINK</text></g>
+          <g class="phase" id="phOut"><rect x="618" y="284" width="100" height="32" rx="16"/><text x="668" y="306">OUT</text></g>
+          <g id="ball" opacity="0"><circle r="21" fill="#2F9BEA" stroke="#1E2340" stroke-width="3"/><text y="9" text-anchor="middle" class="lbl" font-size="26" fill="#1E2340"></text></g>
+        </svg>
+        <div class="caption" aria-hidden="true">
+          <span class="c-in">1. Keyboard sends it IN</span><span class="c-think">2. CPU THINKS</span><span class="c-out">3. Monitor shows it OUT</span>
+        </div>
+      </div>
+      <div class="keys" id="keys"></div>
+      <p class="keyhint">Tap a letter, or press keys on your real keyboard.</p>
+      <div class="card analogy">
+        <h3>You work the same way!</h3>
+        <div class="an-row">
+          <div class="an" style="--d:0s;--soft:var(--in-soft);--glow:var(--in)">
+            <svg viewBox="0 0 80 80" aria-hidden="true"><path d="M6 40 Q40 6 74 40 Q40 74 6 40 Z" fill="#FFFFFF" stroke="#1E2340" stroke-width="3"/><circle cx="40" cy="40" r="15" fill="#2F9BEA" stroke="#1E2340" stroke-width="2.5"/><circle cx="40" cy="40" r="6" fill="#1E2340"/><circle cx="45" cy="35" r="3" fill="#FFFFFF"/></svg>
+            <b>IN</b><span>Your eyes see a ball coming.</span>
+          </div>
+          <svg class="arr" viewBox="0 0 40 40" aria-hidden="true"><use href="#s-arrow"/></svg>
+          <div class="an" style="--d:2s;--soft:var(--think-soft);--glow:var(--think)">
+            <svg viewBox="0 0 80 80" aria-hidden="true"><g fill="#1E2340"><circle cx="28" cy="30" r="17"/><circle cx="50" cy="28" r="18"/><circle cx="58" cy="46" r="15"/><circle cx="24" cy="48" r="15"/><circle cx="40" cy="52" r="15"/></g><g fill="#FF9BB3"><circle cx="28" cy="30" r="14"/><circle cx="50" cy="28" r="15"/><circle cx="58" cy="46" r="12"/><circle cx="24" cy="48" r="12"/><circle cx="40" cy="52" r="12"/></g><path d="M40 18 V58 M26 32 Q32 38 26 44 M54 30 Q48 38 56 44" fill="none" stroke="#1E2340" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <b>THINK</b><span>Your brain thinks: "Catch it!"</span>
+          </div>
+          <svg class="arr" viewBox="0 0 40 40" aria-hidden="true"><use href="#s-arrow"/></svg>
+          <div class="an" style="--d:4s;--soft:var(--out-soft);--glow:var(--out)">
+            <svg viewBox="0 0 80 80" aria-hidden="true"><rect x="22" y="26" width="34" height="42" rx="14" fill="#F2C29B" stroke="#1E2340" stroke-width="3"/><rect x="12" y="38" width="16" height="10" rx="5" fill="#F2C29B" stroke="#1E2340" stroke-width="3" transform="rotate(-35 20 43)"/><path d="M30 26 V16 M38 26 V12 M46 26 V14" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/><path d="M30 26 V16 M38 26 V12 M46 26 V14" stroke="#F2C29B" stroke-width="1" stroke-linecap="round"/><circle cx="58" cy="18" r="12" fill="#FF5C7A" stroke="#1E2340" stroke-width="3"/><path d="M50 12 Q58 18 66 12" fill="none" stroke="#FFFFFF" stroke-width="2"/></svg>
+            <b>OUT</b><span>Your hands catch the ball!</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 3: INSIDE ================= -->
+    <section class="view" id="v-inside" data-ch="inside" hidden>
+      <div class="card stage">
+        <svg class="scene" id="insideScene" viewBox="0 0 800 460" role="group" aria-label="Inside the CPU box. Tap each part.">
+          <rect x="150" y="16" width="500" height="428" rx="18" fill="#C9D0EA" stroke="#1E2340" stroke-width="3"/>
+          <rect x="170" y="36" width="460" height="388" rx="8" fill="#2B3156" stroke="#1E2340" stroke-width="3"/>
+          <g class="hot" data-part="board" tabindex="0" role="button" aria-label="Motherboard" style="transform-origin:center">
+            <rect x="188" y="54" width="322" height="352" rx="6" fill="#2E9E62" stroke="#1E2340" stroke-width="3"/>
+            <path class="trace" d="M348 120 H402 M348 144 H402 M348 168 H402"/>
+            <path class="trace" d="M300 192 V300 M324 192 V232 H430 V300 M252 144 H214 V336"/>
+            <rect x="214" y="300" width="230" height="12" rx="3" fill="#1E2340"/>
+            <rect x="214" y="336" width="230" height="12" rx="3" fill="#1E2340"/>
+            <circle cx="470" cy="260" r="9" fill="#5E6590" stroke="#1E2340" stroke-width="2"/><circle cx="470" cy="290" r="9" fill="#5E6590" stroke="#1E2340" stroke-width="2"/>
+            <text x="350" y="390" text-anchor="middle" class="lbl" font-size="15" fill="#A8EFC4" letter-spacing="2">MOTHERBOARD</text>
+          </g>
+          <path d="M524 214 C 500 214, 504 252, 486 258" fill="none" stroke="#FF5C7A" stroke-width="6" stroke-linecap="round"/>
+          <path d="M524 224 C 506 226, 510 286, 486 290" fill="none" stroke="#FFC233" stroke-width="6" stroke-linecap="round"/>
+          <path d="M530 330 C 506 330, 470 330, 444 342" fill="none" stroke="#FF7A45" stroke-width="5" stroke-linecap="round"/>
+          <g class="hot" data-part="cpu" tabindex="0" role="button" aria-label="CPU chip"><use href="#s-chip" x="252" y="96" width="96" height="96"/></g>
+          <g class="hot" data-part="ram" tabindex="0" role="button" aria-label="RAM">
+            <rect x="398" y="82" width="106" height="144" fill="transparent"/>
+            <g transform="translate(446,84) rotate(90)"><use href="#s-ram" width="140" height="44"/></g>
+            <g transform="translate(500,84) rotate(90)"><use href="#s-ram" width="140" height="44"/></g>
+          </g>
+          <g class="hot" data-part="fan" tabindex="0" role="button" aria-label="Fan">
+            <rect x="531" y="61" width="80" height="80" rx="10" fill="#4A5180" stroke="#1E2340" stroke-width="3"/>
+            <circle cx="571" cy="101" r="34" fill="#1E2340"/>
+            <g class="fastspin"><g fill="#9AD8FF" stroke="#1E2340" stroke-width="2"><ellipse cx="571" cy="82" rx="9" ry="16"/><ellipse cx="571" cy="82" rx="9" ry="16" transform="rotate(90 571 101)"/><ellipse cx="571" cy="82" rx="9" ry="16" transform="rotate(180 571 101)"/><ellipse cx="571" cy="82" rx="9" ry="16" transform="rotate(270 571 101)"/></g></g>
+            <circle cx="571" cy="101" r="8" fill="#9AA3C7" stroke="#1E2340" stroke-width="2"/>
+          </g>
+          <g class="hot" data-part="psu" tabindex="0" role="button" aria-label="Power supply"><use href="#s-psu" x="524" y="168" width="96" height="67"/></g>
+          <g class="hot" data-part="disk" tabindex="0" role="button" aria-label="Hard disk">
+            <rect x="530" y="270" width="86" height="105" rx="8" fill="#B8C0DC" stroke="#1E2340" stroke-width="3"/>
+            <g class="slowspin"><circle cx="573" cy="312" r="29" fill="#E9EDF8" stroke="#1E2340" stroke-width="3"/><path d="M573 286 A26 26 0 0 1 597 304" fill="none" stroke="#9AD8FF" stroke-width="5" stroke-linecap="round"/></g>
+            <circle cx="573" cy="312" r="6" fill="#1E2340"/>
+            <path d="M599 358 L580 320" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="599" cy="358" r="7" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
+          </g>
+          <g class="door" id="door" tabindex="0" role="button" aria-label="Open the box">
+            <rect x="170" y="36" width="460" height="388" rx="8" fill="#AEB7DA" stroke="#1E2340" stroke-width="3"/>
+            <path d="M230 110 H570 M230 130 H570 M230 150 H570 M230 170 H570" stroke="#8C95BF" stroke-width="6" stroke-linecap="round"/>
+            <rect x="590" y="200" width="16" height="70" rx="8" fill="#5E6590" stroke="#1E2340" stroke-width="3"/>
+            <rect x="260" y="250" width="280" height="64" rx="32" fill="#FFC233" stroke="#1E2340" stroke-width="3"/>
+            <text x="400" y="292" text-anchor="middle" class="lbl" font-size="28" fill="#1E2340">Tap to open!</text>
+          </g>
+        </svg>
+        <div class="inside-tools"><button class="btn" type="button" id="doorBtn" style="--c:var(--store)">Open the box</button></div>
+      </div>
+      <div class="found" id="insideFound"></div>
+      <div class="card info" id="insideInfo"><p class="empty">Open the box, then tap the parts inside.</p></div>
+    </section>
+
+    <!-- ================= LEVEL 4: SPEED ================= -->
+    <section class="view" id="v-speed" data-ch="speed" hidden>
+      <div class="card race" id="race">
+        <div class="lane">
+          <div class="who"><svg aria-hidden="true"><use href="#s-kid"/></svg>Ayansh</div>
+          <div class="track"><div class="runner" id="kidRunner"><svg aria-hidden="true"><use href="#s-kid"/></svg></div></div>
+          <div class="count" id="kidCount">0</div>
+        </div>
+        <div class="lane">
+          <div class="who"><svg aria-hidden="true"><use href="#s-chip"/></svg>Computer</div>
+          <div class="track"><div class="runner" id="compRunner"><svg aria-hidden="true"><use href="#s-chip"/></svg></div></div>
+          <div class="count" id="compCount">0</div>
+        </div>
+        <button class="btn tapbtn" type="button" id="tapBtn">Start the race!</button>
+        <p class="muted" style="margin:0;text-align:center;font-size:17px">Count to 20 by tapping the big button (or the space bar).</p>
+        <div class="cdown" id="cdown" hidden><span>3</span></div>
+      </div>
+      <div class="card meter" id="meter" hidden>
+        <p class="lbl" style="font-size:20px">While you were counting, the computer did this many sums:</p>
+        <div class="bign" id="bign">0</div>
+        <p class="muted" id="bigwords"></p>
+        <div class="results" id="results" hidden>
+          <div class="res" style="background:var(--in-soft)">You counted to 20 in<b id="kidTime">0 seconds</b></div>
+          <div class="res" style="background:var(--think-soft)">The computer counted to 20 in<b>less than a blink</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 5: MEMORY ================= -->
+    <section class="view" id="v-memory" data-ch="memory" hidden>
+      <ol class="steps" id="memSteps"></ol>
+      <div class="mem" id="mem">
+        <div class="card mem-card">
+          <div class="row"><h3>The desk</h3><span class="k" style="background:var(--grape)">RAM</span></div>
+          <p class="sub">What the computer is working on right now.</p>
+          <div class="desk">
+            <div class="paper" id="paper"></div>
+            <div class="dark">Power is OFF<small>The desk forgot everything!</small></div>
+          </div>
+          <div class="palette" id="palette" aria-label="Stickers"></div>
+          <div class="memtools">
+            <button class="btn" type="button" id="saveBtn" style="--c:var(--store)">Save to cupboard</button>
+            <button class="btn" type="button" id="clearBtn">Clear desk</button>
+            <button class="btn power" type="button" id="powerBtn" aria-pressed="true">Power: ON</button>
+          </div>
+        </div>
+        <div class="card mem-card">
+          <div class="row"><h3>The cupboard</h3><span class="k k-store">HARD DISK</span></div>
+          <p class="sub">Keeps things safe for a long, long time.</p>
+          <div class="cupboard" id="cupboard"></div>
+          <span class="safe">Still safe, even with no power!</span>
+        </div>
+      </div>
+      <div class="memrule">
+        <div class="res card" style="background:#EEE8FF"><b>RAM = desk</b>Fast and handy. It forgets when the power goes off.</div>
+        <div class="res card" style="background:var(--store-soft)"><b>Hard disk = cupboard</b>Keeps your work forever, until you throw it away.</div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 6: BINARY ================= -->
+    <section class="view" id="v-binary" data-ch="binary" hidden>
+      <div class="bin">
+        <div class="card">
+          <h3>One switch, one light</h3>
+          <div class="swrap">
+            <button class="switch" type="button" id="switch" aria-pressed="false" aria-label="Light switch"><span class="knob"></span></button>
+            <svg class="bulb bulbbig" id="bigBulb" viewBox="-12 -12 74 94" aria-hidden="true"></svg>
+            <div class="digit" id="digit">0</div>
+          </div>
+          <p style="text-align:center;margin:.6em 0 0"><span class="k" style="background:var(--wash)">OFF = 0</span> <span class="k" style="background:#FFD43B">ON = 1</span></p>
+        </div>
+        <div class="card">
+          <h3>Every letter is a pattern of 8 lights</h3>
+          <div class="letterbox">
+            <div class="bigletter" id="bigLetter">A</div>
+            <div style="flex:1;min-width:0"><p style="margin:0" id="letterSay">Tap a letter below to see its lights.</p></div>
+          </div>
+          <div class="bits" id="bits"></div>
+          <div class="keys" id="binKeys"></div>
+        </div>
+      </div>
+      <div class="card namegrid" style="padding:16px;margin-top:18px">
+        <h3 style="font-size:26px">AYANSH in computer language</h3>
+        <table id="nameTable"></table>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 7: CODE ================= -->
+    <section class="view" id="v-code" data-ch="code" hidden>
+      <div class="code">
+        <div class="card">
+          <div class="lvls" id="lvls"></div>
+          <div class="board" id="board"></div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:26px">Your program</h3>
+          <div class="prog" id="prog"></div>
+          <div class="cmds">
+            <button class="btn cmd r-up" type="button" data-cmd="up" aria-label="Up"><svg aria-hidden="true"><use href="#s-arrow"/></svg></button>
+            <button class="btn cmd r-down" type="button" data-cmd="down" aria-label="Down"><svg aria-hidden="true"><use href="#s-arrow"/></svg></button>
+            <button class="btn cmd r-left" type="button" data-cmd="left" aria-label="Left"><svg aria-hidden="true"><use href="#s-arrow"/></svg></button>
+            <button class="btn cmd" type="button" data-cmd="right" aria-label="Right"><svg aria-hidden="true"><use href="#s-arrow"/></svg></button>
+          </div>
+          <div class="ptools">
+            <button class="btn go" type="button" id="goBtn">Go!</button>
+            <button class="btn" type="button" id="undoBtn">Undo</button>
+            <button class="btn" type="button" id="clearProg">Clear</button>
+            <button class="btn" type="button" id="nextPuzzle" style="--c:var(--out)" hidden>Next puzzle</button>
+          </div>
+          <p style="margin:14px 0 0" class="lbl">Steps to brush your teeth:</p>
+          <ol class="recipe"><li>Pick up the brush</li><li>Put on toothpaste</li><li>Brush up and down</li><li>Rinse your mouth</li></ol>
+          <p class="muted" style="margin:.3em 0 0;font-size:17px">A list of steps like this is called a <b>program</b>. The computer does each step, in order, exactly as you say.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL 8: QUIZ ================= -->
+    <section class="view" id="v-quiz" data-ch="quiz" hidden>
+      <div class="card quiz" id="quiz"></div>
+    </section>
+  </main>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const INK = '#1E2340';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 60) : ms));
+const tween = (ms, fn) => new Promise(res => {
+  if (reduce) { fn(1); return res(); }
+  const t0 = performance.now();
+  const step = t => { const p = Math.min(1, (t - t0) / ms); fn(p); p < 1 ? requestAnimationFrame(step) : res(); };
+  requestAnimationFrame(step);
+});
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const icon = (name, cls = '') => `<svg class="${cls}" aria-hidden="true"><use href="#s-${name}"/></svg>`;
+const restart = (el, cls) => { el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls); };
+
+/* ---------- saved progress (this browser only) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const KEY = 'ayansh-computer-world';
+const state = Object.assign({ stars: {}, voice: true, sound: true }, store.get(KEY, {}));
+const save = () => store.set(KEY, { stars: state.stars, voice: state.voice, sound: state.sound });
+
+/* ---------- sounds ---------- */
+let actx = null;
+function tone(f, d = .12, type = 'sine', vol = .14, when = 0) {
+  if (!state.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + .03);
+  } catch (e) {}
+}
+const sfx = {
+  pop: () => tone(700, .09, 'triangle'),
+  tick: () => tone(1100, .04, 'square', .05),
+  good: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'triangle', .14, i * .09)),
+  oops: () => { tone(260, .16, 'sawtooth', .06); tone(190, .26, 'sawtooth', .06, .13); },
+  whirr: () => [300, 420, 560, 720].forEach((f, i) => tone(f, .08, 'square', .04, i * .06)),
+  tune: () => [392, 440, 494, 587, 494, 587, 784].forEach((f, i) => tone(f, .2, 'triangle', .13, i * .17)),
+  star: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .22, 'sine', .15, i * .1))
+};
+
+/* ---------- Bit talks ---------- */
+let voices = [];
+const loadVoices = () => { try { voices = speechSynthesis.getVoices(); } catch (e) {} };
+if ('speechSynthesis' in window) { loadVoices(); try { speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {} }
+function speak(text) {
+  if (!state.voice || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = voices.find(v => /en[-_]IN/i.test(v.lang)) || voices.find(v => /en[-_]GB/i.test(v.lang)) || voices.find(v => /^en/i.test(v.lang));
+    if (v) u.voice = v;
+    u.rate = .92; u.pitch = 1.15;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+const bit = $('#bit'), sayText = $('#sayText'), bubble = $('#bubble');
+let lastSaid = '', talkTimer = 0;
+function say(html) {
+  sayText.innerHTML = html;
+  lastSaid = sayText.textContent;
+  restart(bubble, 'pop'); restart(bit, 'hop');
+  bit.classList.add('talk'); clearTimeout(talkTimer);
+  talkTimer = setTimeout(() => bit.classList.remove('talk'), Math.min(6000, 600 + lastSaid.length * 45));
+  speak(lastSaid);
+}
+$('#againBtn').addEventListener('click', () => say(sayText.innerHTML));
+
+function setToggle(btn, on) { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+setToggle($('#voiceBtn'), state.voice); setToggle($('#soundBtn'), state.sound);
+$('#voiceBtn').addEventListener('click', e => {
+  state.voice = !state.voice; setToggle(e.currentTarget, state.voice); save();
+  if (!state.voice) { try { speechSynthesis.cancel(); } catch (err) {} } else speak('OK! I will read to you.');
+});
+$('#soundBtn').addEventListener('click', e => { state.sound = !state.sound; setToggle(e.currentTarget, state.sound); save(); sfx.pop(); });
+
+/* ---------- celebration ---------- */
+const cv = $('#confetti'), cx = cv.getContext('2d');
+let bits = [], confettiOn = false;
+function confetti(n = 140) {
+  if (reduce) return;
+  cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+  const cols = ['#2F9BEA', '#FF7A45', '#3DBB5E', '#F5B300', '#FF5C7A', '#8C6BEB'];
+  for (let i = 0; i < n; i++) bits.push({ x: innerWidth * (.2 + Math.random() * .6), y: innerHeight * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 4, c: cols[i % cols.length], a: Math.random() * 6, va: (Math.random() - .5) * .4, life: 0 });
+  if (!confettiOn) { confettiOn = true; requestAnimationFrame(drawConfetti); }
+}
+function drawConfetti() {
+  const d = devicePixelRatio;
+  cx.setTransform(d, 0, 0, d, 0, 0); cx.clearRect(0, 0, innerWidth, innerHeight);
+  bits = bits.filter(b => b.life < 160 && b.y < innerHeight + 30);
+  for (const b of bits) {
+    b.life++; b.vy += .35; b.vx *= .99; b.x += b.vx; b.y += b.vy; b.a += b.va;
+    cx.save(); cx.translate(b.x, b.y); cx.rotate(b.a); cx.fillStyle = b.c; cx.fillRect(-b.r, -b.r / 2, b.r * 2, b.r); cx.restore();
+  }
+  if (bits.length) requestAnimationFrame(drawConfetti); else { confettiOn = false; cx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+function toast(text) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.innerHTML = icon('star') + text;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2900);
+}
+
+/* ---------- levels & stars ---------- */
+const CH = [
+  { id: 'parts',  title: 'Meet the Computer',     blurb: 'Find its 6 parts',            icon: 'monitor',  color: '#2F9BEA' },
+  { id: 'flow',   title: 'In, Think, Out',        blurb: 'Watch a letter travel',       icon: 'keyboard', color: '#FF7A45' },
+  { id: 'inside', title: 'Inside the Box',        blurb: 'Open the CPU box',            icon: 'fan',      color: '#21B3A0' },
+  { id: 'speed',  title: 'Super-Fast Brain',      blurb: 'Race the computer',           icon: 'chip',     color: '#FF5C7A' },
+  { id: 'memory', title: 'Desk and Cupboard',     blurb: 'How a computer remembers',    icon: 'disk',     color: '#F5B300' },
+  { id: 'binary', title: 'Lights On, Lights Off', blurb: 'The computer’s secret language', icon: 'bulb', color: '#8C6BEB' },
+  { id: 'code',   title: 'Give the Orders',       blurb: 'Guide the robot',             icon: 'bot',      color: '#3DBB5E' },
+  { id: 'quiz',   title: 'Big Quiz',              blurb: 'Win the last star',           icon: 'star',     color: '#3E5BD8' }
+];
+const starCount = () => CH.filter(c => state.stars[c.id]).length;
+
+function renderLevels() {
+  $('#levels').innerHTML = CH.map((c, i) => `
+    <a class="level" href="#${c.id}" style="--c:${c.color}">
+      <div class="ibox">${icon(c.icon)}</div>
+      <div><div class="lv">Level ${i + 1}</div><h3>${c.title}</h3><p>${c.blurb}</p></div>
+      ${icon('star', 'star' + (state.stars[c.id] ? '' : ' dim'))}
+    </a>`).join('');
+  const all = starCount() === CH.length;
+  $('#cert').hidden = !all;
+  if (all) {
+    $('#certStars').innerHTML = CH.map(() => icon('star')).join('');
+    $('#certDate').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+}
+function updateStars() {
+  $('#starnum').textContent = starCount();
+  renderLevels();
+  CH.forEach(c => {
+    const v = $('#v-' + c.id);
+    $('.ch-head .star', v).classList.toggle('dim', !state.stars[c.id]);
+    $('.btn.next', v).classList.toggle('ready', !!state.stars[c.id]);
+  });
+}
+function award(id) {
+  if (state.stars[id]) return false;
+  state.stars[id] = true; save();
+  sfx.star(); confetti(); toast('You won a star!');
+  restart($('#starcount'), 'bump');
+  updateStars();
+  return true;
+}
+
+/* chapter header + footer for every level */
+CH.forEach((c, i) => {
+  const v = $('#v-' + c.id);
+  v.style.setProperty('--c', c.color);
+  v.insertAdjacentHTML('afterbegin', `<div class="ch-head"><span class="lvchip">Level ${i + 1}</span><h2>${c.title}</h2>${icon('star', 'star dim')}</div>`);
+  const next = CH[i + 1];
+  v.insertAdjacentHTML('beforeend', `<nav class="ch-foot">
+      <a class="btn" href="#home">Back to the map</a>
+      <a class="btn next" href="#${next ? next.id : 'home'}">${next ? 'Next: ' + next.title : 'See my stars'} ${icon('arrow')}</a>
+    </nav>`);
+});
+
+/* ---------- router ---------- */
+const views = {};
+let current = 'home';
+function route() {
+  let id = location.hash.replace('#', '') || 'home';
+  if (!$('#v-' + id)) id = 'home';
+  $$('.view').forEach(v => { v.hidden = v.id !== 'v-' + id; });
+  current = id;
+  window.scrollTo(0, 0);
+  if (views[id] && views[id].enter) views[id].enter();
+}
+addEventListener('hashchange', route);
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if ((e.key === ' ' || e.key === 'Enter') && e.target.closest && e.target.closest('button, a, [role="button"]')) return;
+  const v = views[current];
+  if (v && v.key) v.key(e);
+});
+
+views.home = { enter() {
+  const n = starCount();
+  if (n === 0) say('Hi Ayansh! I am <b>Bit</b>, a little robot. A computer is made of small building blocks. Tap <b>Level 1</b> and let’s explore!');
+  else if (n < CH.length) say(`Welcome back, Ayansh! You have <b>${n} star${n > 1 ? 's' : ''}</b>. Pick a level to play.`);
+  else { say('WOW! You won all 8 stars! You are a real <b>Computer Explorer</b>. Here is your certificate!'); confetti(); }
+} };
+
+let resetArmed = false;
+$('#resetBtn').addEventListener('click', e => {
+  if (!resetArmed) { resetArmed = true; e.currentTarget.textContent = 'Tap again to clear all stars'; setTimeout(() => { resetArmed = false; $('#resetBtn').textContent = 'Play again from the start'; }, 4000); return; }
+  state.stars = {}; save(); resetArmed = false; e.currentTarget.textContent = 'Play again from the start';
+  updateStars(); views.home.enter();
+});
+
+/* ---------- part explorer (levels 1 and 3) ---------- */
+const KIND = { in: 'IN · input', think: 'THINK', out: 'OUT · output', store: 'STORE · memory', help: 'HELPER' };
+const SOFT = { in: 'var(--in-soft)', think: 'var(--think-soft)', out: 'var(--out-soft)', store: 'var(--store-soft)', help: 'var(--help-soft)' };
+function explorer({ id, scene, foundEl, infoEl, data, act, done, canPick = () => true }) {
+  const found = new Set(), keys = Object.keys(data);
+  foundEl.innerHTML = keys.map(k => `<span class="fchip" data-k="${k}">${icon(data[k].icon)}<span>?</span></span>`).join('');
+  function pick(k) {
+    if (!canPick()) return;
+    const d = data[k], isNew = !found.has(k);
+    found.add(k);
+    const chip = $(`.fchip[data-k="${k}"]`, foundEl);
+    if (isNew) { chip.classList.add('got'); chip.lastElementChild.textContent = d.name; }
+    infoEl.style.setProperty('--soft', SOFT[d.kind]);
+    infoEl.innerHTML = `<div class="big">${icon(d.icon)}</div><div><div class="row"><h3>${d.name}</h3><span class="k k-${d.kind}">${KIND[d.kind]}</span></div><p>${d.text}</p><p class="like">${d.like}</p></div>`;
+    restart(infoEl, 'pop');
+    $$(`[data-part="${k}"]`, scene).forEach(el => restart(el, 'boing'));
+    const tag = $(`[data-tag="${k}"]`, scene); if (tag) tag.classList.add('show');
+    sfx.pop();
+    if (act) act(k);
+    const line = `This is the <b>${d.name}</b>. ${d.text} ${d.like}`;
+    if (isNew && found.size === keys.length) { say(line + ' ' + done); setTimeout(() => award(id), 900); }
+    else say(line);
+  }
+  const hit = e => e.target.closest('[data-part]');
+  scene.addEventListener('click', e => { const h = hit(e); if (h) pick(h.dataset.part); });
+  scene.addEventListener('keydown', e => { const h = hit(e); if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(h.dataset.part); } });
+}
+
+/* ---------- LEVEL 1: parts ---------- */
+const PARTS = {
+  monitor:  { name: 'Monitor',  kind: 'out',   icon: 'monitor',  text: 'The monitor is the computer’s face. It <b>shows</b> you words, pictures and games.', like: 'It is like a TV.' },
+  tower:    { name: 'CPU box',  kind: 'think', icon: 'tower',    text: 'This big box holds the computer’s <b>brain</b>. It does all the thinking! We will open it in Level 3.', like: 'It is like your head, with your brain inside.' },
+  keyboard: { name: 'Keyboard', kind: 'in',    icon: 'keyboard', text: 'We press the keys to <b>type</b> letters and numbers into the computer.', like: 'It is like a pen for writing to the computer.' },
+  mouse:    { name: 'Mouse',    kind: 'in',    icon: 'mouse',    text: 'We move the mouse to <b>point</b> at things on the screen, and <b>click</b> them.', like: 'It is like your finger pointing at something.' },
+  speaker:  { name: 'Speakers', kind: 'out',   icon: 'speaker',  text: 'Speakers <b>play</b> music and sounds.', like: 'They are like the computer’s mouth.' },
+  printer:  { name: 'Printer',  kind: 'out',   icon: 'printer',  text: 'A printer puts your work <b>on paper</b>, so you can hold it in your hand.', like: 'It is like a magic stamp that can print any picture.' }
+};
+const scr = $('#scr'), fx = $('#fx');
+let scrTok = 0;
+const BG = c => `<rect x="281" y="93" width="234" height="136" fill="${c}"/>`;
+const IDLE = BG('#8FD3FF') +
+  `<rect x="293" y="104" width="26" height="22" rx="4" fill="#FFC233" stroke="${INK}" stroke-width="2"/>` +
+  `<rect id="appIcon" x="293" y="134" width="26" height="22" rx="4" fill="#FF7A45" stroke="${INK}" stroke-width="2"/>` +
+  `<rect x="293" y="164" width="26" height="22" rx="4" fill="#3DBB5E" stroke="${INK}" stroke-width="2"/>` +
+  `<rect x="281" y="214" width="234" height="15" fill="#2B3156"/><circle cx="293" cy="221.5" r="4.5" fill="#3DBB5E"/>`;
+function screen(mode) {
+  const tok = ++scrTok;
+  if (mode === 'idle') scr.innerHTML = IDLE + `<text x="420" y="172" text-anchor="middle" class="lbl" font-size="32" fill="${INK}">Hello!</text>`;
+  if (mode === 'smile') scr.innerHTML = BG('#FFF1C7') + `<g class="appear" style="transform-origin:398px 158px"><circle cx="398" cy="158" r="48" fill="#FFC233" stroke="${INK}" stroke-width="3"/><circle cx="381" cy="146" r="6" fill="${INK}"/><circle cx="415" cy="146" r="6" fill="${INK}"/><path d="M374 168 Q398 194 422 168" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/></g>`;
+  if (mode === 'think') scr.innerHTML = BG('#2B3156') + `<g class="spinner go"><use href="#s-gear" x="373" y="112" width="50" height="50"/></g><text x="398" y="196" text-anchor="middle" class="lbl" font-size="24" fill="#FFFFFF">Thinking…</text>`;
+  if (mode === 'music') scr.innerHTML = BG('#2B3156') + [0, 1, 2, 3, 4, 5, 6].map(i => `<rect class="eqbar" style="--d:${(i % 3) * .15 + i * .04}s" x="${312 + i * 26}" y="${120 + (i % 2) * 14}" width="16" height="${86 - (i % 2) * 14}" rx="3" fill="${['#2F9BEA', '#3DBB5E', '#F5B300', '#FF7A45', '#FF5C7A', '#8C6BEB', '#21B3A0'][i]}"/>`).join('');
+  if (mode === 'print') scr.innerHTML = BG('#FFFFFF') + `<text x="398" y="148" text-anchor="middle" class="lbl" font-size="26" fill="${INK}">Printing…</text><rect x="318" y="166" width="160" height="16" rx="8" fill="#EEF0F7" stroke="${INK}" stroke-width="2"/><rect id="pbar" x="318" y="166" width="0" height="16" rx="8" fill="#3DBB5E"/>`;
+  if (mode === 'type') scr.innerHTML = BG('#F7F9FF') + `<text id="typed" x="300" y="170" class="lbl" font-size="34" fill="${INK}"></text>`;
+  if (mode === 'cursor') scr.innerHTML = IDLE + `<g id="arrowPtr"><path d="M0 0 L0 28 L7 21 L12 32 L18 29 L13 19 L22 19 Z" fill="#FFFFFF" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/></g>`;
+  return tok;
+}
+screen('idle');
+/* keys on the drawn keyboard */
+$('#kbKeys').innerHTML = [318, 329.5].map((y, r) => Array.from({ length: 10 }, (_, i) => `<rect class="kk" x="${290 + i * 22 - r * 3}" y="${y}" width="18" height="8.5" rx="2" fill="#FFFFFF" stroke="${INK}" stroke-width="1.5"/>`).join('')).join('') +
+  `<rect class="kk" x="340" y="341" width="120" height="7" rx="2" fill="#FFFFFF" stroke="${INK}" stroke-width="1.5"/>`;
+const kks = $$('.kk');
+function flashKey() { const k = kks[Math.floor(Math.random() * kks.length)]; k.setAttribute('fill', '#2F9BEA'); setTimeout(() => k.setAttribute('fill', '#FFFFFF'), 160); }
+function svgAdd(parent, html) { const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.innerHTML = html; parent.appendChild(g); return g; }
+
+async function partAct(k) {
+  if (k === 'monitor') { screen('smile'); }
+  if (k === 'tower') {
+    const tok = screen('think'); const p = $('#pwrLight'); p.classList.add('blinky'); sfx.whirr();
+    await wait(1800); p.classList.remove('blinky'); if (tok === scrTok) screen('idle');
+  }
+  if (k === 'keyboard') {
+    const tok = screen('type'); const msg = 'Hi Ayansh!';
+    for (let i = 1; i <= msg.length; i++) { if (tok !== scrTok) return; $('#typed').textContent = msg.slice(0, i); flashKey(); sfx.tick(); await wait(140); }
+  }
+  if (k === 'mouse') {
+    const tok = screen('cursor'), a = $('#arrowPtr');
+    $('#mouseBtn').setAttribute('fill', '#2F9BEA');
+    await tween(900, p => { const e = ease(p); a.setAttribute('transform', `translate(${470 - e * 168},${120 + e * 26})`); });
+    if (tok !== scrTok) return;
+    sfx.pop(); $('#appIcon').setAttribute('fill', '#FFC233');
+    svgAdd(scr, `<circle class="ringfx" cx="306" cy="145" r="14"/>`);
+    setTimeout(() => $('#mouseBtn').setAttribute('fill', 'transparent'), 300);
+    await wait(500); if (tok === scrTok) svgAdd(scr, `<g class="appear" style="transform-origin:420px 180px"><rect x="350" y="140" width="140" height="70" rx="10" fill="#FFFFFF" stroke="${INK}" stroke-width="3"/><text x="420" y="184" text-anchor="middle" class="lbl" font-size="24" fill="${INK}">Clicked!</text></g>`);
+  }
+  if (k === 'speaker') {
+    screen('music'); sfx.tune();
+    [216, 582].forEach(x => {
+      svgAdd(fx, `<circle class="ringfx" cx="${x}" cy="262" r="24"/>`);
+      for (let i = 0; i < 3; i++) setTimeout(() => {
+        const g = svgAdd(fx, `<g transform="translate(${x - 8 + i * 6},196)"><g class="note" style="--dx:${(i - 1) * 18}px"><ellipse cx="0" cy="0" rx="7" ry="5" fill="${INK}"/><rect x="5" y="-24" width="3" height="24" fill="${INK}"/><path d="M8 -24 q10 4 7 13" fill="none" stroke="${INK}" stroke-width="3"/></g></g>`);
+        setTimeout(() => g.remove(), 1600);
+      }, i * 300);
+    });
+    setTimeout(() => fx.querySelectorAll('.ringfx').forEach(r => r.parentNode.remove()), 1100);
+  }
+  if (k === 'printer') {
+    const tok = screen('print'); const sh = $('#sheet'); sh.classList.remove('out');
+    tone(200, .9, 'square', .025);
+    tween(1500, p => { const b = $('#pbar'); if (b) b.setAttribute('width', 160 * p); });
+    await wait(200); restart(sh, 'out');
+    await wait(4000); if (tok === scrTok) { sh.classList.remove('out'); screen('idle'); }
+  }
+}
+explorer({ id: 'parts', scene: $('#partsScene'), foundEl: $('#partsFound'), infoEl: $('#partsInfo'), data: PARTS, act: partAct,
+  done: 'You found all 6 parts! Did you see the colours? Blue parts put things IN. The box THINKS. Green parts show things OUT.' });
+views.parts = { enter() { say('Here is a computer on a desk. It has <b>6 parts</b>. Tap each part to find out what it does!'); } };
+
+/* ---------- LEVEL 2: In, Think, Out ---------- */
+const ball = $('#ball'), ballC = $('circle', ball), ballT = $('text', ball);
+const w1 = $('#wire1'), w2 = $('#wire2');
+let flowBusy = false, flowQ = [], flowLine = '', flowCount = 0;
+const keysEl = $('#keys');
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+keysEl.innerHTML = LETTERS.map(l => `<button class="key" type="button" data-l="${l}">${l}</button>`).join('');
+keysEl.addEventListener('click', e => { const b = e.target.closest('.key'); if (b) sendLetter(b.dataset.l); });
+function phase(which) {
+  ['In', 'Think', 'Out'].forEach(p => $('#ph' + p).classList.toggle('on', p === which));
+  $$('#v-flow .caption span').forEach(s => s.classList.toggle('on', !!which && s.classList.contains('c-' + which.toLowerCase())));
+}
+function along(path, p, s = 1) { const L = path.getTotalLength(), pt = path.getPointAtLength(L * p); ball.setAttribute('transform', `translate(${pt.x},${pt.y}) scale(${s})`); }
+async function sendLetter(l) {
+  if (flowBusy) { if (flowQ.length < 5) flowQ.push(l); return; }
+  flowBusy = true;
+  const key = $(`.key[data-l="${l}"]`, keysEl); if (key) { key.classList.add('down'); setTimeout(() => key.classList.remove('down'), 180); }
+  ballT.textContent = l; ballC.setAttribute('fill', '#2F9BEA'); ball.setAttribute('opacity', '1');
+  phase('In'); $('#core1').classList.add('live'); sfx.tick(); restart($('#fKb'), 'boing');
+  await tween(650, p => along(w1, ease(p)));
+  $('#core1').classList.remove('live');
+  phase('Think'); $('#fGear').classList.add('go'); $('#fTower').classList.add('glowing'); sfx.whirr();
+  await tween(220, p => along(w1, 1, 1 - p));
+  await wait(450);
+  ballC.setAttribute('fill', '#3DBB5E');
+  $('#fGear').classList.remove('go'); $('#fTower').classList.remove('glowing');
+  phase('Out'); $('#core2').classList.add('live');
+  await tween(650, p => along(w2, ease(p), Math.min(1, p * 3)));
+  $('#core2').classList.remove('live'); ball.setAttribute('opacity', '0'); sfx.pop();
+  flowLine = (flowLine + l).slice(-11);
+  $('#fBig').textContent = l; $('#fLine').textContent = flowLine;
+  restart($('#fMon'), 'boing');
+  await wait(250); phase(null);
+  flowCount++;
+  if (flowCount === 1) say(`You pressed <b>${l}</b>! The keyboard sent it IN. The CPU box THOUGHT about it. The monitor showed it OUT. Try more letters!`);
+  if (flowCount === 5) { say('Super! Every time, it goes the same way: <b>IN</b>, then <b>THINK</b>, then <b>OUT</b>. That is how every computer works!'); award('flow'); }
+  flowBusy = false;
+  if (flowQ.length) sendLetter(flowQ.shift());
+}
+views.flow = {
+  enter() { say('Every computer works in 3 steps: <b>IN</b>, <b>THINK</b> and <b>OUT</b>. Press a letter and watch it travel!'); },
+  key(e) { const l = e.key.toUpperCase(); if (/^[A-Z]$/.test(l)) sendLetter(l); }
+};
+
+/* ---------- LEVEL 3: inside the box ---------- */
+const INSIDE = {
+  cpu:   { name: 'CPU chip',     kind: 'think', icon: 'chip',  text: 'This small chip is the real <b>CPU</b>, the brain of the computer. It does all the thinking, super fast!', like: 'It is like your brain. Small, but very clever.' },
+  ram:   { name: 'RAM',          kind: 'store', icon: 'ram',   text: 'RAM holds what the computer is working on <b>right now</b>. It forgets everything when the power goes off.', like: 'It is like your study desk.' },
+  disk:  { name: 'Hard disk',    kind: 'store', icon: 'disk',  text: 'The hard disk <b>keeps</b> your games, photos and drawings, even when the computer is off.', like: 'It is like a cupboard that never forgets.' },
+  fan:   { name: 'Fan',          kind: 'help',  icon: 'fan',   text: 'Thinking makes the computer hot! The fan blows air to keep it <b>cool</b>.', like: 'It is like the fan in your room in summer.' },
+  psu:   { name: 'Power supply', kind: 'help',  icon: 'psu',   text: 'It takes <b>electricity</b> from the plug on the wall and shares it with every part.', like: 'It is like food. It gives the computer energy.' },
+  board: { name: 'Motherboard',  kind: 'help',  icon: 'board', text: 'This big green board <b>connects</b> all the parts. Tiny roads carry messages between them.', like: 'It is like the roads in your city.' }
+};
+const door = $('#door'), doorBtn = $('#doorBtn');
+let doorOpen = false;
+function setDoor(open) {
+  doorOpen = open; door.classList.toggle('open', open);
+  doorBtn.textContent = open ? 'Close the box' : 'Open the box';
+  door.setAttribute('aria-hidden', open ? 'true' : 'false');
+  if (open) { sfx.whirr(); say('Wow, look inside! Tap each part to meet it. Can you find the real <b>CPU</b> chip?'); }
+}
+door.addEventListener('click', () => setDoor(true));
+door.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDoor(true); } });
+doorBtn.addEventListener('click', () => setDoor(!doorOpen));
+explorer({ id: 'inside', scene: $('#insideScene'), foundEl: $('#insideFound'), infoEl: $('#insideInfo'), data: INSIDE, canPick: () => doorOpen,
+  done: 'You met every part inside the box! Remember: the tiny CPU chip is the real brain.' });
+views.inside = { enter() { say(doorOpen ? 'Tap the parts inside the box.' : 'Let’s peek inside the CPU box. Tap the box to <b>open</b> it!'); } };
+
+/* ---------- LEVEL 4: speed race ---------- */
+const GOAL = 20, PER_SEC = 3e9;
+const race = { st: 'idle', kid: 0, t0: 0, raf: 0, tok: 0 };
+const tapBtn = $('#tapBtn');
+const fmt = n => Math.floor(n).toLocaleString('en-IN');
+function setRunner(id, n) { $(id).style.setProperty('--p', Math.min(1, n / GOAL)); }
+function resetRace() {
+  race.st = 'idle'; race.kid = 0; race.tok++; cancelAnimationFrame(race.raf); $('#cdown').hidden = true;
+  setRunner('#kidRunner', 0); setRunner('#compRunner', 0);
+  $('#kidCount').textContent = '0'; $('#compCount').textContent = '0';
+  tapBtn.textContent = 'Start the race!';
+  $('#meter').hidden = true; $('#results').hidden = true;
+}
+async function startRace() {
+  race.st = 'count'; tapBtn.textContent = 'Get ready…';
+  const tok = race.tok, cd = $('#cdown'); cd.hidden = false;
+  for (const n of ['3', '2', '1', 'GO!']) { cd.innerHTML = `<span>${n}</span>`; tone(n === 'GO!' ? 880 : 520, .18, 'triangle'); await wait(700); if (tok !== race.tok) return; }
+  cd.hidden = true;
+  race.st = 'go'; race.t0 = performance.now(); tapBtn.textContent = 'TAP! +1';
+  $('#meter').hidden = false;
+  tween(260, p => { const n = Math.round(p * GOAL); $('#compCount').textContent = n; setRunner('#compRunner', n); });
+  const tickNum = () => {
+    if (race.st !== 'go') return;
+    const s = (performance.now() - race.t0) / 1000;
+    $('#bign').textContent = fmt(s * PER_SEC);
+    $('#bigwords').textContent = `That is about ${fmt(s * PER_SEC / 1e7)} crore sums!`;
+    race.raf = requestAnimationFrame(tickNum);
+  };
+  tickNum();
+  await wait(400);
+  if (race.st === 'go') say('The computer is already finished! Keep going, Ayansh, tap tap tap!');
+}
+function tapRace() {
+  if (race.st === 'idle') return startRace();
+  if (race.st === 'done') { resetRace(); return startRace(); }
+  if (race.st !== 'go') return;
+  race.kid++; $('#kidCount').textContent = race.kid; setRunner('#kidRunner', race.kid); sfx.tick();
+  if (race.kid >= GOAL) {
+    race.st = 'done'; cancelAnimationFrame(race.raf);
+    const s = (performance.now() - race.t0) / 1000;
+    $('#bign').textContent = fmt(s * PER_SEC);
+    $('#bigwords').textContent = `That is about ${fmt(s * PER_SEC / 1e7)} crore sums, in just ${s.toFixed(1)} seconds!`;
+    $('#kidTime').textContent = s.toFixed(1) + ' seconds'; $('#results').hidden = false;
+    tapBtn.textContent = 'Race again';
+    sfx.good();
+    say(`Well done! You counted to 20 in ${Math.round(s)} seconds. A computer can do about <b>300 crore sums every second</b>! But a computer has no ideas of its own. <b>You</b> have the ideas. It just does the work super fast.`);
+    award('speed');
+  }
+}
+tapBtn.addEventListener('click', tapRace);
+views.speed = {
+  enter() { resetRace(); say('The CPU brain is super fast. Let’s have a race! Who can count to <b>20</b> first, you or the computer?'); },
+  key(e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tapRace(); } }
+};
+
+/* ---------- LEVEL 5: memory ---------- */
+const STK = ['sun', 'tree', 'house', 'car', 'flower', 'fish'];
+const STEPS = ['Make a picture', 'Save it', 'Power OFF', 'Power ON', 'Open it'];
+const mem = { desk: [], saved: [], power: true, step: 0 };
+const paper = $('#paper'), memEl = $('#mem');
+paper.innerHTML = Array.from({ length: 6 }, () => '<div class="slot"></div>').join('');
+$('#palette').innerHTML = STK.map(s => `<button type="button" data-s="${s}" aria-label="${s} sticker">${icon('stk-' + s)}</button>`).join('');
+const rot = i => [-8, 6, -4, 9, -6, 4][i];
+function renderSteps() { $('#memSteps').innerHTML = STEPS.map((s, i) => `<li class="${i < mem.step ? 'done' : i === mem.step ? 'now' : ''}">${i + 1}. ${s}</li>`).join(''); }
+function renderDesk(fresh) {
+  $$('.slot', paper).forEach((sl, i) => {
+    const s = mem.desk[i];
+    sl.className = 'slot' + (fresh && s ? ' new' : '');
+    sl.style.setProperty('--r', rot(i) + 'deg');
+    sl.innerHTML = s ? icon('stk-' + s) : '';
+  });
+}
+function mini(pic) { return pic.map(s => icon('stk-' + s)).join(''); }
+function renderCupboard() {
+  $('#cupboard').innerHTML = Array.from({ length: 4 }, (_, i) => {
+    const p = mem.saved[i];
+    return `<div class="shelf">${p ? `<button class="saved" type="button" data-i="${i}" aria-label="Open saved picture ${i + 1}">${mini(p)}</button>` : 'empty shelf'}</div>`;
+  }).join('');
+}
+function fly(fromEl, toEl) {
+  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+  const c = fromEl.cloneNode(true);
+  Object.assign(c.style, { position: 'fixed', left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px', margin: 0, zIndex: 40, pointerEvents: 'none', transformOrigin: 'top left' });
+  document.body.appendChild(c);
+  const dx = b.left - a.left, dy = b.top - a.top, sx = b.width / a.width, sy = b.height / a.height;
+  const anim = c.animate([
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${dx / 2}px,${dy / 2 - 80}px) scale(${(1 + sx) / 2},${(1 + sy) / 2}) rotate(-6deg)` },
+    { transform: `translate(${dx}px,${dy}px) scale(${sx},${sy})` }
+  ], { duration: reduce ? 1 : 850, easing: 'ease-in-out' });
+  return anim.finished.then(() => c.remove(), () => c.remove());
+}
+function addSticker(s) {
+  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.'); }
+  if (mem.desk.length >= 6) { sfx.oops(); return say('The paper is full! Press <b>Save</b>, or <b>Clear</b> the desk.'); }
+  mem.desk.push(s); sfx.pop();
+  const sl = $$('.slot', paper)[mem.desk.length - 1];
+  sl.className = 'slot new'; sl.style.setProperty('--r', rot(mem.desk.length - 1) + 'deg'); sl.innerHTML = icon('stk-' + s);
+  if (mem.step === 0 && mem.desk.length >= 3) { mem.step = 1; renderSteps(); say('What a lovely picture! It is on the desk, which is the <b>RAM</b>. Now press <b>Save to cupboard</b> to keep it safe.'); }
+}
+$('#palette').addEventListener('click', e => { const b = e.target.closest('button'); if (b) addSticker(b.dataset.s); });
+$('#saveBtn').addEventListener('click', async () => {
+  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.'); }
+  if (!mem.desk.length) { sfx.oops(); return say('The desk is empty. Tap some stickers first!'); }
+  const target = $('.shelf', $('#cupboard'));
+  sfx.whirr();
+  await fly(paper, target);
+  mem.saved.unshift(mem.desk.slice()); mem.saved = mem.saved.slice(0, 4);
+  renderCupboard(); restart($('.shelf', $('#cupboard')), 'boing'); sfx.pop();
+  if (mem.step <= 1) { mem.step = 2; renderSteps(); say('Saved! A copy is now in the cupboard, the <b>hard disk</b>. Now switch the <b>power OFF</b>. What do you think will happen?'); }
+  else say('Saved in the cupboard!');
+});
+$('#clearBtn').addEventListener('click', () => { if (!mem.power) return; mem.desk = []; renderDesk(); sfx.pop(); });
+$('#powerBtn').addEventListener('click', async e => {
+  const btn = e.currentTarget;
+  if (mem.power) {
+    mem.power = false; btn.textContent = 'Power: OFF'; btn.setAttribute('aria-pressed', 'false');
+    tone(300, .3, 'sawtooth', .05); tone(150, .4, 'sawtooth', .05, .15);
+    $$('.slot', paper).forEach(sl => { if (sl.innerHTML) sl.className = 'slot leave'; });
+    memEl.classList.add('off');
+    await wait(800); mem.desk = []; renderDesk();
+    if (mem.saved.length) say('Oh no! The desk, the <b>RAM</b>, forgot everything! But look! Your picture is still safe in the cupboard, the <b>hard disk</b>. Now switch the power back ON.');
+    else say('The desk forgot everything! Next time, press <b>Save</b> before the power goes off.');
+    if (mem.step === 2) { mem.step = 3; renderSteps(); }
+  } else {
+    mem.power = true; btn.textContent = 'Power: ON'; btn.setAttribute('aria-pressed', 'true');
+    memEl.classList.remove('off'); sfx.good();
+    if (mem.step === 3) { mem.step = 4; renderSteps(); say('Power is back! The desk is empty. Tap your picture in the cupboard to <b>open</b> it.'); }
+    else say('Power is back ON!');
+  }
+});
+$('#cupboard').addEventListener('click', async e => {
+  const b = e.target.closest('.saved'); if (!b) return;
+  if (!mem.power) { sfx.oops(); return say('Switch the power ON first!'); }
+  sfx.whirr();
+  await fly(b, paper);
+  mem.desk = mem.saved[+b.dataset.i].slice(); renderDesk(true); sfx.pop();
+  if (mem.step === 4) {
+    mem.step = 5; renderSteps();
+    say('Yay! You opened your picture from the cupboard. <b>RAM</b> is the desk: it forgets when the power goes off. The <b>hard disk</b> is the cupboard: it remembers!');
+    award('memory');
+  } else say('Your picture is back on the desk.');
+});
+renderSteps(); renderDesk(); renderCupboard();
+views.memory = { enter() {
+  if (mem.step === 0) say('A computer has a <b>desk</b> and a <b>cupboard</b> for remembering things. First, make a picture on the desk: tap <b>3 stickers</b>!');
+  else say('Follow the yellow step at the top.');
+} };
+
+/* ---------- LEVEL 6: on and off ---------- */
+const BULB = `<g class="rays" stroke="#F5B300" stroke-width="3" stroke-linecap="round"><path d="M25 1 V-6 M40.6 8.4 L45.5 3.5 M9.4 8.4 L4.5 3.5 M47 24 H54 M3 24 H-4"/></g>
+  <circle class="glass" cx="25" cy="24" r="18" stroke="${INK}" stroke-width="3"/>
+  <path d="M19 31 Q25 21 31 31" fill="none" stroke="${INK}" stroke-width="2"/>
+  <rect x="17" y="41" width="16" height="6" fill="#9AA3C7" stroke="${INK}" stroke-width="2"/>
+  <rect x="18" y="47" width="14" height="6" rx="2" fill="#9AA3C7" stroke="${INK}" stroke-width="2"/>
+  <rect x="21" y="53" width="8" height="4" rx="2" fill="${INK}"/>`;
+$('#bigBulb').innerHTML = BULB;
+const bin = { flipped: false, letters: new Set() };
+$('#switch').addEventListener('click', e => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('#bigBulb').classList.toggle('on', on); $('#digit').textContent = on ? '1' : '0';
+  tone(on ? 880 : 330, .08, 'square', .06);
+  if (!bin.flipped) { bin.flipped = true; say('Click! Light ON is <b>1</b>. Light OFF is <b>0</b>. Computers have millions of tiny switches like this inside. Now tap some letters!'); checkBin(); }
+});
+$('#bits').innerHTML = Array.from({ length: 8 }, () => `<div class="bit"><svg class="bulb" viewBox="-12 -12 74 94" aria-hidden="true">${BULB}</svg><b>0</b></div>`).join('');
+const binKeys = $('#binKeys');
+binKeys.innerHTML = LETTERS.map(l => `<button class="key" type="button" data-l="${l}">${l}</button>`).join('');
+binKeys.addEventListener('click', e => { const b = e.target.closest('.key'); if (b) showLetter(b.dataset.l); });
+const code8 = l => l.charCodeAt(0).toString(2).padStart(8, '0');
+let binTok = 0;
+async function showLetter(l) {
+  const tok = ++binTok, code = code8(l), cells = $$('#bits .bit');
+  $('#bigLetter').textContent = l; restart($('#bigLetter'), 'boing');
+  $('#letterSay').innerHTML = `To a computer, the letter <b>${l}</b> is the pattern <b style="letter-spacing:.12em">${code}</b>.`;
+  cells.forEach(c => { $('svg', c).classList.remove('on'); $('b', c).textContent = ' '; });
+  for (let i = 0; i < 8; i++) {
+    await wait(110); if (tok !== binTok) return;
+    const on = code[i] === '1';
+    $('svg', cells[i]).classList.toggle('on', on); $('b', cells[i]).textContent = code[i];
+    tone(on ? 990 : 440, .05, 'square', .04);
+  }
+  const first = bin.letters.size === 0;
+  bin.letters.add(l);
+  if (first) say(`The letter <b>${l}</b> is a pattern of 8 lights: some ON, some OFF. Every letter has its own pattern!`);
+  checkBin();
+}
+function checkBin() {
+  if (bin.flipped && bin.letters.size >= 3 && !state.stars.binary) {
+    say('You can read the computer’s secret language! Everything inside a computer, letters, pictures and games, is made of <b>ON and OFF</b>.');
+    award('binary');
+  }
+}
+$('#nameTable').innerHTML = 'AYANSH'.split('').map(l => { const c = code8(l); return `<tr><th scope="row">${l}</th>${c.split('').map(b => `<td><div class="ndot${b === '1' ? ' on' : ''}"></div></td>`).join('')}<td class="code">${c}</td></tr>`; }).join('');
+views.binary = {
+  enter() { say('Here is a secret: a computer only understands lights that are <b>ON</b> or <b>OFF</b>! Flip the switch to try it.'); },
+  key(e) { const l = e.key.toUpperCase(); if (/^[A-Z]$/.test(l)) showLetter(l); }
+};
+
+/* ---------- LEVEL 7: give the orders ---------- */
+const LEVELS = [
+  { start: [0, 2], goal: [4, 2], rocks: [], tip: 'Make the robot walk to the star. Tap the arrows to add steps, then press <b>Go!</b>' },
+  { start: [0, 4], goal: [3, 1], rocks: [[1, 4], [1, 3], [2, 2], [3, 3]], tip: 'Watch out for rocks! The robot cannot walk through them.' },
+  { start: [0, 0], goal: [4, 4], rocks: [[1, 0], [1, 1], [1, 3], [1, 4], [3, 1], [3, 2], [3, 3]], tip: 'A tricky one! Find a path around all the rocks.' }
+];
+const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const MAXP = 12;
+const cg = { lvl: 0, prog: [], pos: [0, 0], running: false, run: 0, solved: new Set() };
+const boardEl = $('#board'), progEl = $('#prog');
+let robot;
+function isRock(x, y) { return LEVELS[cg.lvl].rocks.some(r => r[0] === x && r[1] === y); }
+function renderBoard() {
+  const L = LEVELS[cg.lvl];
+  let h = '';
+  for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) {
+    const goal = L.goal[0] === x && L.goal[1] === y;
+    h += `<div class="cell${goal ? ' goal' : ''}">${isRock(x, y) ? icon('rock') : goal ? icon('star') : ''}</div>`;
+  }
+  boardEl.innerHTML = h + `<div class="robot" id="robot">${icon('bot')}</div>`;
+  robot = $('#robot');
+  placeRobot(L.start, false);
+  $('#lvls').innerHTML = LEVELS.map((_, i) => `<span class="lvdot${i === cg.lvl ? ' now' : cg.solved.has(i) ? ' done' : ''}">Puzzle ${i + 1}</span>`).join('');
+}
+function placeRobot(p, anim = true) {
+  cg.pos = p.slice();
+  if (!anim) robot.style.transition = 'none';
+  robot.style.setProperty('--x', p[0]); robot.style.setProperty('--y', p[1]);
+  if (!anim) { void robot.offsetWidth; robot.style.transition = ''; }
+}
+function renderProg(active = -1, bad = -1) {
+  progEl.innerHTML = cg.prog.length ? cg.prog.map((c, i) => `<span class="pchip${i === active ? ' now' : ''}${i === bad ? ' bad' : ''}">${icon('arrow', c === 'right' ? '' : 'r-' + c)}</span>`).join('')
+    : '<span class="ph">Tap the arrows to add steps here.</span>';
+}
+function addCmd(c) {
+  if (cg.running) return;
+  if (cg.prog.length >= MAXP) { sfx.oops(); return say(`That is a lot of steps! The most is ${MAXP}.`); }
+  cg.prog.push(c); renderProg(); sfx.tick();
+}
+$$('#v-code [data-cmd]').forEach(b => b.addEventListener('click', () => addCmd(b.dataset.cmd)));
+$('#undoBtn').addEventListener('click', () => { if (cg.running) return; cg.prog.pop(); renderProg(); });
+$('#clearProg').addEventListener('click', () => { if (cg.running) return; cg.prog = []; renderProg(); placeRobot(LEVELS[cg.lvl].start, false); });
+$('#nextPuzzle').addEventListener('click', () => { cg.lvl = Math.min(cg.lvl + 1, LEVELS.length - 1); setupPuzzle(); });
+async function runProg() {
+  if (cg.running) return;
+  if (!cg.prog.length) { sfx.oops(); return say('Add some steps first! Tap the arrows.'); }
+  const L = LEVELS[cg.lvl], my = ++cg.run;
+  cg.running = true; robot.classList.remove('bump', 'win');
+  placeRobot(L.start, false); await wait(250);
+  for (let i = 0; i < cg.prog.length; i++) {
+    if (my !== cg.run) return;
+    const c = cg.prog[i], d = DIRS[c], nx = cg.pos[0] + d[0], ny = cg.pos[1] + d[1];
+    renderProg(i);
+    if (c === 'left') robot.classList.add('flip'); if (c === 'right') robot.classList.remove('flip');
+    const wall = nx < 0 || ny < 0 || nx > 4 || ny > 4;
+    if (wall || isRock(nx, ny)) {
+      renderProg(-1, i); restart(robot, 'bump'); sfx.oops();
+      say(`Oops! Step ${i + 1} bumps into ${wall ? 'the edge' : 'a rock'}. The computer did exactly what you said. Let’s fix that step!`);
+      await wait(1300); if (my !== cg.run) return;
+      placeRobot(L.start, false); robot.classList.remove('flip'); renderProg(); cg.running = false; return;
+    }
+    placeRobot([nx, ny]); sfx.tick();
+    await wait(430);
+    if (nx === L.goal[0] && ny === L.goal[1]) return win();
+  }
+  say('Not there yet! The robot did all your steps. Add more steps to reach the star.');
+  await wait(1200); if (my !== cg.run) return;
+  placeRobot(L.start, false); robot.classList.remove('flip'); renderProg(); cg.running = false;
+}
+function win() {
+  cg.running = false; cg.solved.add(cg.lvl); restart(robot, 'win'); sfx.good(); confetti(60);
+  renderProg();
+  $('#lvls').innerHTML = LEVELS.map((_, i) => `<span class="lvdot${i === cg.lvl ? ' now' : cg.solved.has(i) ? ' done' : ''}">Puzzle ${i + 1}</span>`).join('');
+  if (cg.lvl < LEVELS.length - 1) { $('#nextPuzzle').hidden = false; say(`You did it in ${cg.prog.length} steps! You just wrote a <b>program</b>. Press <b>Next puzzle</b>.`); }
+  else { say('Hooray! You solved every puzzle. You are a <b>programmer</b>! People write programs, and computers follow them, step by step.'); award('code'); }
+}
+$('#goBtn').addEventListener('click', runProg);
+function setupPuzzle() {
+  cg.run++; cg.running = false; cg.prog = [];
+  $('#nextPuzzle').hidden = true;
+  renderBoard(); renderProg(); say(LEVELS[cg.lvl].tip);
+}
+views.code = {
+  enter() { setupPuzzle(); say('A computer can’t think up ideas by itself. It follows steps, one at a time. ' + LEVELS[cg.lvl].tip); },
+  key(e) {
+    const m = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[e.key];
+    if (m) { e.preventDefault(); addCmd(m); }
+    else if (e.key === 'Enter') runProg();
+    else if (e.key === 'Backspace') { e.preventDefault(); if (!cg.running) { cg.prog.pop(); renderProg(); } }
+  }
+};
+
+/* ---------- LEVEL 8: big quiz ---------- */
+const QUIZ = [
+  { q: 'Which part do we use to <b>type</b>?', a: [['keyboard', 'Keyboard', 1], ['monitor', 'Monitor'], ['speaker', 'Speakers']] },
+  { q: 'Which part <b>shows</b> us pictures?', a: [['mouse', 'Mouse'], ['monitor', 'Monitor', 1], ['printer', 'Printer']] },
+  { q: 'Where is the computer’s <b>brain</b>?', a: [['fan', 'Fan'], ['speaker', 'Speakers'], ['chip', 'CPU chip', 1]] },
+  { q: 'What keeps your games safe when the computer is <b>off</b>?', a: [['disk', 'Hard disk', 1], ['ram', 'RAM'], ['fan', 'Fan']] },
+  { q: 'Which part puts things <b>IN</b> to the computer?', a: [['speaker', 'Speakers'], ['mouse', 'Mouse', 1], ['printer', 'Printer']] },
+  { q: 'A computer understands lights that are…', a: [['bigsmall', 'Big and small'], ['redblue', 'Red and blue'], ['bulb', 'ON and OFF', 1]] },
+  { q: 'What keeps the computer <b>cool</b>?', a: [['printer', 'Printer'], ['fan', 'Fan', 1], ['keyboard', 'Keyboard']] },
+  { q: 'A list of steps for a computer is called a…', a: [['speaker', 'Song'], ['list', 'Program', 1], ['stk-house', 'Picture']] }
+];
+const CHEERS = ['Yes!', 'Super!', 'Well done!', 'Correct!', 'Brilliant!', 'You got it!'];
+const qz = { i: 0, tried: false, marks: [] };
+const quizEl = $('#quiz');
+function renderQ() {
+  const Q = QUIZ[qz.i];
+  quizEl.innerHTML = `<div class="qdots">${QUIZ.map((_, i) => `<span class="qdot${i === qz.i ? ' cur' : ''}${qz.marks[i] === 'ok' ? ' ok' : qz.marks[i] === 'try' ? ' try' : ''}"></span>`).join('')}</div>
+    <p class="q">${Q.q}</p>
+    <div class="choices">${Q.a.map((c, j) => `<button type="button" class="choice" data-j="${j}">${icon(c[0])}${c[1]}</button>`).join('')}</div>
+    <p class="muted" style="margin:14px 0 0;font-size:17px">Question ${qz.i + 1} of ${QUIZ.length}</p>`;
+  say(Q.q);
+}
+quizEl.addEventListener('click', async e => {
+  const b = e.target.closest('.choice'); if (!b || b.disabled) return;
+  const Q = QUIZ[qz.i], c = Q.a[+b.dataset.j];
+  if (c[2]) {
+    qz.marks[qz.i] = qz.tried ? 'try' : 'ok';
+    b.classList.add('right'); $$('.choice', quizEl).forEach(x => { x.disabled = true; });
+    sfx.good(); say(CHEERS[qz.i % CHEERS.length] + ' It is the <b>' + c[1] + '</b>.');
+    await wait(1500);
+    qz.i++; qz.tried = false;
+    if (qz.i < QUIZ.length) renderQ(); else endQuiz();
+  } else {
+    qz.tried = true; restart(b, 'wrong'); b.disabled = true; sfx.oops();
+    say('Not this one. Try again!');
+  }
+});
+function endQuiz() {
+  const n = qz.marks.filter(m => m === 'ok').length;
+  quizEl.innerHTML = `<div class="qend"><h3>Quiz finished!</h3>
+    <div class="stars">${QUIZ.map((_, i) => icon('star', qz.marks[i] === 'ok' ? '' : 'dim')).join('')}</div>
+    <p style="font-size:22px;margin:0">You got <b>${n} out of ${QUIZ.length}</b> right on the first try.</p>
+    <div class="row" style="justify-content:center;margin-top:16px"><button class="btn" type="button" id="quizAgain">Play the quiz again</button><a class="btn" href="#home" style="--c:var(--store)">Back to the map</a></div></div>`;
+  $('#quizAgain').addEventListener('click', startQuiz);
+  const won = award('quiz');
+  say(n === QUIZ.length ? 'All correct! You are a computer expert!' : `Great work! You got ${n} on the first try.` + (won ? ' Here is your star!' : ''));
+  if (starCount() === CH.length) setTimeout(() => say('You have all 8 stars! Go to the map to see your <b>certificate</b>!'), 3500);
+}
+function startQuiz() { qz.i = 0; qz.tried = false; qz.marks = []; renderQ(); }
+views.quiz = { enter() { startQuiz(); } };
+
+/* ---------- start ---------- */
+updateStars();
+route();
+})();
+</script>
+</body>
+</html>
