@@ -94,6 +94,7 @@ canvas{display:block;touch-action:none}
 .facts dd{margin:2px 0 0;font-family:var(--display);font-weight:600;font-size:16px;line-height:1.2}
 .info-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
 .info-actions .btn{flex:1 1 140px}
+.info-actions #infoVisit{flex-basis:100%}
 
 /* Nova's subtitle strip */
 .caption{display:flex;align-items:center;gap:12px;padding-block:8px;padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--deep);border-top:1px solid var(--line);min-height:76px}
@@ -113,7 +114,7 @@ canvas{display:block;touch-action:none}
 .round svg{width:22px;height:22px}
 
 /* tabs */
-.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding-top:6px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px));padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-top:1px solid var(--line)}
+.tabs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding-top:6px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px));padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-top:1px solid var(--line)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:14px;padding:6px 2px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim);min-width:0}
 .tab svg{width:28px;height:28px}
 .tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -168,6 +169,22 @@ canvas{display:block;touch-action:none}
 .dest img{width:34px;height:34px}
 .dest[aria-pressed="true"]{border-color:var(--sun);color:var(--star)}
 
+/* spacecraft + visits */
+.picker{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px;max-width:100%;scrollbar-width:thin}
+.craft{flex:none;display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim);white-space:nowrap}
+.craft canvas{width:34px;height:34px;flex:none}
+.craft[aria-pressed="true"]{border-color:var(--sun);color:var(--star);background:#241C10}
+.hud{position:absolute;top:66px;left:var(--gut-l);max-width:min(380px,60%);background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 12px;pointer-events:none}
+.hud h3{font-size:20px;color:var(--sun)}
+.hud p{margin:2px 0 0;font-size:13px;color:var(--dim);line-height:1.35}
+.btn.hold{min-width:58px;font-size:20px;user-select:none;-webkit-user-select:none}
+.btn.hold.on{background:var(--cyan);color:#062A2E}
+.seg.scrolly{overflow-x:auto;max-width:100%}
+input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
+.btn.small span:empty{display:none}
+.seg.scrolly button{flex:none}
+#view-visit .over.top,#view-earth .over.top{justify-content:flex-start}
+
 /* quiz */
 .quiz{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:16px;padding-left:var(--gut-l);padding-right:var(--gut-r)}
 .quiz > *{position:relative}
@@ -209,6 +226,9 @@ canvas{display:block;touch-action:none}
   .info{top:auto;left:var(--gut-l);right:var(--gut-r);width:auto;bottom:8px;max-height:60%;padding:12px;gap:10px;animation-name:slideup}
   @keyframes slideup{from{transform:translateY(30px);opacity:0}}
   .info-head canvas{width:84px;height:84px}
+  .info-actions{order:1;margin-top:0}
+  .facts{order:2}
+  .info-actions .btn{min-height:42px;padding:6px 12px;font-size:16px}
   .info-head h2{font-size:28px}
   .facts dd{font-size:15px}
   .say{font-size:16px}
@@ -229,6 +249,11 @@ canvas{display:block;touch-action:none}
   .skywin{height:70px}
   .opts{gap:8px}
   #namesBtn{display:none}
+  .hud{top:62px;max-width:calc(100% - 32px);padding:6px 10px}
+  .hud h3{font-size:16px}
+  .hud p{font-size:12px}
+  .craft{font-size:13px}
+  .btn.hold{min-width:52px}
   .seg button{padding:6px 9px;font-size:14px}
   .tab span{white-space:normal;line-height:1.1;text-align:center}
   .readout{right:auto;max-width:56%;padding:8px 10px}
@@ -290,6 +315,7 @@ canvas{display:block;touch-action:none}
         <dl class="facts" id="infoFacts"></dl>
         <div class="info-actions">
           <button class="btn" id="infoHear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Hear again</button>
+          <button class="btn go" id="infoVisit" type="button"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg>Visit as Ayansh</button>
           <button class="btn cyan" id="infoNext" type="button">Next</button>
         </div>
       </aside>
@@ -357,7 +383,46 @@ canvas{display:block;touch-action:none}
       <div class="over bottom"><button class="btn go" id="goBtn" type="button" style="font-size:22px;padding:12px 30px"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Go!</button></div>
     </section>
 
-    <!-- 6. Quiz -->
+    <!-- 6. Spacecraft (craft.js) -->
+    <section class="view" id="view-craft" hidden aria-label="Spacecraft">
+      <canvas class="full" id="craftCv" aria-label="A spacecraft simulation. Use the buttons below it."></canvas>
+      <div class="over top"><div class="picker" id="craftPick" aria-label="Pick a spacecraft"></div></div>
+      <div class="hud" id="craftHud" aria-live="polite"><h3 id="craftName"></h3><p id="craftFacts"></p></div>
+      <div class="over bottom" id="craftCtl"></div>
+    </section>
+
+    <!-- Visit a world as Ayansh (visit.js) -->
+    <section class="view" id="view-visit" hidden aria-label="Visit a world">
+      <canvas class="full" id="visitCv" aria-label="Ayansh exploring a world. Walk with the arrow buttons, tap glowing things to learn about them."></canvas>
+      <div class="over top">
+        <button class="btn small" id="visitBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back to space</button>
+        <div class="cluster" id="visitChips"></div>
+      </div>
+      <div class="over bottom" id="visitCtl">
+        <button class="btn hold" id="vLeft" type="button" aria-label="Walk left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="btn hold" id="vRight" type="button" aria-label="Walk right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="btn go" id="vJump" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Jump!</button>
+        <span class="chip" id="visitFound">Found 0 of 3</span>
+      </div>
+    </section>
+
+    <!-- Earth explorer (visit.js) -->
+    <section class="view" id="view-earth" hidden aria-label="Explore planet Earth">
+      <canvas class="full" id="earthCv" aria-label="Planet Earth explorer"></canvas>
+      <div class="over top">
+        <button class="btn small" id="earthBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Space</button>
+        <div class="seg scrolly" role="group" aria-label="Earth activities" id="earthModes">
+          <button type="button" data-m="globe" aria-pressed="true">Globe</button>
+          <button type="button" data-m="india" aria-pressed="false">India</button>
+          <button type="button" data-m="inside" aria-pressed="false">Inside</button>
+          <button type="button" data-m="volcano" aria-pressed="false">Volcano</button>
+          <button type="button" data-m="water" aria-pressed="false">Rain</button>
+        </div>
+      </div>
+      <div class="over bottom" id="earthCtl"></div>
+    </section>
+
+    <!-- 7. Quiz -->
     <section class="view" id="view-quiz" hidden aria-label="Space quiz">
       <canvas class="full" id="quizBg" aria-hidden="true"></canvas>
       <div class="quiz" id="quiz">
@@ -401,6 +466,7 @@ canvas{display:block;touch-action:none}
     <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span>Weigh me</span></button>
     <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span>Day &amp; Night</span></button>
     <button class="tab" role="tab" data-view="trip" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/><circle cx="14" cy="10" r="1.8"/></svg><span>Space race</span></button>
+    <button class="tab" role="tab" data-view="craft" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="11" y="10" width="6" height="8" rx="1.5"/><path d="M3 9h7v10H3zM18 9h7v10h-7zM10 14h1M17 14h1M14 10V6M12 5h4"/></svg><span>Missions</span></button>
     <button class="tab" role="tab" data-view="quiz" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3l3.2 6.6 7.3.9-5.4 5 1.4 7.2L14 19.2l-6.5 3.5 1.4-7.2-5.4-5 7.3-.9z"/></svg><span>Quiz</span></button>
   </nav>
 </div>
@@ -526,15 +592,24 @@ function craterShade(cr, x, y, z) {
   return k;
 }
 let LAND = null;
-function landBit(x, y) {
-  x = ((x % 360) + 360) % 360; y = clamp(y, 0, 179);
-  const i = y * 360 + x; return (LAND[i >> 3] >> (7 - (i & 7))) & 1;
+function bitGrid(src) {
+  if (!src || !src.bits) return null;
+  const b = atob(src.bits), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i);
+  return { w: src.w, h: src.h, a };
+}
+function gridBit(g, x, y, wrap) {
+  x = wrap ? ((x % g.w) + g.w) % g.w : clamp(x, 0, g.w - 1); y = clamp(y, 0, g.h - 1);
+  const i = y * g.w + x; return (g.a[i >> 3] >> (7 - (i & 7))) & 1;
+}
+// 0 = sea, 1 = land, in between near coasts; fx, fy are grid cells
+function gridAmount(g, fx, fy, wrap) {
+  const x = Math.floor(fx), y = Math.floor(fy), u = fx - x, v = fy - y;
+  return lerp(lerp(gridBit(g, x, y, wrap), gridBit(g, x + 1, y, wrap), u), lerp(gridBit(g, x, y + 1, wrap), gridBit(g, x + 1, y + 1, wrap), u), v);
 }
 function landAmount(latD, lonD) {
-  if (!LAND) { const b = atob(window.EARTH_LAND || ''); LAND = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) LAND[i] = b.charCodeAt(i); }
-  if (!LAND.length) return 0;
-  const fx = lonD + 180 - .5, fy = 90 - latD - .5, x = Math.floor(fx), y = Math.floor(fy), u = fx - x, v = fy - y;
-  return lerp(lerp(landBit(x, y), landBit(x + 1, y), u), lerp(landBit(x, y + 1), landBit(x + 1, y + 1), u), v);
+  if (LAND === null) LAND = bitGrid(window.EARTH_LAND) || false;
+  if (!LAND) return 0;
+  return gridAmount(LAND, (lonD + 180) / 360 * LAND.w - .5, (90 - latD) / 180 * LAND.h - .5, true);
 }
 
 // colour of dry land on Earth: rainforest near the equator, deserts near 23°, ice at the poles
@@ -565,11 +640,11 @@ const TEX_JOBS = {
     const f = fbm(x * 2.5 + w * 2, y * 7, z * 2.5 + w * 2, 5);
     return mix([186, 136, 78], [245, 220, 170], clamp(f * 1.6 - .3, 0, 1));
   }),
-  earth: () => makeTex(512, 256, (la, lo, x, y, z) => {
+  earth: () => makeTex(1024, 512, (la, lo, x, y, z) => {
     const latD = la * 180 / PI, lonD = lo * 180 / PI;
     const j1 = fbm(x * 5, y * 5, z * 5, 4) - .5, j2 = fbm(x * 5 + 17, y * 5, z * 5, 4) - .5;
     const th = .5 + (fbm(x * 14, y * 14, z * 14, 3) - .5) * .5;
-    const amt = smooth(th - .12, th + .12, landAmount(latD + j1 * 1.6, lonD + j2 * 1.6 / Math.max(.25, Math.cos(la))));
+    const amt = smooth(th - .12, th + .12, landAmount(latD + j1 * .7, lonD + j2 * .7 / Math.max(.25, Math.cos(la))));
     const alat = Math.abs(latD), n = fbm(x * 6, y * 6, z * 6, 4);
     const sea = alat > 74 + n * 8 ? [228, 238, 248] : mix([10, 42, 118], [28, 92, 170], clamp(n * 1.4 - .2, 0, 1));
     if (amt <= 0) return sea;
@@ -969,7 +1044,8 @@ function show(name, quiet) {
   if (name !== current) views[current].leave?.();
   current = name;
   $$('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
-  $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === name ? 'true' : 'false'));
+  const tab = { visit: 'explore', earth: 'explore' }[name] || name;
+  $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === tab ? 'true' : 'false'));
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   views[name].enter?.(quiet);
 }
@@ -1173,6 +1249,7 @@ views.explore = (() => {
     $('#infoFacts').innerHTML = b.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
     const nextId = ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
     $('#infoNext').textContent = 'Next: ' + BODIES[nextId].name;
+    $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : 'Visit as Ayansh';
     info.hidden = false;
     $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === id ? 'true' : 'false'));
     const tb = $(`.thumb[data-id="${id}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -1245,6 +1322,7 @@ views.explore = (() => {
   $('#infoClose').addEventListener('click', () => { stopTour(); Voice.stop(); closeInfo(); Sfx.tap(); });
   $('#infoHear').addEventListener('click', () => { if (sel) { Sfx.tap(); Voice.say(sel); } });
   $('#infoNext').addEventListener('click', () => { stopTour(); select(ORDER[(ORDER.indexOf(sel) + 1) % ORDER.length]); });
+  $('#infoVisit').addEventListener('click', () => { if (!sel) return; stopTour(); Sfx.whoosh(); window.visitWorld?.(sel); });
   $('#tourBtn').addEventListener('click', () => { Sfx.tap(); if (tour) stopTour(); else startTour(); });
 
   function buildStrip() {
@@ -1258,6 +1336,38 @@ views.explore = (() => {
   };
 })();
 
+function cloud(ctx, x, y, s) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(x, y, 18 * s, 0, TAU); ctx.arc(x + 22 * s, y - 8 * s, 22 * s, 0, TAU); ctx.arc(x + 46 * s, y, 17 * s, 0, TAU); ctx.fill(); }
+/* Ayansh in his space suit. air: in the middle of a jump, strain: 0 normal, .5 heavy, 1 too heavy and hot; face: -1 left, 1 right */
+function drawAstro(ctx, x, y, s, air, strain, t, face = 1, walk = 0) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  const squash = strain ? 1 - strain * .12 : 1; ctx.scale(1 + (1 - squash) * .6, squash);
+  const hy = air ? -98 : strain ? -50 : -46 + Math.sin(t * 2) * 2;
+  ctx.lineCap = 'round';
+  // legs
+  const sw = walk ? Math.sin(walk) * 8 : 0, l1 = -12 - (air ? 4 : 0) + sw, l2 = 12 + (air ? 4 : 0) - sw;
+  ctx.strokeStyle = '#DDE2F5'; ctx.lineWidth = 13;
+  ctx.beginPath(); ctx.moveTo(-10, -30); ctx.lineTo(l1, -4); ctx.moveTo(10, -30); ctx.lineTo(l2, -4); ctx.stroke();
+  ctx.fillStyle = '#5B6491'; ctx.beginPath(); ctx.ellipse(l1 - 1, -2, 10, 6, 0, 0, TAU); ctx.ellipse(l2 + 1, -2, 10, 6, 0, 0, TAU); ctx.fill();
+  // backpack + body
+  ctx.fillStyle = '#B8C0E0'; roundRect(ctx, -26 - face * 4, -80, 52, 44, 12); ctx.fill();
+  ctx.fillStyle = '#F3F4FF'; roundRect(ctx, -21, -78, 42, 52, 16); ctx.fill();
+  ctx.fillStyle = '#FF7442'; roundRect(ctx, -12, -64, 24, 14, 4); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '700 7px Lexend, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('AYANSH', 0, -54.5);
+  // arms
+  ctx.strokeStyle = '#E6EAF8'; ctx.lineWidth = 11;
+  ctx.beginPath(); ctx.moveTo(-18, -70); ctx.lineTo(air ? -34 : -30, hy); ctx.moveTo(18, -70); ctx.lineTo(air ? 34 : 30, hy); ctx.stroke();
+  // helmet
+  ctx.fillStyle = '#F3F4FF'; ctx.beginPath(); ctx.arc(0, -98, 25, 0, TAU); ctx.fill();
+  const fx = walk ? face * 3 : 0;
+  ctx.fillStyle = '#16215A'; roundRect(ctx, -18 + fx, -110, 36, 26, 12); ctx.fill();
+  ctx.fillStyle = 'rgba(89,224,232,.55)'; ctx.beginPath(); ctx.ellipse(-8 + fx, -102, 6, 3.5, -.5, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#F3F1FF'; ctx.beginPath(); ctx.arc(-6 + fx, -96, 2.4, 0, TAU); ctx.arc(6 + fx, -96, 2.4, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.2; ctx.beginPath();
+  if (strain) { ctx.moveTo(-5 + fx, -88); ctx.lineTo(5 + fx, -88); } else ctx.arc(fx, -91, 5, .2, PI - .2);
+  ctx.stroke();
+  if (strain === 1) { ctx.fillStyle = '#7FD3FF'; ctx.beginPath(); ctx.ellipse(22, -112 + (t * 30) % 14, 3, 5, 0, 0, TAU); ctx.fill(); }
+  ctx.restore();
+}
 function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 /* ================================================================ 2. SIZES (true scale) */
@@ -1425,35 +1535,6 @@ views.weigh = (() => {
     ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(ax, ay + 18, 26 * (1 - Math.min(.6, lift / 300)), 5, 0, 0, TAU); ctx.fill();
     drawAstro(ctx, ax, ay - 2 - lift, Math.min(1.25, H / 380), air, cur === 'sun' ? 1 : w.g > 2 ? .5 : 0, t);
     if (lift > room * .9) { ctx.fillStyle = '#F3F1FF'; ctx.font = '700 22px Fredoka, sans-serif'; ctx.fillText('Wheee!', ax + 70, ay - lift + 10); }
-  }
-  function cloud(ctx, x, y, s) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(x, y, 18 * s, 0, TAU); ctx.arc(x + 22 * s, y - 8 * s, 22 * s, 0, TAU); ctx.arc(x + 46 * s, y, 17 * s, 0, TAU); ctx.fill(); }
-  function drawAstro(ctx, x, y, s, air, strain, t) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-    const squash = strain ? 1 - strain * .12 : 1; ctx.scale(1 + (1 - squash) * .6, squash);
-    const hy = air ? -98 : strain ? -50 : -46 + Math.sin(t * 2) * 2;
-    ctx.lineCap = 'round';
-    // legs
-    ctx.strokeStyle = '#DDE2F5'; ctx.lineWidth = 13;
-    ctx.beginPath(); ctx.moveTo(-10, -30); ctx.lineTo(-12 - (air ? 4 : 0), -4); ctx.moveTo(10, -30); ctx.lineTo(12 + (air ? 4 : 0), -4); ctx.stroke();
-    ctx.fillStyle = '#5B6491'; ctx.beginPath(); ctx.ellipse(-13, -2, 10, 6, 0, 0, TAU); ctx.ellipse(13, -2, 10, 6, 0, 0, TAU); ctx.fill();
-    // backpack + body
-    ctx.fillStyle = '#B8C0E0'; roundRect(ctx, -26, -80, 52, 44, 12); ctx.fill();
-    ctx.fillStyle = '#F3F4FF'; roundRect(ctx, -21, -78, 42, 52, 16); ctx.fill();
-    ctx.fillStyle = '#FF7442'; roundRect(ctx, -12, -64, 24, 14, 4); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '700 7px Lexend, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('AYANSH', 0, -54.5);
-    // arms
-    ctx.strokeStyle = '#E6EAF8'; ctx.lineWidth = 11;
-    ctx.beginPath(); ctx.moveTo(-18, -70); ctx.lineTo(air ? -34 : -30, hy); ctx.moveTo(18, -70); ctx.lineTo(air ? 34 : 30, hy); ctx.stroke();
-    // helmet
-    ctx.fillStyle = '#F3F4FF'; ctx.beginPath(); ctx.arc(0, -98, 25, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#16215A'; roundRect(ctx, -18, -110, 36, 26, 12); ctx.fill();
-    ctx.fillStyle = 'rgba(89,224,232,.55)'; ctx.beginPath(); ctx.ellipse(-8, -102, 6, 3.5, -.5, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#F3F1FF'; ctx.beginPath(); ctx.arc(-6, -96, 2.4, 0, TAU); ctx.arc(6, -96, 2.4, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.2; ctx.beginPath();
-    if (strain) { ctx.moveTo(-5, -88); ctx.lineTo(5, -88); } else ctx.arc(0, -91, 5, .2, PI - .2);
-    ctx.stroke();
-    if (strain === 1) { ctx.fillStyle = '#7FD3FF'; ctx.beginPath(); ctx.ellipse(22, -112 + (t * 30) % 14, 3, 5, 0, 0, TAU); ctx.fill(); }
-    ctx.restore();
   }
   function pick(id) { cur = id; jumpT = -1; Sfx.whoosh(); update(); Voice.say('weigh_' + id); }
   function jump() {
@@ -1814,7 +1895,9 @@ function loop(now) {
 }
 new ResizeObserver(() => views[current].layout()).observe($('#stage'));
 
+const readyHooks = [];  // other scripts add set-up steps that need the planet pictures
 (async function boot() {
+  if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
   buildSky();
   views.explore.layout();
   requestAnimationFrame(loop);
@@ -1827,6 +1910,7 @@ new ResizeObserver(() => views[current].layout()).observe($('#stage'));
   await sleep(0);
   for (const id of ORDER) THUMB[id] = renderThumb(id);
   views.explore.buildStrip(); views.weigh.build(); views.day.build(); views.trip.build();
+  readyHooks.forEach(f => { try { f(); } catch (e) { console.error(e); } });
   $('#load').textContent = 'Ready for launch!';
   const btn = $('#blast'); btn.disabled = false; btn.focus({ preventScroll: true });
   const hash = location.hash.slice(1);
@@ -1839,5 +1923,7 @@ new ResizeObserver(() => views[current].layout()).observe($('#stage'));
   }, { once: true });
 })();
 </script>
+<script src="craft.js"></script>
+<script src="visit.js"></script>
 </body>
 </html>

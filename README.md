@@ -33,18 +33,36 @@ He wins a star for each level, and gets a certificate after all 8.
 
 An animated, hands-on solar system in `solar-system/`. Nova, a friendly space guide, talks Ayansh through it in a recorded, natural-sounding voice, and every word she says is shown underneath so he can read along.
 
-**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`) and open `solar-system/index.html` in a web browser. Press **Blast off!** to start. It works offline; the internet is only needed for the nicer fonts.
+**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`) and open `solar-system/index.html` in a web browser. Press **Blast off!** to start. It works offline; the internet is only needed for the nicer fonts. Arrow keys and the space bar also work in the walking and flying activities.
 
-## The six activities
+## The activities
 
 | Tab | What Ayansh does | What he learns |
 |---|---|---|
 | Explore | Watches the planets go round the Sun, taps any of them (or the comet or asteroid belt) to fly in close, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
+| Explore → **Visit as Ayansh** | Walks and jumps around that world in his space suit and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
+| Explore → Earth → **Explore Earth** | Globe, India, Inside, Volcano and Rain | Continents and oceans (tap anywhere on the globe), nine world wonders, famous places in India (Himalayas, Ganga, Thar, Taj Mahal, Sriharikota, Western Ghats, Sundarbans, Kanyakumari), digging to the centre of the Earth, making a volcano erupt, and the water cycle and monsoon |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
+| Missions | Flies ten real spacecraft (below) | How real space missions work |
 | Quiz | Answers 10 picture questions out loud | Goes over everything, with a star for each first-try answer |
+
+### The Missions tab
+
+| Spacecraft | What Ayansh does |
+|---|---|
+| International Space Station | Counts sunrises as it circles Earth, opens a labelled close-up, floats around inside (water balls, tortillas, sleeping bag, exercise bike, Cupola window), docks a spaceship, and meets Rakesh Sharma and Shubhanshu Shukla |
+| Chandrayaan-3 | Lands Vikram softly on the flat spot near the Moon's south pole with the thrust and arrow buttons, then drives Pragyan, which prints the Ashoka emblem and ISRO logo in the dust |
+| Mangalyaan | Fires the engine at the right moment six times to stretch the orbit, then flies to Mars |
+| Voyager 1 and 2 | Drags the years from 1977 to today and watches both fly past the giant planets and out of the Sun's bubble; opens the Golden Record and the Pale Blue Dot |
+| Parker Solar Probe | Keeps the heat shield pointed at the Sun while diving past it at 690,000 km/h |
+| Juno | Waits for Juno to swoop low over Jupiter and snaps colourful cloud photos; meets the four big moons |
+| Cassini and Huygens | Drops Huygens onto Titan by parachute and runs the Grand Finale dives |
+| New Horizons | Times the photo of Pluto (too early is blurry), then flies on to the snowman-shaped Arrokoth |
+| James Webb Space Telescope | Unfolds the sunshield and the gold mirror step by step, cools it down, then looks at far-away galaxies |
+| Perseverance and Ingenuity | Drives the rover, drills rock samples and flies the helicopter |
 
 ## Things to know
 
