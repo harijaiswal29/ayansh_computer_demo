@@ -33,20 +33,22 @@ He wins a star for each level, and gets a certificate after all 8.
 
 An animated, hands-on solar system in `solar-system/`. Nova, a friendly space guide, talks Ayansh through it in a recorded, natural-sounding voice, and every word she says is shown underneath so he can read along.
 
-**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`) and open `solar-system/index.html` in a web browser. Press **Blast off!** to start. It works offline; the internet is only needed for the nicer fonts. Arrow keys and the space bar also work in the walking and flying activities.
+**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`, the planet pictures in `solar-system/tex`) and open `solar-system/index.html` in a web browser. Press **Blast off!** to start. It works offline; the internet is only needed for the nicer fonts. A computer or tablet from the last few years runs the 3D smoothly.
+
+Everything is in real 3D with real planet pictures made from NASA images: Earth has its continents, clouds, shiny oceans and city lights on the night side. In Explore and in every 3D activity you can **drag to turn**, and **pinch, scroll or use the + and − buttons to zoom**, all the way from the whole solar system down to a planet's surface.
 
 ## The activities
 
 | Tab | What Ayansh does | What he learns |
 |---|---|---|
-| Explore | Watches the planets go round the Sun, taps any of them (or the comet or asteroid belt) to fly in close, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
-| Explore → **Visit as Ayansh** | Walks and jumps around that world in his space suit and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
-| Explore → Earth → **Explore Earth** | Globe, India, Inside, Volcano and Rain | Continents and oceans (tap anywhere on the globe), nine world wonders, famous places in India (Himalayas, Ganga, Thar, Taj Mahal, Sriharikota, Western Ghats, Sundarbans, Kanyakumari), digging to the centre of the Earth, making a volcano erupt, and the water cycle and monsoon |
+| Explore | Watches the planets go round the Sun in 3D, taps any of them (or the comet or asteroid belt) to fly there, zooms right in to the surface, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
+| Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
+| Explore → Earth → **Explore Earth** | A real 3D globe, a satellite picture of India, a 3D cut-away of the Earth, an erupting 3D volcano and a 3D rain cycle | Continents and oceans (tap anywhere on the globe), nine world wonders, famous places in India (Himalayas, Ganga, Thar, Taj Mahal, Sriharikota, Western Ghats, Sundarbans, Kanyakumari), digging to the centre of the Earth, making a volcano erupt, and the water cycle and monsoon |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
-| Missions | Flies ten real spacecraft (below) | How real space missions work |
+| Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
 | Quiz | Answers 10 picture questions out loud | Goes over everything, with a star for each first-try answer |
 
 ### The Missions tab
@@ -66,7 +68,7 @@ An animated, hands-on solar system in `solar-system/`. Nova, a friendly space gu
 
 ## Things to know
 
-- Planets are painted live from their own maps, so they really turn, the side facing the Sun is lit, and Earth shows the real continents.
+- Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
 - **Voice** turns Nova on or off, **Sounds** controls the beeps. The two buttons beside her words replay or stop what she is saying.
 - If a voice file is missing, Nova falls back to the best-sounding voice the browser has.
 - Distances in the Explore view are squeezed so everything fits on one screen; **How big?** shows the true sizes.

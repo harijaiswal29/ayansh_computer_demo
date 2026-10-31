@@ -50,6 +50,8 @@ canvas{display:block;touch-action:none}
 #stage{position:relative;overflow:hidden;background:var(--void)}
 .view{position:absolute;inset:0}
 .view > canvas.full{position:absolute;inset:0;width:100%;height:100%}
+canvas.gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+canvas.over2d{background:transparent}
 
 /* chunky buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:10px 18px;min-height:46px;font-family:var(--display);font-weight:600;font-size:18px;background:var(--raised);color:var(--star);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 #070B22;transition:transform .08s}
@@ -80,7 +82,7 @@ canvas{display:block;touch-action:none}
 .thumb[aria-pressed="true"]{border-color:var(--sun);color:var(--star);background:rgba(40,33,20,.85)}
 
 /* explore info card */
-.info{position:absolute;top:10px;bottom:10px;right:var(--gut-r);width:min(370px,44%);background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:slidein .35s ease-out}
+.info{position:absolute;top:66px;bottom:10px;right:var(--gut-r);width:min(370px,44%);background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:slidein .35s ease-out}
 @keyframes slidein{from{transform:translateX(30px);opacity:0}}
 .info .x{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--deep);font-size:24px;line-height:1}
 .info-head{display:flex;align-items:center;gap:14px;padding-right:44px}
@@ -286,7 +288,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   <main id="stage">
     <!-- 1. Explore -->
     <section class="view" id="view-explore" aria-label="Explore the solar system">
-      <canvas class="full" id="exploreCv" aria-label="Animated solar system. Tap the Sun or a planet to learn about it."></canvas>
+      <canvas class="full" id="exploreCv" aria-label="Animated 3D solar system. Tap the Sun or a planet to fly to it; drag to turn, pinch or scroll to zoom."></canvas>
       <div class="over top">
         <div class="cluster">
           <button class="btn small go" id="tourBtn" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Planet tour</span></button>
@@ -393,14 +395,15 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 
     <!-- Visit a world as Ayansh (visit.js) -->
     <section class="view" id="view-visit" hidden aria-label="Visit a world">
-      <canvas class="full" id="visitCv" aria-label="Ayansh exploring a world. Walk with the arrow buttons, tap glowing things to learn about them."></canvas>
+      <canvas class="full" id="visitCv" aria-label="Ayansh exploring a world in 3D. Tap the ground to walk there, or use the buttons. Tap glowing things to learn about them."></canvas>
       <div class="over top">
         <button class="btn small" id="visitBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back to space</button>
         <div class="cluster" id="visitChips"></div>
       </div>
       <div class="over bottom" id="visitCtl">
-        <button class="btn hold" id="vLeft" type="button" aria-label="Walk left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button class="btn hold" id="vRight" type="button" aria-label="Walk right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="btn hold" id="vLeft" type="button" aria-label="Turn left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="btn hold" id="vFwd" type="button" aria-label="Walk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg><span>Walk</span></button>
+        <button class="btn hold" id="vRight" type="button" aria-label="Turn right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
         <button class="btn go" id="vJump" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Jump!</button>
         <span class="chip" id="visitFound">Found 0 of 3</span>
       </div>
@@ -483,6 +486,9 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 <canvas class="burst" id="burst" aria-hidden="true"></canvas>
 
 <script src="earth-land.js"></script>
+<script src="tex/small.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="engine3d.js"></script>
 <script src="lines.js"></script>
 <script>
 'use strict';
@@ -748,6 +754,7 @@ function paintSphere(slot, d, id, o) {
   const out = slot.img.data; out.fill(0);
   const T = tex.data, W = tex.w, H = tex.h, k = W / TAU, rot = o.rot || 0;
   const cl = id === 'earth' && TEX.clouds, CT = cl && cl.data, CW = cl && cl.w, CH = cl && cl.h, ck = cl && CW / TAU, crot = rot * 1.25 + .7;
+  const nl = id === 'earth' && TEX.earth_night, NT = nl && nl.data, NW = nl && nl.w, NH = nl && nl.h, nk = nl && NW / TAU;
   const lx = o.L[0], ly = o.L[1], lz = o.L[2], amb = o.ambient ?? .07, emis = b.emissive, soft = d > H * .9;
   const atmo = b.atmo;
   for (let i = 0; i < L.n; i++) {
@@ -771,14 +778,19 @@ function paintSphere(slot, d, id, o) {
       r += (255 - r) * a; g += (255 - g) * a; bl += (255 - bl) * a;
     }
     const nz = L.nz[i];
-    let s;
+    let s, dot = 1;
     if (emis) s = .62 + .45 * Math.sqrt(nz);
     else {
-      const dot = L.nx[i] * lx + L.ny[i] * ly + nz * lz;
+      dot = L.nx[i] * lx + L.ny[i] * ly + nz * lz;
       s = amb + (1 - amb) * smooth(-.12, .5, dot);
     }
     const j = L.idx[i] * 4;
     out[j] = r * s; out[j + 1] = g * s; out[j + 2] = bl * s;
+    if (NT && dot < .2) { // city lights glow on the night side
+      let nu = ((L.lon[i] + rot + PI) * nk) % NW; if (nu < 0) nu += NW;
+      const nt = ((Math.min(NH - 1, (L.lat[i] * NH) | 0)) * NW + (nu | 0)) * 4, k = (1 - smooth(-.25, .2, dot)) * 1.25;
+      out[j] += NT[nt] * k; out[j + 1] += NT[nt + 1] * k; out[j + 2] += NT[nt + 2] * k * .8;
+    }
     if (atmo && !emis) {
       const dot = L.nx[i] * lx + L.ny[i] * ly + nz * lz;
       const rim = Math.pow(1 - nz, 3) * smooth(-.25, .4, dot) * .85;
@@ -1056,285 +1068,7 @@ function intro(name, id, then) {
   seenIntro[name] = true; Voice.say(id, then);
 }
 
-/* ================================================================ 1. EXPLORE */
-views.explore = (() => {
-  const cv = $('#exploreCv'), info = $('#info');
-  let W = 0, H = 0, S = 1, base = 1, sinE = .45, cosE = .89;
-  const cam = { x: 0, y: 0, z: 1, tx: 0, ty: 0, tz: 1 };
-  let speed = 1, simT = 0, names = true, sel = null, follow = null, t = 0, lastYrs = -1;
-  const pos = {};
-  const slots = {}; ORDER.forEach(id => slots[id] = makeSlot());
-  const infoSlot = makeSlot();
-  const start = {}; { const r = rng(42); for (const id of ORDER) start[id] = r() * TAU; }
-  const belt = [], kuiper = [];
-  { const r = rng(8); for (let i = 0; i < 480; i++) belt.push({ r: .43 + r() * .075, a: r() * TAU, s: .6 + r() * 1.3, c: 140 + r() * 70 | 0 });
-    for (let i = 0; i < 380; i++) kuiper.push({ r: .95 + r() * .14, a: r() * TAU, s: .5 + r() * 1, c: 150 + r() * 60 | 0 }); }
-  const comet = { th: 2.4, a: .62, e: .82, w: 2.3 };
-  const sparks = [];
-  let tour = null;
-
-  function orbitSpeed(period) { return TAU / (Math.pow(period, .6) * 24); }
-  let topUI = 56, botUI = 92, boost = 1;
-  function layout() {
-    const f = fitCanvas(cv); W = f.w; H = f.h;
-    topUI = ($('#view-explore .over.top').offsetHeight || 46) + 14; botUI = ($('#stripRow').offsetHeight || 80) + 12;
-    const usable = H - topUI - botUI;
-    sinE = clamp((usable / W) * .66, .36, .8); cosE = Math.sqrt(1 - sinE * sinE);
-    base = Math.max(60, Math.min((W / 2 - 14) / 1.03, (usable / 2) / (1.03 * sinE + .05)));
-    boost = clamp(420 / base, 1, 1.9);
-  }
-  function worldPos(id) {
-    const b = BODIES[id];
-    if (id === 'sun') return [0, 0, 0];
-    if (b.parent) {
-      const p = worldPos(b.parent), a = start[id] + simT * TAU / 4;
-      return [p[0] + Math.cos(a) * b.orbit, p[1] + Math.sin(a) * b.orbit * .35, p[2] + Math.sin(a) * b.orbit];
-    }
-    const a = start[id] + simT * orbitSpeed(b.period);
-    const X = Math.cos(a) * b.orbit, Z = Math.sin(a) * b.orbit;
-    return [X, (b.incl || 0) * Math.sin(a + 1) , Z];
-  }
-  function toScreen(X, Y, Z) {
-    const sx = X, sy = Z * sinE - Y * cosE;
-    return [W / 2 + (sx - cam.x) * S, centerY() + (sy - cam.y) * S];
-  }
-  function centerY() { return topUI + (H - topUI - botUI) / 2; }
-  // how far (px) to slide the chosen planet so the info card does not cover it
-  function focusShift() {
-    if (info.hidden) return [0, 0];
-    if (W > 760) return [-(info.offsetWidth + 16) / 2, 0];
-    return [0, (topUI + H - info.offsetHeight - 8) / 2 - centerY()];
-  }
-  // direction from a planet to the Sun, turned into screen terms (x right, y down, z toward you),
-  // nudged a little toward the viewer so the night side is never pitch black
-  function lightFor(X, Z) {
-    const n = Math.hypot(X, Z) || 1, dx = -X / n, dz = -Z / n;
-    const v = [dx * .8, dz * sinE * .8, dz * cosE * .8 + .62];
-    const m = Math.hypot(...v) || 1; return [v[0] / m, v[1] / m, v[2] / m];
-  }
-  function bodyR(id) { return Math.max(id === 'moon' || id === 'pluto' ? 1.8 : 2.6, BODIES[id].size * S * (cam.z < 2 ? lerp(boost, 1, cam.z - 1) : 1)); }
-
-  function frame(dt) {
-    t += dt; simT += dt * speed;
-    const yrs = Math.floor(simT * orbitSpeed(1) / TAU);
-    if (yrs !== lastYrs) { lastYrs = yrs; $('#yearCount').textContent = yrs; }
-    if (follow) {
-      const p = worldPos(follow), [fx, fy] = focusShift();
-      cam.tx = p[0] - fx / S; cam.ty = p[2] * sinE - p[1] * cosE - fy / S;
-    }
-    const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 3.2);
-    cam.x = lerp(cam.x, cam.tx, k); cam.y = lerp(cam.y, cam.ty, k); cam.z = Math.exp(lerp(Math.log(cam.z), Math.log(cam.tz), k));
-    S = base * cam.z;
-    const ctx = cv.getContext('2d'), d = dprNow();
-    ctx.setTransform(d, 0, 0, d, 0, 0);
-    drawSky(ctx, W, H, t, cam.x, cam.y, dt);
-
-    // orbits
-    for (const id of ORDER) {
-      const b = BODIES[id]; if (!b.orbit || b.parent) continue;
-      ctx.beginPath();
-      for (let i = 0; i <= 120; i++) { const a = i / 120 * TAU, [x, y] = toScreen(Math.cos(a) * b.orbit, (b.incl || 0) * Math.sin(a + 1), Math.sin(a) * b.orbit); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-      ctx.strokeStyle = sel === id ? 'rgba(255,181,46,.75)' : id === 'pluto' ? 'rgba(140,160,255,.12)' : 'rgba(140,160,255,.22)';
-      ctx.lineWidth = sel === id ? 2 : 1; if (id === 'pluto') ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]);
-    }
-    // collect drawables with depth
-    const items = [];
-    for (const id of ORDER) {
-      if (BODIES[id].thumbOnly) continue;
-      const p = worldPos(id), [sx, sy] = toScreen(p[0], p[1], p[2]);
-      const r = id === 'sun' ? Math.max(14, BODIES.sun.size * S * (cam.z < 2 ? lerp(Math.min(boost, 1.25), 1, cam.z - 1) : 1)) : bodyR(id);
-      pos[id] = { x: sx, y: sy, r, z: p[2] };
-      items.push({ id, z: p[2] + (id === 'moon' ? 0 : 0), p });
-    }
-    const dots = (arr, front) => {
-      const sc = Math.min(2.2, Math.sqrt(cam.z));
-      for (const a of arr) {
-        const ang = a.a + simT * orbitSpeed(Math.pow(a.r / .3, 1.5)) ;
-        const Z = Math.sin(ang) * a.r; if ((Z >= 0) !== front) continue;
-        const [x, y] = toScreen(Math.cos(ang) * a.r, 0, Z);
-        if (x < -4 || y < -4 || x > W + 4 || y > H + 4) continue;
-        ctx.fillStyle = `rgb(${a.c},${a.c - 14},${a.c - 28})`; ctx.fillRect(x, y, a.s * sc, a.s * sc);
-      }
-    };
-    ctx.globalAlpha = .55; dots(kuiper, false); ctx.globalAlpha = .9; dots(belt, false); ctx.globalAlpha = 1;
-    items.sort((a, b) => a.z - b.z);
-    const sunZ = 0;
-    let sunDrawn = false;
-    const cpos = cometPos();
-    for (const it of items) {
-      if (!sunDrawn && it.z >= sunZ && it.id !== 'sun') { drawSun(ctx); sunDrawn = true; dots(belt, true); ctx.globalAlpha = .55; dots(kuiper, true); ctx.globalAlpha = 1; }
-      if (it.id === 'sun') continue;
-      const q = pos[it.id];
-      if (q.x < -q.r * 3 || q.y < -q.r * 3 || q.x > W + q.r * 3 || q.y > H + q.r * 3) continue;
-      const lp = it.id === 'moon' ? worldPos('earth') : it.p;
-      drawBody(ctx, it.id, q.x, q.y, q.r, { rot: start[it.id] - t * BODIES[it.id].spin * Math.max(speed, .15), L: lightFor(lp[0], lp[2]), pitch: Math.asin(sinE), dpr: d, slot: slots[it.id], ambient: .1 });
-    }
-    if (!sunDrawn) { drawSun(ctx); dots(belt, true); }
-    drawComet(ctx, cpos, dt);
-
-    // selection ring + names
-    if (sel && pos[sel]) {
-      const q = pos[sel], rr = q.r * (BODIES[sel].rings ? 2.4 : 1) + 8;
-      ctx.save(); ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 7]); ctx.lineDashOffset = -t * 20;
-      ctx.beginPath(); ctx.arc(q.x, q.y, rr, 0, TAU); ctx.stroke(); ctx.restore();
-    }
-    if (names) {
-      ctx.font = '600 13px Fredoka, "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      const placed = [], order = [sel, 'earth', 'sun', 'jupiter', 'saturn', 'mars', 'venus', 'mercury', 'uranus', 'neptune', 'pluto', 'moon', 'comet'];
-      for (const id of new Set(order)) {
-        if (!id || !pos[id] || (id === 'moon' && cam.z < 2.2)) continue;
-        const q = pos[id], y = q.y + q.r * (BODIES[id].rings ? (id === 'saturn' ? 1.1 : 1.9) : 1) + 6;
-        if (q.x < 0 || q.x > W || y > H) continue;
-        const tw = ctx.measureText(BODIES[id].name).width + 10, box = [q.x - tw / 2, y - 1, tw, 17];
-        if (placed.some(b => box[0] < b[0] + b[2] && b[0] < box[0] + box[2] && box[1] < b[1] + b[3] && b[1] < box[1] + box[3])) continue;
-        placed.push(box);
-        ctx.fillStyle = 'rgba(5,8,23,.6)'; ctx.fillRect(box[0], box[1], tw, 17);
-        ctx.fillStyle = id === sel ? '#FFB52E' : '#C9D0F2'; ctx.fillText(BODIES[id].name, q.x, y);
-      }
-      if (!sel && cam.z < 1.6 && pos.earth) {
-        const q = pos.earth, y = q.y - q.r - 30 - Math.sin(t * 3) * 3;
-        ctx.font = '700 13px Fredoka, sans-serif';
-        const label = 'You live here!', tw = ctx.measureText(label).width + 16;
-        ctx.fillStyle = '#FFB52E'; roundRect(ctx, q.x - tw / 2, y - 2, tw, 21, 10); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(q.x - 5, y + 19); ctx.lineTo(q.x + 5, y + 19); ctx.lineTo(q.x, y + 25); ctx.fill();
-        ctx.fillStyle = '#2A1600'; ctx.fillText(label, q.x, y + 2);
-      }
-    }
-    // tap sparkles
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const s = sparks[i]; s.life += dt; if (s.life > .6) { sparks.splice(i, 1); continue; }
-      ctx.strokeStyle = `rgba(89,224,232,${1 - s.life / .6})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(s.x, s.y, 6 + s.life * 50, 0, TAU); ctx.stroke();
-    }
-    if (!info.hidden && sel) drawInfoPlanet(dt);
-  }
-  function drawSun(ctx) {
-    const q = pos.sun; if (!q) return;
-    sunGlow(ctx, q.x, q.y, q.r, t);
-    drawBody(ctx, 'sun', q.x, q.y, q.r, { rot: -t * .05, L: [0, 0, 1], pitch: .2, dpr: dprNow(), slot: slots.sun, maxD: 300 });
-  }
-  function cometPos() {
-    const c = comet, r = c.a * (1 - c.e * c.e) / (1 + c.e * Math.cos(c.th));
-    return { r, X: Math.cos(c.th + c.w) * r, Z: Math.sin(c.th + c.w) * r };
-  }
-  function drawComet(ctx, p, dt) {
-    comet.th += dt * speed * .028 / (p.r * p.r); // fast near the Sun, slow far away
-    const [x, y] = toScreen(p.X, 0, p.Z), [sx, sy] = toScreen(0, 0, 0);
-    let dx = x - sx, dy = y - sy; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
-    const len = clamp(.09 / p.r, .05, .5) * S;
-    const g = ctx.createLinearGradient(x, y, x + dx * len, y + dy * len);
-    g.addColorStop(0, 'rgba(220,245,255,.85)'); g.addColorStop(1, 'rgba(120,200,255,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - dy * 3, y + dx * 3); ctx.lineTo(x + dx * len - dy * len * .14, y + dy * len + dx * len * .14); ctx.lineTo(x + dx * len + dy * len * .08, y + dy * len - dx * len * .08); ctx.lineTo(x + dy * 3, y - dx * 3); ctx.fill();
-    ctx.save(); ctx.shadowColor = '#9EE6FF'; ctx.shadowBlur = 10; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, clamp(.004 * S, 2, 7), 0, TAU); ctx.fill(); ctx.restore();
-    pos.comet = { x, y, r: 8, z: p.Z };
-  }
-  function drawInfoPlanet() {
-    const c = $('#infoCv'), d = dprNow(), size = c.clientWidth;
-    if (!size) return;
-    if (c.width !== Math.round(size * d)) { c.width = c.height = Math.round(size * d); }
-    const ctx = c.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, size, size);
-    const id = sel, b = BODIES[id], cx = size / 2;
-    if (id === 'belt') { const r2 = rng(5); for (let i = 0; i < 12; i++) rock(ctx, cx + (r2() - .5) * size * .8, cx + (r2() - .5) * size * .7 + Math.sin(t + i) * 3, 5 + r2() * 14, r2); return; }
-    if (id === 'comet') { ctx.drawImage(thumbImg('comet'), 0, 0, size, size); return; }
-    const r = size * (b.rings ? (id === 'saturn' ? .21 : .25) : id === 'sun' ? .3 : .42);
-    if (id === 'sun') sunGlow(ctx, cx, cx, r, t, .8);
-    drawBody(ctx, id, cx, cx, r, { rot: -t * (id === 'sun' ? .1 : .35) * Math.sign(b.spin || 1), L: [-.55, -.3, .78], pitch: id === 'saturn' ? .42 : .25, dpr: d, slot: infoSlot, ringFlat: .42 });
-  }
-  const thumbCache = {};
-  function thumbImg(id) { if (!thumbCache[id]) { thumbCache[id] = new Image(); thumbCache[id].src = THUMB[id]; } return thumbCache[id]; }
-
-  function select(id, opts = {}) {
-    sel = id; follow = id === 'belt' || id === 'comet' ? null : id;
-    const b = BODIES[id];
-    $('#infoKind').textContent = b.kind; $('#infoName').textContent = b.name; $('#infoNick').textContent = b.nick;
-    $('#infoFacts').innerHTML = b.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
-    const nextId = ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
-    $('#infoNext').textContent = 'Next: ' + BODIES[nextId].name;
-    $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : 'Visit as Ayansh';
-    info.hidden = false;
-    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === id ? 'true' : 'false'));
-    const tb = $(`.thumb[data-id="${id}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
-    if (id === 'belt') { cam.tx = 0; cam.ty = 0; cam.tz = 1.5; }
-    else if (id === 'comet') { const p = cometPos(); cam.tx = p.X; cam.ty = p.Z * sinE; cam.tz = 1.6; }
-    else { const want = W > 760 ? 74 : 50; cam.tz = clamp(want / (b.size * base), 1, 40); if (id === 'sun') cam.tz = clamp((W > 760 ? 110 : 70) / (b.size * base), 1, 6); }
-    Sfx.whoosh();
-    if (!opts.silent) Voice.say(id, opts.done);
-  }
-  function closeInfo() {
-    sel = null; follow = null; info.hidden = true; cam.tx = 0; cam.ty = 0; cam.tz = 1;
-    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', 'false'));
-  }
-  function stopTour() {
-    if (!tour) return; clearTimeout(tour.timer); tour = null; Voice.stop();
-    $('#tourBtn span').textContent = 'Planet tour';
-  }
-  function startTour() {
-    tour = { i: -1 }; $('#tourBtn span').textContent = 'Stop tour';
-    closeInfo();
-    const step = () => {
-      if (!tour) return;
-      tour.i++;
-      if (tour.i >= TOUR.length) { closeInfo(); const tt = tour; Voice.say('tour_end', () => { if (tour === tt) stopTour(); }); return; }
-      select(TOUR[tour.i], { done: () => { if (tour) tour.timer = setTimeout(step, 1100); } });
-    };
-    Voice.say('tour_start', () => { if (tour) tour.timer = setTimeout(step, 400); });
-  }
-
-  // input
-  const pts = new Map(); let downAt = null, moved = false, pinch0 = 0, z0 = 1;
-  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.offsetX, e.offsetY]); downAt = [e.offsetX, e.offsetY]; moved = false; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); z0 = cam.tz; } });
-  cv.addEventListener('pointermove', e => {
-    if (!pts.has(e.pointerId)) return;
-    const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.offsetX, e.offsetY]);
-    if (pts.size === 2) { const [a, b] = [...pts.values()]; const dd = Math.hypot(a[0] - b[0], a[1] - b[1]); cam.tz = clamp(z0 * dd / (pinch0 || 1), .6, 40); moved = true; return; }
-    if (downAt && Math.hypot(e.offsetX - downAt[0], e.offsetY - downAt[1]) > 7) moved = true;
-    if (moved) { follow = null; cam.tx -= (e.offsetX - prev[0]) / S; cam.ty -= (e.offsetY - prev[1]) / S; cam.x = cam.tx; cam.y = cam.ty; }
-  });
-  const up = e => {
-    pts.delete(e.pointerId);
-    if (!moved && downAt && pts.size === 0) tapAt(e.offsetX, e.offsetY);
-    if (pts.size === 0) downAt = null;
-  };
-  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); downAt = null; });
-  cv.addEventListener('wheel', e => { e.preventDefault(); cam.tz = clamp(cam.tz * Math.exp(-e.deltaY * .0015), .6, 40); }, { passive: false });
-  function tapAt(x, y) {
-    let best = null, bd = 1e9;
-    for (const id in pos) {
-      const q = pos[id], hit = Math.max(q.r * (BODIES[id].rings ? 1.8 : 1) + 8, 22), dd = Math.hypot(x - q.x, y - q.y);
-      if (dd < hit && dd - (q.z || 0) * 4 < bd) { best = id; bd = dd - (q.z || 0) * 4; }
-    }
-    if (!best) {
-      const X = (x - W / 2) / S + cam.x, Z = ((y - centerY()) / S + cam.y) / sinE, rr = Math.hypot(X, Z);
-      if (rr > .43 && rr < .505) best = 'belt';
-    }
-    sparks.push({ x, y, life: 0 });
-    stopTour();
-    if (best) select(best); else Sfx.twinkle();
-  }
-
-  // controls
-  $$('#view-explore .seg button').forEach(bt => bt.addEventListener('click', () => {
-    speed = +bt.dataset.speed; Sfx.tap();
-    $$('#view-explore .seg button').forEach(x => x.setAttribute('aria-pressed', x === bt ? 'true' : 'false'));
-  }));
-  $('#namesBtn').addEventListener('click', e => { names = !names; e.currentTarget.setAttribute('aria-pressed', names); Sfx.tap(); });
-  $('#zoomIn').addEventListener('click', () => { cam.tz = clamp(cam.tz * 1.5, .6, 40); Sfx.tap(); });
-  $('#zoomOut').addEventListener('click', () => { if (cam.tz <= 1.05 && !sel) { cam.tx = cam.ty = 0; } cam.tz = clamp(cam.tz / 1.5, .6, 40); if (cam.tz < 1.3 && sel) closeInfo(); Sfx.tap(); });
-  $('#infoClose').addEventListener('click', () => { stopTour(); Voice.stop(); closeInfo(); Sfx.tap(); });
-  $('#infoHear').addEventListener('click', () => { if (sel) { Sfx.tap(); Voice.say(sel); } });
-  $('#infoNext').addEventListener('click', () => { stopTour(); select(ORDER[(ORDER.indexOf(sel) + 1) % ORDER.length]); });
-  $('#infoVisit').addEventListener('click', () => { if (!sel) return; stopTour(); Sfx.whoosh(); window.visitWorld?.(sel); });
-  $('#tourBtn').addEventListener('click', () => { Sfx.tap(); if (tour) stopTour(); else startTour(); });
-
-  function buildStrip() {
-    $('#strip').innerHTML = ORDER.map(id => `<button class="thumb" type="button" data-id="${id}" aria-pressed="false"><img src="${THUMB[id]}" alt="">${BODIES[id].name.replace('Asteroid belt', 'Asteroids')}</button>`).join('');
-    $$('.thumb').forEach(b => b.addEventListener('click', () => { stopTour(); select(b.dataset.id); }));
-  }
-  return {
-    frame, layout, buildStrip, select, stopTour,
-    enter(quiet) { layout(); if (!quiet) intro('explore', 'explore_intro'); },
-    leave() { stopTour(); }
-  };
-})();
+/* 1. EXPLORE lives in explore3d.js */
 
 function cloud(ctx, x, y, s) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(x, y, 18 * s, 0, TAU); ctx.arc(x + 22 * s, y - 8 * s, 22 * s, 0, TAU); ctx.arc(x + 46 * s, y, 17 * s, 0, TAU); ctx.fill(); }
 /* Ayansh in his space suit. air: in the middle of a jump, strain: 0 normal, .5 heavy, 1 too heavy and hot; face: -1 left, 1 right */
@@ -1368,6 +1102,7 @@ function drawAstro(ctx, x, y, s, air, strain, t, face = 1, walk = 0) {
   if (strain === 1) { ctx.fillStyle = '#7FD3FF'; ctx.beginPath(); ctx.ellipse(22, -112 + (t * 30) % 14, 3, 5, 0, 0, TAU); ctx.fill(); }
   ctx.restore();
 }
+
 function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 /* ================================================================ 2. SIZES (true scale) */
@@ -1893,20 +1628,33 @@ function loop(now) {
   try { views[current].frame(dt); } catch (e) { console.error(e); }
   requestAnimationFrame(loop);
 }
-new ResizeObserver(() => views[current].layout()).observe($('#stage'));
+new ResizeObserver(() => views[current]?.layout?.()).observe($('#stage'));
 
 const readyHooks = [];  // other scripts add set-up steps that need the planet pictures
+// turn a real planet map (a data: URL) into pixels the sphere painter can sample
+function decodeTex(uri, alphaFromGrey) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      if (alphaFromGrey) for (let i = 0; i < d.length; i += 4) { d[i + 3] = d[i]; d[i] = d[i + 1] = d[i + 2] = 255; }
+      res({ w: c.width, h: c.height, data: d });
+    };
+    img.onerror = () => res(null);
+    img.src = uri;
+  });
+}
 (async function boot() {
   if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r));
   buildSky();
   views.explore.layout();
   requestAnimationFrame(loop);
-  const jobs = Object.keys(TEX_JOBS);
-  for (let i = 0; i < jobs.length; i++) {
-    await sleep(0);
-    TEX[jobs[i]] = TEX_JOBS[jobs[i]]();
-    $('#load').textContent = `Painting the planets… ${Math.round((i + 1) / jobs.length * 100)}%`;
-  }
+  // real planet maps, all decoded together; home-made maps only for anything missing
+  const real = window.TEXSMALL || {}, ids = Object.keys(real); let done = 0;
+  await Promise.all(ids.map(id => decodeTex(real[id], id === 'clouds').then(tx => { TEX[id] = tx; $('#load').textContent = `Loading the planets… ${Math.round(++done / ids.length * 100)}%`; })));
+  for (const id of Object.keys(TEX_JOBS)) if (!TEX[id]) { await sleep(0); TEX[id] = TEX_JOBS[id](); }
   await sleep(0);
   for (const id of ORDER) THUMB[id] = renderThumb(id);
   views.explore.buildStrip(); views.weigh.build(); views.day.build(); views.trip.build();
@@ -1923,6 +1671,7 @@ const readyHooks = [];  // other scripts add set-up steps that need the planet p
   }, { once: true });
 })();
 </script>
+<script src="explore3d.js"></script>
 <script src="craft.js"></script>
 <script src="visit.js"></script>
 </body>
