@@ -1,0 +1,1843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ayansh's Space Adventure</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: one full-screen mission console. A slim header, a big live space stage, Nova's subtitle strip, then six chunky toy tabs.
+   Single deliberate night-sky look: deep navy space, sun-gold for "you are here / chosen", cyan for things you can press. */
+:root{
+  --void:#050817; --deep:#0C1331; --panel:rgba(13,20,52,.9); --raised:#16215A; --line:#2B3A7A;
+  --star:#F3F1FF; --dim:#A8B2DE; --faint:#6E79AE;
+  --sun:#FFB52E; --flare:#FF7442; --cyan:#59E0E8; --mint:#6FEA95; --rose:#FF6D8A;
+  --display:"Fredoka","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --body:"Lexend","Segoe UI",system-ui,sans-serif;
+  --gut-l:max(16px,env(safe-area-inset-left,0px)); --gut-r:max(16px,env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--void);color:var(--star);font-family:var(--body);font-size:17px;line-height:1.45;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+canvas{display:block;touch-action:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+#app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto}
+
+/* header */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.2px;min-width:0}
+.brand svg{width:38px;height:38px;flex:none}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim);letter-spacing:.6px;text-transform:uppercase}
+.toggles{display:flex;gap:8px;flex:none}
+.tog{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--deep);border-radius:999px;padding:5px 12px 5px 8px;font-family:var(--display);font-weight:600;font-size:15px}
+.tog svg{width:22px;height:22px}
+.tog[aria-pressed="true"]{border-color:var(--cyan);color:var(--star)}
+.tog[aria-pressed="false"]{color:var(--faint)}
+.tog[aria-pressed="false"] .on{display:none}
+.tog[aria-pressed="true"] .off{display:none}
+
+/* stage */
+#stage{position:relative;overflow:hidden;background:var(--void)}
+.view{position:absolute;inset:0}
+.view > canvas.full{position:absolute;inset:0;width:100%;height:100%}
+
+/* chunky buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:10px 18px;min-height:46px;font-family:var(--display);font-weight:600;font-size:18px;background:var(--raised);color:var(--star);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 #070B22;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px var(--line),0 1px 0 #070B22}
+.btn svg{width:22px;height:22px;flex:none}
+.btn.go{background:var(--sun);color:#2A1600;box-shadow:0 4px 0 #A8650A}
+.btn.go:active{box-shadow:0 1px 0 #A8650A}
+.btn.cyan{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
+.btn.small{min-height:40px;padding:6px 12px;font-size:15px;border-radius:12px}
+.btn[aria-pressed="true"]{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
+.seg{display:inline-flex;background:var(--deep);border-radius:14px;padding:3px;box-shadow:inset 0 0 0 2px var(--line)}
+.seg button{border:0;background:none;border-radius:11px;padding:6px 12px;min-height:38px;font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim)}
+.seg button[aria-pressed="true"]{background:var(--cyan);color:#062A2E}
+
+/* overlay rows inside views */
+.over{position:absolute;left:0;right:0;padding-left:var(--gut-l);padding-right:var(--gut-r);display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
+.over > *{pointer-events:auto}
+.over.top{top:10px;justify-content:space-between}
+.over.bottom{bottom:10px}
+.cluster{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--dim)}
+.chip b{font-family:var(--display);font-size:17px;color:var(--star);font-variant-numeric:tabular-nums}
+
+/* planet strip */
+.strip{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin;scroll-snap-type:x proximity;max-width:100%}
+.thumb{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;width:68px;padding:6px 2px 4px;border:2px solid transparent;border-radius:14px;background:rgba(12,19,49,.72);font-family:var(--display);font-weight:600;font-size:13px;color:var(--dim);scroll-snap-align:start}
+.thumb img{width:42px;height:42px;object-fit:contain}
+.thumb[aria-pressed="true"]{border-color:var(--sun);color:var(--star);background:rgba(40,33,20,.85)}
+
+/* explore info card */
+.info{position:absolute;top:10px;bottom:10px;right:var(--gut-r);width:min(370px,44%);background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:slidein .35s ease-out}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}}
+.info .x{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--deep);font-size:24px;line-height:1}
+.info-head{display:flex;align-items:center;gap:14px;padding-right:44px}
+.info-head canvas{width:120px;height:120px;flex:none}
+.info-head .kind{margin:0;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);font-weight:600}
+.info-head h2{font-size:36px;font-weight:700}
+.info-head .nick{margin:2px 0 0;color:var(--sun);font-family:var(--display);font-weight:600;font-size:17px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+.facts div{background:var(--deep);border-radius:14px;padding:8px 10px;min-width:0}
+.facts dt{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:600}
+.facts dd{margin:2px 0 0;font-family:var(--display);font-weight:600;font-size:16px;line-height:1.2}
+.info-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.info-actions .btn{flex:1 1 140px}
+
+/* Nova's subtitle strip */
+.caption{display:flex;align-items:center;gap:12px;padding-block:8px;padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--deep);border-top:1px solid var(--line);min-height:76px}
+.nova{width:54px;height:54px;flex:none}
+.nova .mouth{transform-origin:32px 43px;transition:transform .1s}
+.caption.talking .nova .mouth{animation:talk .28s infinite alternate}
+.caption.talking .nova{animation:bob 1.2s ease-in-out infinite}
+@keyframes talk{to{transform:scaleY(.25)}}
+@keyframes bob{50%{transform:translateY(-2px)}}
+.say{flex:1;min-width:0;margin:0;font-size:18px;line-height:1.4;max-height:4.3em;overflow-y:auto;color:var(--star)}
+.say .w{transition:color .15s}
+.caption.talking .say .w{color:var(--faint)}
+.caption.talking .say .w.done{color:var(--star)}
+.caption.talking .say .w.now{color:var(--sun)}
+.say .who{font-family:var(--display);font-weight:700;color:var(--cyan);margin-right:6px}
+.round{width:46px;height:46px;flex:none;border-radius:50%;border:2px solid var(--line);background:var(--raised);display:grid;place-items:center}
+.round svg{width:22px;height:22px}
+
+/* tabs */
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding-top:6px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px));padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:14px;padding:6px 2px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim);min-width:0}
+.tab svg{width:28px;height:28px}
+.tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tab[aria-selected="true"]{background:var(--sun);color:#2A1600}
+
+/* sizes */
+.scroller{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden}
+.scroller .track{height:100%;display:flex}
+.scroller canvas{position:sticky;left:0;flex:none;height:100%}
+.compare{position:absolute;top:10px;left:var(--gut-l);right:var(--gut-r);max-width:560px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:10px 14px;pointer-events:none}
+.compare h3{font-size:22px;color:var(--sun)}
+.compare p{margin:2px 0 0;font-size:16px;color:var(--dim)}
+.compare p b{color:var(--star);font-weight:600}
+.hint{font-size:13px;color:var(--faint)}
+
+/* weigh */
+.weigh{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.weigh-stage{position:relative;min-height:0}
+.weigh-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.readout{position:absolute;top:10px;left:var(--gut-l);right:12px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:10px 14px;max-width:420px}
+.readout h3{font-size:24px}
+.readout p{margin:2px 0 0;color:var(--dim);font-size:15px}
+.readout .big{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;color:var(--sun);font-variant-numeric:tabular-nums}
+.readout .big small{font-size:20px;color:var(--star)}
+.jump{position:absolute;bottom:14px;right:14px}
+.weigh-side{overflow-y:auto;padding:12px var(--gut-r) 14px 14px;display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line);background:var(--deep)}
+.me{display:flex;gap:10px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:6px;background:var(--void);border:2px solid var(--line);border-radius:16px;padding:6px 8px}
+.stepper label{font-size:13px;color:var(--dim);margin-right:4px}
+.stepper output{font-family:var(--display);font-weight:700;font-size:22px;min-width:3.4ch;text-align:center;font-variant-numeric:tabular-nums}
+.stepper button{width:38px;height:38px;border-radius:50%;border:0;background:var(--raised);font-size:22px;font-weight:700;line-height:1}
+.worlds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.world{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:16px;border:2px solid var(--line);background:var(--void);font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim)}
+.world img{width:46px;height:46px;object-fit:contain}
+.world b{font-size:19px;color:var(--star);font-variant-numeric:tabular-nums}
+.world[aria-pressed="true"]{border-color:var(--sun);background:#241C10}
+
+/* day & night */
+.skycard{position:absolute;top:62px;right:var(--gut-r);width:190px;border-radius:18px;overflow:hidden;border:2px solid var(--line);background:var(--panel)}
+.skywin{height:92px;position:relative;transition:background .6s}
+.skywin svg{position:absolute;inset:0;width:100%;height:100%}
+.skycard p{margin:0;padding:8px 12px;font-size:14px;color:var(--dim)}
+.skycard p b{display:block;font-family:var(--display);font-size:20px;color:var(--star)}
+.phases{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;max-width:100%}
+.phase{flex:none;width:70px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:14px;border:2px solid transparent;background:rgba(12,19,49,.8);font-family:var(--display);font-weight:600;font-size:12px;color:var(--dim)}
+.phase img{width:36px;height:36px}
+.phase[aria-pressed="true"]{border-color:var(--sun);color:var(--star)}
+
+/* trip */
+.dests{display:flex;gap:6px;flex-wrap:wrap}
+.dest{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:16px;color:var(--dim)}
+.dest img{width:34px;height:34px}
+.dest[aria-pressed="true"]{border-color:var(--sun);color:var(--star)}
+
+/* quiz */
+.quiz{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:16px;padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.quiz > *{position:relative}
+.qstars{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.qstars svg{width:26px;height:26px}
+.qcard{width:100%;max-width:720px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.qcard .num{font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);font-weight:600;margin:0}
+.qcard h2{font-size:clamp(26px,5vw,40px);font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%}
+.opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px;border-radius:22px;border:3px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:20px}
+.opt img{width:min(120px,24vw);height:min(120px,24vw);object-fit:contain}
+.opt.right{border-color:var(--mint);background:#0F3324;animation:pop .4s}
+.opt.wrong{border-color:var(--rose);opacity:.55;animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.07)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.badge{width:100%;max-width:520px;text-align:center;background:var(--panel);border:3px solid var(--sun);border-radius:28px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.badge h2{font-size:34px;color:var(--sun)}
+.badge p{margin:0;color:var(--dim)}
+.burst{position:fixed;pointer-events:none;inset:0;width:100%;height:100%;z-index:30}
+
+/* start screen */
+.start{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding-left:var(--gut-l);padding-right:var(--gut-r);background:radial-gradient(ellipse at 50% 120%,rgba(255,140,40,.28),transparent 60%),rgba(5,8,23,.55);transition:opacity .6s}
+.start.gone{opacity:0;pointer-events:none}
+.start-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:560px}
+.start-box .eyebrow{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin:0}
+.start-box h1{font-size:clamp(40px,9vw,72px);font-weight:700;line-height:.95}
+.start-box h1 em{font-style:normal;color:var(--sun)}
+.start-box p{margin:0;color:var(--dim);max-width:44ch}
+.start-box .btn{font-size:24px;padding:14px 30px;min-height:62px}
+.load{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+@media (max-width:760px){
+  body{font-size:16px}
+  .brand{font-size:18px}
+  .brand small{display:none}
+  .brand svg{width:30px;height:30px}
+  .tog span{display:none}
+  .tog{padding:6px}
+  .info{top:auto;left:var(--gut-l);right:var(--gut-r);width:auto;bottom:8px;max-height:60%;padding:12px;gap:10px;animation-name:slideup}
+  @keyframes slideup{from{transform:translateY(30px);opacity:0}}
+  .info-head canvas{width:84px;height:84px}
+  .info-head h2{font-size:28px}
+  .facts dd{font-size:15px}
+  .say{font-size:16px}
+  .nova{width:44px;height:44px}
+  .caption{min-height:66px;gap:8px}
+  .round{width:42px;height:42px}
+  .tab{font-size:11px}
+  .tab svg{width:24px;height:24px}
+  .weigh{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+  .weigh-side{border-left:0;border-top:1px solid var(--line);padding-left:var(--gut-l)}
+  .readout .big{font-size:32px}
+  .readout h3{font-size:19px}
+  .worlds{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .world{font-size:11px;padding:6px 2px}
+  .world img{width:34px;height:34px}
+  .world b{font-size:14px}
+  .skycard{width:150px;top:58px}
+  .skywin{height:70px}
+  .opts{gap:8px}
+  #namesBtn{display:none}
+  .seg button{padding:6px 9px;font-size:14px}
+  .tab span{white-space:normal;line-height:1.1;text-align:center}
+  .readout{right:auto;max-width:56%;padding:8px 10px}
+  .readout p{font-size:12px;line-height:1.3}
+  .jump{right:auto;left:var(--gut-l)}
+  .opt{font-size:16px;padding:10px 4px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="12" fill="#FFB52E"/><path d="M14 20a12 12 0 0 1 20-4" stroke="#FFE3A0" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="24" cy="25" rx="22" ry="7" fill="none" stroke="#59E0E8" stroke-width="3" transform="rotate(-18 24 25)"/></svg>
+      <div style="min-width:0"><span>Ayansh's Space Adventure</span><small>Explore our solar system with Nova</small></div>
+    </div>
+    <div class="toggles">
+      <button class="tog" id="voiceTog" type="button" aria-pressed="true" title="Nova talks out loud">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg><span>Voice</span>
+      </button>
+      <button class="tog" id="soundTog" type="button" aria-pressed="true" title="Beeps and whooshes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path class="off" d="M3 3l18 18"/></svg><span>Sounds</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="stage">
+    <!-- 1. Explore -->
+    <section class="view" id="view-explore" aria-label="Explore the solar system">
+      <canvas class="full" id="exploreCv" aria-label="Animated solar system. Tap the Sun or a planet to learn about it."></canvas>
+      <div class="over top">
+        <div class="cluster">
+          <button class="btn small go" id="tourBtn" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Planet tour</span></button>
+          <span class="chip">Earth years <b id="yearCount">0</b></span>
+        </div>
+        <div class="cluster">
+          <div class="seg" role="group" aria-label="Speed">
+            <button type="button" data-speed="0" aria-pressed="false" title="Pause">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span class="sr">Pause</span></button>
+            <button type="button" data-speed="0.35" aria-pressed="false">Slow</button>
+            <button type="button" data-speed="1" aria-pressed="true">Normal</button>
+            <button type="button" data-speed="4" aria-pressed="false">Fast</button>
+          </div>
+          <button class="btn small" id="namesBtn" type="button" aria-pressed="true">Names</button>
+          <button class="btn small" id="zoomOut" type="button" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+          <button class="btn small" id="zoomIn" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></button>
+        </div>
+      </div>
+      <div class="over bottom" id="stripRow"><div class="strip" id="strip" aria-label="Jump to a planet"></div></div>
+      <aside class="info" id="info" hidden aria-live="polite">
+        <button class="x" id="infoClose" type="button" aria-label="Close and zoom out">&times;</button>
+        <div class="info-head">
+          <canvas id="infoCv" width="240" height="240" aria-hidden="true"></canvas>
+          <div style="min-width:0"><p class="kind" id="infoKind"></p><h2 id="infoName"></h2><p class="nick" id="infoNick"></p></div>
+        </div>
+        <dl class="facts" id="infoFacts"></dl>
+        <div class="info-actions">
+          <button class="btn" id="infoHear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Hear again</button>
+          <button class="btn cyan" id="infoNext" type="button">Next</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 2. Sizes -->
+    <section class="view" id="view-sizes" hidden aria-label="How big are the planets">
+      <div class="scroller" id="sizesScroll"><div class="track" id="sizesTrack"><canvas id="sizesCv" aria-label="The planets side by side at their real sizes. Tap one to compare it with Earth."></canvas></div></div>
+      <div class="compare" id="compare">
+        <h3 id="cmpTitle">Real sizes, side by side</h3>
+        <p id="cmpText">Tap a planet to compare it with Earth. <span class="hint">Slide sideways to see them all.</span></p>
+      </div>
+    </section>
+
+    <!-- 3. Weigh me -->
+    <section class="view" id="view-weigh" hidden aria-label="How heavy would I be">
+      <div class="weigh">
+        <div class="weigh-stage">
+          <canvas id="weighCv" aria-label="Ayansh the astronaut standing on the chosen world. Press Jump to jump."></canvas>
+          <div class="readout" aria-live="polite">
+            <h3 id="wTitle">On Earth</h3>
+            <div class="big" id="wKg">22 <small>kg</small></div>
+            <p id="wMore"></p>
+          </div>
+          <button class="btn go jump" id="jumpBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Jump!</button>
+        </div>
+        <div class="weigh-side">
+          <div class="me">
+            <div class="stepper"><label for="kgOut">Ayansh weighs</label><button type="button" id="kgMinus" aria-label="Less">&minus;</button><output id="kgOut">22</output><button type="button" id="kgPlus" aria-label="More">+</button><span class="hint">kg</span></div>
+            <div class="stepper"><label for="ageOut">Age</label><button type="button" id="ageMinus" aria-label="Younger">&minus;</button><output id="ageOut">7</output><button type="button" id="agePlus" aria-label="Older">+</button><span class="hint">years</span></div>
+          </div>
+          <div class="worlds" id="worlds" aria-label="Pick a world"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Day & night / Moon shapes -->
+    <section class="view" id="view-day" hidden aria-label="Day and night, and Moon shapes">
+      <canvas class="full" id="dayCv" aria-label="Earth spinning in sunlight. Drag to spin it."></canvas>
+      <div class="over top">
+        <div class="seg" role="group" aria-label="Choose">
+          <button type="button" id="modeDay" aria-pressed="true">Day &amp; Night</button>
+          <button type="button" id="modeMoon" aria-pressed="false">Moon shapes</button>
+        </div>
+      </div>
+      <div class="skycard" id="skycard" aria-live="polite">
+        <div class="skywin" id="skywin"></div>
+        <p>In India now<b id="skyWord">Day</b><span id="skyTime">1:00 PM</span></p>
+      </div>
+      <div class="over bottom" id="dayBtns">
+        <button class="btn go" id="makeDay" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>Make it day</button>
+        <button class="btn" id="spinBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v4h-4"/></svg>Spin</button>
+        <button class="btn" id="makeNight" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5z"/></svg>Make it night</button>
+      </div>
+      <div class="over bottom" id="moonBtns" hidden>
+        <button class="btn small" id="moonPlay" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Play</button>
+        <div class="phases" id="phases" aria-label="Moon shapes"></div>
+      </div>
+    </section>
+
+    <!-- 5. Space race -->
+    <section class="view" id="view-trip" hidden aria-label="Space race">
+      <canvas class="full" id="tripCv" aria-label="A car, a rocket and a beam of light racing from Earth."></canvas>
+      <div class="over top"><div class="dests" id="dests" aria-label="Where to"></div></div>
+      <div class="over bottom"><button class="btn go" id="goBtn" type="button" style="font-size:22px;padding:12px 30px"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Go!</button></div>
+    </section>
+
+    <!-- 6. Quiz -->
+    <section class="view" id="view-quiz" hidden aria-label="Space quiz">
+      <canvas class="full" id="quizBg" aria-hidden="true"></canvas>
+      <div class="quiz" id="quiz">
+        <div class="qstars" id="qstars" aria-label="Stars won"></div>
+        <div class="qcard" id="qcard">
+          <p class="num" id="qnum"></p>
+          <h2 id="qtext"></h2>
+          <button class="btn small" id="qhear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Hear it</button>
+          <div class="opts" id="opts"></div>
+        </div>
+        <div class="badge" id="badge" hidden>
+          <svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="#FFB52E" stroke="#FFE3A0" stroke-width="1"/></svg>
+          <h2>Space Expert Ayansh!</h2>
+          <p id="badgeText"></p>
+          <button class="btn go" id="again" type="button">Play again</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="caption" id="caption">
+    <svg class="nova" viewBox="0 0 64 64" aria-hidden="true">
+      <line x1="32" y1="9" x2="32" y2="2" stroke="#A8B2DE" stroke-width="2.5"/>
+      <path d="M32-3l1.6 3.4 3.7.4-2.8 2.5.8 3.7L32 5.2 28.7 7l.8-3.7-2.8-2.5 3.7-.4z" fill="#FFB52E" transform="translate(0 1)"/>
+      <circle cx="32" cy="35" r="25" fill="#EEF0FF" stroke="#2B3A7A" stroke-width="3"/>
+      <rect x="13" y="22" width="38" height="28" rx="14" fill="#16215A"/>
+      <path d="M18 29a12 9 0 0 1 9-5" stroke="#59E0E8" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
+      <ellipse cx="25" cy="34" rx="3.2" ry="4" fill="#F3F1FF"/><ellipse cx="39" cy="34" rx="3.2" ry="4" fill="#F3F1FF"/>
+      <circle cx="25.6" cy="35" r="1.6" fill="#16215A"/><circle cx="39.6" cy="35" r="1.6" fill="#16215A"/>
+      <path class="mouth" d="M26 42q6 5 12 0" stroke="#FFB52E" stroke-width="3" fill="#FFB52E" stroke-linejoin="round"/>
+      <circle cx="19" cy="41" r="2.4" fill="#FF6D8A" opacity=".55"/><circle cx="45" cy="41" r="2.4" fill="#FF6D8A" opacity=".55"/>
+    </svg>
+    <p class="say" id="say" aria-live="polite"><span class="who">Nova</span>Hi! Press Blast off to begin.</p>
+    <button class="round" id="replay" type="button" aria-label="Say it again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg></button>
+    <button class="round" id="hush" type="button" aria-label="Stop talking"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Activities">
+    <button class="tab" role="tab" data-view="explore" aria-selected="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="4" fill="currentColor"/><ellipse cx="14" cy="14" rx="12" ry="6"/><circle cx="24.5" cy="11" r="2.4" fill="currentColor" stroke="none"/></svg><span>Explore</span></button>
+    <button class="tab" role="tab" data-view="sizes" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="16.5" r="4"/><circle cx="21.5" cy="14" r="6.5"/></svg><span>How big?</span></button>
+    <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span>Weigh me</span></button>
+    <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span>Day &amp; Night</span></button>
+    <button class="tab" role="tab" data-view="trip" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/><circle cx="14" cy="10" r="1.8"/></svg><span>Space race</span></button>
+    <button class="tab" role="tab" data-view="quiz" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3l3.2 6.6 7.3.9-5.4 5 1.4 7.2L14 19.2l-6.5 3.5 1.4-7.2-5.4-5 7.3-.9z"/></svg><span>Quiz</span></button>
+  </nav>
+</div>
+
+<div class="start" id="start">
+  <div class="start-box">
+    <p class="eyebrow">Mission control to Ayansh</p>
+    <h1>Ayansh's <em>Space</em> Adventure</h1>
+    <p>Fly around the Sun, visit all eight planets, weigh yourself on the Moon and race a beam of light. Nova, your space guide, will talk you through it.</p>
+    <button class="btn go" id="blast" type="button" disabled><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg>Blast off!</button>
+    <span class="load" id="load">Painting the planets… 0%</span>
+  </div>
+</div>
+<canvas class="burst" id="burst" aria-hidden="true"></canvas>
+
+<script src="earth-land.js"></script>
+<script src="lines.js"></script>
+<script>
+'use strict';
+/* ================================================================ basics */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const TAU = Math.PI * 2, PI = Math.PI;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const mix = (c1, c2, t) => [c1[0] + (c2[0] - c1[0]) * t, c1[1] + (c2[1] - c1[1]) * t, c1[2] + (c2[2] - c1[2]) * t];
+const dprNow = () => Math.min(2, window.devicePixelRatio || 1);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const prefs = Object.assign({ voice: true, sound: true, kg: 22, age: 7 }, store.get('ayansh-space', {}));
+const savePrefs = () => store.set('ayansh-space', prefs);
+function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
+function fitCanvas(cv) {
+  const r = cv.getBoundingClientRect(), d = dprNow();
+  const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+  return { ctx, w: r.width, h: r.height, d };
+}
+
+/* ================================================================ facts */
+// size = drawn radius in the orbit view (orbits are squeezed so everything fits on one screen)
+const BODIES = {
+  sun:     { name: 'Sun', kind: 'Our star', nick: 'A giant ball of glowing gas', size: .085, color: [255, 190, 70], spin: .05, emissive: true,
+             facts: [['Size', '109 Earths wide'], ['Outside', 'About 5,500 °C'], ['Inside', '1.3 million Earths fit'], ['Sunlight', 'Reaches us in 8 minutes']] },
+  mercury: { name: 'Mercury', kind: 'Planet 1 from the Sun', nick: 'The speedy one', orbit: .16, size: .012, period: .241, spin: .15, color: [165, 155, 145],
+             facts: [['Size', 'A bit bigger than our Moon'], ['One year', '88 Earth days'], ['Sunrise to sunrise', '176 Earth days'], ['Moons', 'None'], ['Day / night', '430 °C / −180 °C']] },
+  venus:   { name: 'Venus', kind: 'Planet 2 from the Sun', nick: 'The hottest planet', orbit: .225, size: .019, period: .615, spin: -.06, color: [230, 196, 130], atmo: [255, 220, 160],
+             facts: [['Size', 'Almost as big as Earth'], ['One year', '225 Earth days'], ['Sunrise to sunrise', '117 Earth days'], ['Moons', 'None'], ['Temperature', '465 °C']] },
+  earth:   { name: 'Earth', kind: 'Planet 3 from the Sun', nick: 'Our home', orbit: .30, size: .02, period: 1, spin: .5, color: [60, 120, 200], atmo: [110, 170, 255],
+             facts: [['Size', '12,742 km across'], ['One year', '365 days'], ['One day', '24 hours'], ['Moons', '1'], ['Water', 'Covers 71%']] },
+  moon:    { name: 'Moon', kind: "Earth's moon", nick: "Earth's best friend", parent: 'earth', orbit: .046, size: .0075, spin: .0, color: [190, 190, 185],
+             facts: [['Size', 'About ¼ of Earth'], ['Trip around Earth', '27 days'], ['Distance', '384,400 km'], ['People who walked there', '12'], ['Day / night', '120 °C / −170 °C']] },
+  mars:    { name: 'Mars', kind: 'Planet 4 from the Sun', nick: 'The Red Planet', orbit: .38, size: .015, period: 1.88, spin: .5, color: [200, 100, 60], atmo: [255, 170, 130],
+             facts: [['Size', 'About ½ of Earth'], ['One year', '687 Earth days'], ['One day', '24 h 37 min'], ['Moons', '2: Phobos & Deimos'], ['Temperature', 'About −60 °C']] },
+  jupiter: { name: 'Jupiter', kind: 'Planet 5 from the Sun', nick: 'The giant', orbit: .585, size: .048, period: 11.86, spin: 1.1, color: [210, 170, 125],
+             facts: [['Size', '11 Earths wide'], ['One year', '12 Earth years'], ['One day', '10 hours'], ['Moons', 'More than 90'], ['Ground', 'None, it is gas!']] },
+  saturn:  { name: 'Saturn', kind: 'Planet 6 from the Sun', nick: 'The one with rings', orbit: .70, size: .04, period: 29.4, spin: 1.0, color: [225, 200, 145], tilt: .38, rings: 'saturn',
+             facts: [['Size', '9 Earths wide'], ['One year', '29 Earth years'], ['One day', '10½ hours'], ['Moons', 'More than 270'], ['Rings', 'Ice and rock']] },
+  uranus:  { name: 'Uranus', kind: 'Planet 7 from the Sun', nick: 'The sideways one', orbit: .815, size: .028, period: 84, spin: .7, color: [160, 220, 228], tilt: 1.68, rings: 'uranus', atmo: [190, 245, 250],
+             facts: [['Size', '4 Earths wide'], ['One year', '84 Earth years'], ['One day', '17 hours'], ['Moons', 'Nearly 30'], ['Temperature', 'About −195 °C']] },
+  neptune: { name: 'Neptune', kind: 'Planet 8 from the Sun', nick: 'The windy one', orbit: .915, size: .027, period: 164.8, spin: .8, color: [70, 110, 225], atmo: [120, 160, 255],
+             facts: [['Size', '4 Earths wide'], ['One year', '165 Earth years'], ['One day', '16 hours'], ['Moons', '16'], ['Wind', 'Faster than a jet plane']] },
+  pluto:   { name: 'Pluto', kind: 'Dwarf planet', nick: 'Small, icy and far away', orbit: 1.0, size: .008, period: 248, spin: .15, color: [205, 175, 145], incl: .1,
+             facts: [['Size', 'Smaller than our Moon'], ['One year', '248 Earth years'], ['One day', '6 Earth days'], ['Moons', '5'], ['Temperature', 'About −230 °C']] },
+  belt:    { name: 'Asteroid belt', kind: 'Between Mars and Jupiter', nick: 'Millions of space rocks', size: .02, thumbOnly: true,
+             facts: [['Where', 'Between Mars and Jupiter'], ['Made of', 'Rock and metal'], ['Biggest one', 'Ceres, a dwarf planet'], ['How many', 'Millions!']] },
+  comet:   { name: 'Comet', kind: 'Visitor from far away', nick: 'A dirty space snowball', size: .006, thumbOnly: true,
+             facts: [['Made of', 'Ice, dust and rock'], ['Tail', 'Points away from the Sun'], ['Tail length', 'Millions of km'], ['Famous one', "Halley's Comet, back in 2061"]] }
+};
+const ORDER = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'belt', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'comet'];
+const TOUR = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'belt', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+
+/* ================================================================ noise + textures */
+const PERM = (() => { const r = rng(1234), a = [...Array(256).keys()]; for (let i = 255; i > 0; i--) { const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } const p = new Uint8Array(512); for (let i = 0; i < 512; i++) p[i] = a[i & 255]; return p; })();
+const h3 = (x, y, z) => PERM[PERM[PERM[x & 255] + (y & 255)] + (z & 255)];
+function noise3(x, y, z) {
+  const X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z);
+  const fx = x - X, fy = y - Y, fz = z - Z;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+  const a = h3(X, Y, Z), b = h3(X + 1, Y, Z), c = h3(X, Y + 1, Z), d = h3(X + 1, Y + 1, Z);
+  const e = h3(X, Y, Z + 1), f = h3(X + 1, Y, Z + 1), g = h3(X, Y + 1, Z + 1), h = h3(X + 1, Y + 1, Z + 1);
+  const k1 = a + (b - a) * u, k2 = c + (d - c) * u, k3 = e + (f - e) * u, k4 = g + (h - g) * u;
+  const l1 = k1 + (k2 - k1) * v, l2 = k3 + (k4 - k3) * v;
+  return (l1 + (l2 - l1) * w) / 255;
+}
+function fbm(x, y, z, oct = 5) { let a = .5, f = 1, s = 0, n = 0; for (let i = 0; i < oct; i++) { s += a * noise3(x * f, y * f, z * f); n += a; a *= .5; f *= 2.03; } return s / n; }
+
+function makeTex(W, H, fn) {
+  const data = new Uint8ClampedArray(W * H * 4);
+  for (let y = 0; y < H; y++) {
+    const lat = (.5 - (y + .5) / H) * PI, cl = Math.cos(lat), sl = Math.sin(lat);
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + .5) / W) * TAU - PI;
+      const c = fn(lat, lon, cl * Math.sin(lon), sl, cl * Math.cos(lon));
+      const o = (y * W + x) * 4;
+      data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = c.length > 3 ? c[3] : 255;
+    }
+  }
+  return { w: W, h: H, data };
+}
+function craterField(seed, n, rMin, rMax) {
+  const r = rng(seed), out = [];
+  for (let i = 0; i < n; i++) {
+    const z = r() * 2 - 1, t = r() * TAU, s = Math.sqrt(1 - z * z), rad = rMin + (rMax - rMin) * Math.pow(r(), 2.2);
+    out.push([s * Math.cos(t), z, s * Math.sin(t), rad, Math.cos(rad * 1.3)]);
+  }
+  return out;
+}
+function craterShade(cr, x, y, z) {
+  let k = 1;
+  for (const c of cr) {
+    const dot = x * c[0] + y * c[1] + z * c[2];
+    if (dot < c[4]) continue;
+    const t = Math.acos(Math.min(1, dot)) / c[3];
+    if (t < 1) k *= .8 + .12 * t; else if (t < 1.3) k *= 1 + .18 * (1 - Math.abs(t - 1.12) / .18);
+  }
+  return k;
+}
+let LAND = null;
+function landBit(x, y) {
+  x = ((x % 360) + 360) % 360; y = clamp(y, 0, 179);
+  const i = y * 360 + x; return (LAND[i >> 3] >> (7 - (i & 7))) & 1;
+}
+function landAmount(latD, lonD) {
+  if (!LAND) { const b = atob(window.EARTH_LAND || ''); LAND = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) LAND[i] = b.charCodeAt(i); }
+  if (!LAND.length) return 0;
+  const fx = lonD + 180 - .5, fy = 90 - latD - .5, x = Math.floor(fx), y = Math.floor(fy), u = fx - x, v = fy - y;
+  return lerp(lerp(landBit(x, y), landBit(x + 1, y), u), lerp(landBit(x, y + 1), landBit(x + 1, y + 1), u), v);
+}
+
+// colour of dry land on Earth: rainforest near the equator, deserts near 23°, ice at the poles
+function earthLand(latD, lonD, alat, n, x, y, z) {
+  if (latD < -62 || alat > 68 + (n - .5) * 10 || (latD > 60 && lonD > -60 && lonD < -15)) return mix([226, 234, 242], [250, 252, 255], n);
+  const desert = Math.exp(-Math.pow((alat - 23) / 9, 2)) * (0.8 + (fbm(x * 3 + 4, y * 3, z * 3, 3) - .5) * 2.2);
+  const wet = Math.exp(-Math.pow(alat / 12, 2));
+  let c = mix([82, 132, 58], [34, 96, 44], clamp(wet + (n - .5), 0, 1));
+  c = mix(c, [206, 172, 112], clamp(desert, 0, 1));
+  if (alat > 52) c = mix(c, [120, 118, 92], smooth(52, 66, alat));
+  return c.map(v => v * (.85 + n * .3));
+}
+const TEX = {};
+const TEX_JOBS = {
+  sun: () => makeTex(384, 192, (la, lo, x, y, z) => {
+    const g = fbm(x * 9, y * 9, z * 9, 4), b = fbm(x * 2.2 + 5, y * 2.2, z * 2.2, 3);
+    let c = mix([255, 128, 24], [255, 236, 140], clamp(g * 1.5 - .25 + (b - .5) * .6, 0, 1));
+    const spot = fbm(x * 4 + 20, y * 4, z * 4, 3);
+    if (spot > .74 && Math.abs(la) < .6) c = mix(c, [170, 70, 20], smooth(.74, .8, spot) * .6);
+    return c;
+  }),
+  mercury: () => { const cr = craterField(11, 90, .03, .16); return makeTex(256, 128, (la, lo, x, y, z) => {
+    const n = fbm(x * 3, y * 3, z * 3), k = craterShade(cr, x, y, z);
+    return mix([95, 88, 82], [190, 180, 168], n * 1.2 - .1).map(v => v * k);
+  }); },
+  venus: () => makeTex(256, 128, (la, lo, x, y, z) => {
+    const w = fbm(x * 1.5, y * 1.5, z * 1.5, 3);
+    const f = fbm(x * 2.5 + w * 2, y * 7, z * 2.5 + w * 2, 5);
+    return mix([186, 136, 78], [245, 220, 170], clamp(f * 1.6 - .3, 0, 1));
+  }),
+  earth: () => makeTex(512, 256, (la, lo, x, y, z) => {
+    const latD = la * 180 / PI, lonD = lo * 180 / PI;
+    const j1 = fbm(x * 5, y * 5, z * 5, 4) - .5, j2 = fbm(x * 5 + 17, y * 5, z * 5, 4) - .5;
+    const th = .5 + (fbm(x * 14, y * 14, z * 14, 3) - .5) * .5;
+    const amt = smooth(th - .12, th + .12, landAmount(latD + j1 * 1.6, lonD + j2 * 1.6 / Math.max(.25, Math.cos(la))));
+    const alat = Math.abs(latD), n = fbm(x * 6, y * 6, z * 6, 4);
+    const sea = alat > 74 + n * 8 ? [228, 238, 248] : mix([10, 42, 118], [28, 92, 170], clamp(n * 1.4 - .2, 0, 1));
+    if (amt <= 0) return sea;
+    const ground = earthLand(latD, lonD, alat, n, x, y, z);
+    return amt >= 1 ? ground : mix(sea, ground, amt);
+  }),
+  clouds: () => makeTex(512, 256, (la, lo, x, y, z) => {
+    const w = fbm(x * 2, y * 2, z * 2, 3);
+    const f = fbm(x * 3.2 + w * 1.8, y * 5.5, z * 3.2 + w * 1.8, 6);
+    const band = .9 + .25 * Math.cos(la * 6);
+    return [255, 255, 255, 255 * smooth(.5, .72, f * band) * .92];
+  }),
+  moon: () => { const cr = craterField(5, 120, .02, .14); return makeTex(384, 192, (la, lo, x, y, z) => {
+    const m = fbm(x * 1.6 + 3, y * 1.6, z * 1.6, 4), n = fbm(x * 6, y * 6, z * 6, 4);
+    let c = mix([150, 150, 148], [205, 204, 198], n);
+    c = mix(c, [92, 94, 100], smooth(.5, .6, m) * (z > -.2 ? 1 : .35));
+    const k = craterShade(cr, x, y, z);
+    return c.map(v => v * k);
+  }); },
+  mars: () => makeTex(384, 192, (la, lo, x, y, z) => {
+    const n = fbm(x * 3, y * 3, z * 3), d = fbm(x * 1.7 + 9, y * 1.7, z * 1.7, 4);
+    let c = mix([168, 76, 40], [226, 136, 84], n);
+    c = mix(c, [96, 52, 38], smooth(.52, .64, d) * .85);
+    const alat = Math.abs(la * 180 / PI);
+    if (alat > 76 + (n - .5) * 10) c = mix(c, [246, 240, 232], .9);
+    return c;
+  }),
+  jupiter: () => makeTex(512, 256, (la, lo, x, y, z) => {
+    const t = fbm(x * 3, y * 10, z * 3, 5) - .5;
+    const v = la * 15 + t * 2.6 + Math.sin(lo * 3 + la * 20) * .15;
+    let c = mix([240, 228, 205], [188, 140, 98], .5 + .5 * Math.sin(v));
+    c = mix(c, [150, 96, 66], clamp(Math.sin(v * .5 + 1.2) * 1.6 - .9, 0, 1) * .8);
+    if (Math.abs(la) < .09) c = mix(c, [245, 235, 215], .5);
+    const dl = la + .38, dlo = Math.atan2(Math.sin(lo - .8), Math.cos(lo - .8)) * Math.cos(la);
+    const e = (dlo / .2) ** 2 + (dl / .085) ** 2;
+    if (e < 1.5) c = mix(c, e < 1 ? [200, 92, 58] : [235, 200, 175], (e < 1 ? 1 - e * .4 : (1.5 - e) * 1.6) * .95);
+    return c;
+  }),
+  saturn: () => makeTex(512, 256, (la, lo, x, y, z) => {
+    const t = fbm(x * 3, y * 9, z * 3, 4) - .5;
+    const v = la * 18 + t * 1.6;
+    let c = mix([236, 214, 160], [200, 166, 110], .5 + .5 * Math.sin(v));
+    if (la > 1.2) c = mix(c, [160, 170, 150], .4);
+    return c;
+  }),
+  uranus: () => makeTex(256, 128, (la, lo, x, y, z) => {
+    const n = fbm(x * 3, y * 8, z * 3, 3);
+    return mix([140, 205, 215], [196, 240, 244], clamp(n + Math.sin(la * 9) * .08 + (la > 0.9 ? .25 : 0), 0, 1));
+  }),
+  neptune: () => makeTex(384, 192, (la, lo, x, y, z) => {
+    const t = fbm(x * 3, y * 9, z * 3, 4) - .5;
+    let c = mix([38, 70, 180], [86, 132, 240], .5 + .5 * Math.sin(la * 12 + t * 2));
+    const dl = la + .38, dlo = Math.atan2(Math.sin(lo - 1), Math.cos(lo - 1)) * Math.cos(la);
+    const e = (dlo / .2) ** 2 + (dl / .09) ** 2;
+    if (e < 1) c = mix(c, [22, 34, 110], 1 - e * .5);
+    const s = Math.abs(la + .62 + t * .06);
+    if (s < .03) c = mix(c, [225, 235, 255], (1 - s / .03) * smooth(.4, .6, fbm(x * 4, y, z * 4, 3)));
+    return c;
+  }),
+  pluto: () => makeTex(256, 128, (la, lo, x, y, z) => {
+    const n = fbm(x * 3, y * 3, z * 3);
+    let c = mix([168, 120, 88], [222, 196, 164], n);
+    c = mix(c, [92, 58, 46], smooth(.55, .66, fbm(x * 2 + 7, y * 2, z * 2, 4)) * (la < .35 ? 1 : .3));
+    const hx = Math.atan2(Math.sin(lo), Math.cos(lo)) * Math.cos(la) / .42, hy = (la - .2) / .42 + .25;
+    const q = hx * hx + hy * hy - 1;
+    if (q * q * q - hx * hx * hy * hy * hy < 0) c = mix(c, [246, 236, 222], .92);
+    return c;
+  })
+};
+
+/* ================================================================ sphere painter
+   Each body is painted pixel by pixel from its map: it really turns, and its lit side faces the light. */
+const LUTS = new Map(); let lutPixels = 0;
+function getLUT(d, tilt, pitch) {
+  const key = d + '|' + tilt.toFixed(3) + '|' + pitch.toFixed(3);
+  let L = LUTS.get(key);
+  if (L) return L;
+  const r = d / 2, idx = [], lat = [], lon = [], nx = [], ny = [], nz = [], al = [];
+  const ct = Math.cos(tilt), st = Math.sin(tilt), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  for (let py = 0; py < d; py++) for (let px = 0; px < d; px++) {
+    const x = (px + .5 - r) / r, y = (py + .5 - r) / r, rr = x * x + y * y;
+    const edge = (1 - Math.sqrt(rr)) * r + .5;
+    if (edge <= 0) continue;
+    const z = Math.sqrt(Math.max(0, 1 - rr));
+    const xr = x * ct + y * st, yr = -x * st + y * ct;
+    const wy = -yr * cp + z * sp, wz = yr * sp + z * cp;
+    idx.push(py * d + px); lat.push(.5 - Math.asin(clamp(wy, -1, 1)) / PI); lon.push(Math.atan2(xr, wz));
+    nx.push(x); ny.push(y); nz.push(z); al.push(Math.min(1, edge));
+  }
+  L = { d, n: idx.length, idx: Int32Array.from(idx), lat: Float32Array.from(lat), lon: Float32Array.from(lon), nx: Float32Array.from(nx), ny: Float32Array.from(ny), nz: Float32Array.from(nz), al: Float32Array.from(al) };
+  LUTS.set(key, L); lutPixels += L.n;
+  while (lutPixels > 900000 && LUTS.size > 1) { const k = LUTS.keys().next().value; lutPixels -= LUTS.get(k).n; LUTS.delete(k); }
+  return L;
+}
+function makeSlot() { const cv = document.createElement('canvas'); return { cv, ctx: cv.getContext('2d'), img: null, d: 0 }; }
+function paintSphere(slot, d, id, o) {
+  const b = BODIES[id], tex = TEX[id];
+  if (!tex) return false;
+  if (slot.d !== d) { slot.cv.width = slot.cv.height = d; slot.img = slot.ctx.createImageData(d, d); slot.d = d; }
+  const L = getLUT(d, o.tilt ?? b.tilt ?? 0, o.pitch ?? .3);
+  const out = slot.img.data; out.fill(0);
+  const T = tex.data, W = tex.w, H = tex.h, k = W / TAU, rot = o.rot || 0;
+  const cl = id === 'earth' && TEX.clouds, CT = cl && cl.data, CW = cl && cl.w, CH = cl && cl.h, ck = cl && CW / TAU, crot = rot * 1.25 + .7;
+  const lx = o.L[0], ly = o.L[1], lz = o.L[2], amb = o.ambient ?? .07, emis = b.emissive, soft = d > H * .9;
+  const atmo = b.atmo;
+  for (let i = 0; i < L.n; i++) {
+    let u = ((L.lon[i] + rot + PI) * k) % W; if (u < 0) u += W;
+    let r, g, bl;
+    if (soft) { // blend the 4 nearest map pixels so big planets stay smooth
+      const fu = u - .5, fv = L.lat[i] * H - .5, u0 = Math.floor(fu), v0 = clamp(Math.floor(fv), 0, H - 1), v1 = Math.min(H - 1, v0 + 1);
+      const a = fu - u0, c = clamp(fv - v0, 0, 1), x0 = (u0 + W) % W, x1 = (x0 + 1) % W;
+      const p00 = (v0 * W + x0) * 4, p10 = (v0 * W + x1) * 4, p01 = (v1 * W + x0) * 4, p11 = (v1 * W + x1) * 4;
+      const w00 = (1 - a) * (1 - c), w10 = a * (1 - c), w01 = (1 - a) * c, w11 = a * c;
+      r = T[p00] * w00 + T[p10] * w10 + T[p01] * w01 + T[p11] * w11;
+      g = T[p00 + 1] * w00 + T[p10 + 1] * w10 + T[p01 + 1] * w01 + T[p11 + 1] * w11;
+      bl = T[p00 + 2] * w00 + T[p10 + 2] * w10 + T[p01 + 2] * w01 + T[p11 + 2] * w11;
+    } else {
+      const t = (Math.min(H - 1, (L.lat[i] * H) | 0) * W + (u | 0)) * 4;
+      r = T[t]; g = T[t + 1]; bl = T[t + 2];
+    }
+    if (CT) {
+      let cu = ((L.lon[i] + crot + PI) * ck) % CW; if (cu < 0) cu += CW;
+      const ct = ((Math.min(CH - 1, (L.lat[i] * CH) | 0)) * CW + (cu | 0)) * 4, a = CT[ct + 3] / 255;
+      r += (255 - r) * a; g += (255 - g) * a; bl += (255 - bl) * a;
+    }
+    const nz = L.nz[i];
+    let s;
+    if (emis) s = .62 + .45 * Math.sqrt(nz);
+    else {
+      const dot = L.nx[i] * lx + L.ny[i] * ly + nz * lz;
+      s = amb + (1 - amb) * smooth(-.12, .5, dot);
+    }
+    const j = L.idx[i] * 4;
+    out[j] = r * s; out[j + 1] = g * s; out[j + 2] = bl * s;
+    if (atmo && !emis) {
+      const dot = L.nx[i] * lx + L.ny[i] * ly + nz * lz;
+      const rim = Math.pow(1 - nz, 3) * smooth(-.25, .4, dot) * .85;
+      out[j] += (atmo[0] - out[j]) * rim; out[j + 1] += (atmo[1] - out[j + 1]) * rim; out[j + 2] += (atmo[2] - out[j + 2]) * rim;
+    }
+    out[j + 3] = 255 * L.al[i];
+  }
+  slot.ctx.putImageData(slot.img, 0, 0);
+  return true;
+}
+function drawRings(ctx, id, x, y, r, angle, flat, half) {
+  const isS = id === 'saturn';
+  const inner = isS ? 1.25 : 1.5, outer = isS ? 2.25 : 1.9, steps = isS ? 22 : 5;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+  ctx.beginPath();
+  if (half === 'back') ctx.rect(-r * 3, -r * 3, r * 6, r * 3); else ctx.rect(-r * 3, 0, r * 6, r * 3);
+  ctx.clip();
+  ctx.scale(1, flat);
+  const w = (outer - inner) * r / steps;
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1), rr = (inner + (outer - inner) * t) * r;
+    let a;
+    if (isS) { a = (t > .62 && t < .7) ? .05 : .35 + .45 * Math.sin(t * 19) ** 2; }
+    else a = i === steps - 1 ? .55 : .14;
+    const col = isS ? `rgba(${(220 - t * 40) | 0},${(196 - t * 40) | 0},${(150 - t * 30) | 0},${a})` : `rgba(200,235,240,${a})`;
+    ctx.beginPath(); ctx.ellipse(0, 0, rr, rr, 0, 0, TAU); ctx.lineWidth = w * 1.15; ctx.strokeStyle = col; ctx.stroke();
+  }
+  ctx.restore();
+}
+/* draw a body at (x, y) radius r in CSS px. o: {rot, L, pitch, tilt, dpr, slot, ambient, ringFlat} */
+function drawBody(ctx, id, x, y, r, o) {
+  const b = BODIES[id], dpr = o.dpr || dprNow();
+  const tilt = o.tilt ?? b.tilt ?? 0, flat = id === 'uranus' ? .35 : o.ringFlat ?? Math.max(.22, Math.sin(o.pitch ?? .3));
+  if (b.rings && r > 2) drawRings(ctx, id, x, y, r, tilt, flat, 'back');
+  let d = Math.max(2, Math.round(r * 2 * dpr));
+  if (d > 64) d = Math.round(d / 8) * 8; // fewer distinct sizes while zooming means fewer lookup tables
+  if (d < 8 || !TEX[id]) {
+    const g = ctx.createRadialGradient(x + r * o.L[0] * .5, y + r * o.L[1] * .5, r * .1, x, y, r);
+    const c = b.color;
+    g.addColorStop(0, `rgb(${c[0]},${c[1]},${c[2]})`); g.addColorStop(1, `rgb(${c[0] * .35 | 0},${c[1] * .35 | 0},${c[2] * .35 | 0})`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, Math.max(r, .8), 0, TAU); ctx.fill();
+  } else {
+    const slot = o.slot || (o.slot = makeSlot());
+    paintSphere(slot, Math.min(d, o.maxD || 560), id, o);
+    ctx.drawImage(slot.cv, x - r, y - r, r * 2, r * 2);
+  }
+  if (b.rings && r > 2) drawRings(ctx, id, x, y, r, tilt, flat, 'front');
+}
+function sunGlow(ctx, x, y, r, t, strength = 1, noRays) {
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  let g = ctx.createRadialGradient(x, y, r * .8, x, y, r * 3.4);
+  g.addColorStop(0, `rgba(255,170,60,${.55 * strength})`); g.addColorStop(.35, `rgba(255,110,40,${.16 * strength})`); g.addColorStop(1, 'rgba(255,80,20,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 3.4, 0, TAU); ctx.fill();
+  ctx.translate(x, y); ctx.rotate(t * .03);
+  for (let i = 0; i < (noRays ? 0 : 14); i++) {
+    const a = i / 14 * TAU, len = r * (1.9 + .35 * Math.sin(t * .8 + i * 1.7));
+    ctx.rotate(TAU / 14);
+    g = ctx.createLinearGradient(0, 0, len, 0);
+    g.addColorStop(0, `rgba(255,200,90,${.16 * strength})`); g.addColorStop(1, 'rgba(255,160,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(r * .6, -r * .16); ctx.lineTo(len, 0); ctx.lineTo(r * .6, r * .16); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ================================================================ sky backdrop shared by views */
+const SKY = { stars: [], neb: null };
+function buildSky() {
+  const r = rng(99);
+  for (let i = 0; i < 520; i++) SKY.stars.push({ x: r(), y: r(), s: r() < .9 ? .5 + r() * .9 : 1.4 + r() * 1.1, p: r() * TAU, c: r() < .15 ? '#FFE3B8' : r() < .3 ? '#BFD4FF' : '#FFFFFF' });
+  const W = 360, H = 200, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d'), img = c.createImageData(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const nx = x / W, ny = y / H, band = Math.exp(-Math.pow((ny - .42 - (nx - .5) * .5) / .16, 2));
+    const f = fbm(nx * 5, ny * 5, .5, 5), f2 = fbm(nx * 3 + 4, ny * 3, 2.1, 4);
+    const a = clamp(band * (f * 1.6 - .45), 0, 1) * .55;
+    const col = mix([70, 60, 160], [40, 140, 170], f2);
+    const o = (y * W + x) * 4; img.data[o] = col[0]; img.data[o + 1] = col[1]; img.data[o + 2] = col[2]; img.data[o + 3] = a * 255;
+  }
+  c.putImageData(img, 0, 0); SKY.neb = cv;
+}
+const shooting = [];
+function drawSky(ctx, w, h, t, px = 0, py = 0, dt = 0) {
+  ctx.fillStyle = '#050817'; ctx.fillRect(0, 0, w, h);
+  if (SKY.neb) { ctx.globalAlpha = .8; ctx.drawImage(SKY.neb, -w * .1 - px * .02 * w, -h * .1 - py * .02 * h, w * 1.2, h * 1.2); ctx.globalAlpha = 1; }
+  for (const s of SKY.stars) {
+    const x = ((s.x * w - px * 8 * s.s) % w + w) % w, y = ((s.y * h - py * 8 * s.s) % h + h) % h;
+    ctx.globalAlpha = .45 + .55 * Math.abs(Math.sin(t * .9 + s.p));
+    ctx.fillStyle = s.c; ctx.fillRect(x, y, s.s, s.s);
+  }
+  ctx.globalAlpha = 1;
+  if (!reduceMotion && Math.random() < dt * .18) shooting.push({ x: Math.random() * w, y: Math.random() * h * .5, vx: 380 + Math.random() * 300, vy: 120 + Math.random() * 140, life: 0 });
+  for (let i = shooting.length - 1; i >= 0; i--) {
+    const s = shooting[i]; s.life += dt; s.x += s.vx * dt; s.y += s.vy * dt;
+    if (s.life > .9) { shooting.splice(i, 1); continue; }
+    const g = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * .12, s.y - s.vy * .12);
+    g.addColorStop(0, `rgba(255,255,255,${.9 * (1 - s.life / .9)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * .12, s.y - s.vy * .12); ctx.stroke();
+  }
+}
+
+/* ================================================================ sound effects (tiny synth, no files) */
+const Sfx = {
+  ac: null,
+  init() { if (this.ac) { this.ac.resume?.(); return; } try { this.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} },
+  tone(f, dur, type = 'sine', vol = .12, delay = 0, f2) {
+    if (!prefs.sound || !this.ac) return;
+    const t = this.ac.currentTime + delay, o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    const v = vol * (Voice.busy ? .5 : 1);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(this.ac.destination); o.start(t); o.stop(t + dur + .05);
+  },
+  whoosh() {
+    if (!prefs.sound || !this.ac) return;
+    const ac = this.ac, t = ac.currentTime, len = .7, buf = ac.createBuffer(1, ac.sampleRate * len, ac.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = buf; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(2400, t + len * .6);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.09 * (Voice.busy ? .5 : 1), t + .2); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+    src.connect(f).connect(g).connect(ac.destination); src.start(t);
+  },
+  tap() { this.tone(880, .12, 'triangle', .07); },
+  twinkle() { [1320, 1760, 2093].forEach((f, i) => this.tone(f, .25, 'sine', .05, i * .06)); },
+  chime() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, .5, 'triangle', .1, i * .09)); },
+  boop() { this.tone(300, .3, 'sine', .12, 0, 170); },
+  boing(g) { this.tone(clamp(220 * Math.sqrt(g), 120, 700), .45, 'sine', .12, 0, clamp(520 * Math.sqrt(g), 200, 1500)); }
+};
+
+/* ================================================================ Nova's voice
+   Recorded neural voice clips in audio/<id>.mp3. If a clip cannot play, the browser's best-sounding voice reads the line instead. */
+const Voice = {
+  audio: new Audio(), busy: false, cur: null, token: 0, words: [], marks: [], raf: 0, fallback: false, errors: 0, lastId: null,
+  init() {
+    this.audio.preload = 'auto';
+    this.audio.addEventListener('ended', () => this.finish(this.token));
+  },
+  line(id) { return (window.LINES && LINES[id]) || { text: '' }; },
+  caption(id) {
+    const text = this.line(id).text, el = $('#say');
+    el.innerHTML = '<span class="who">Nova</span>';
+    const parts = text.split(/(\s+)/), spans = [], marks = []; let total = 0;
+    for (const p of parts) {
+      if (!p.trim()) { el.appendChild(document.createTextNode(p)); continue; }
+      const s = document.createElement('span'); s.className = 'w'; s.textContent = p; el.appendChild(s); spans.push(s);
+      total += p.length + 2 + (/[.!?]$/.test(p) ? 9 : /[,;:]$/.test(p) ? 4 : 0); marks.push(total);
+    }
+    this.words = spans; this.marks = marks.map(m => m / total);
+    el.scrollTop = 0;
+  },
+  say(id, done) {
+    this.stop();
+    const tok = ++this.token; this.cur = { id, done }; this.lastId = id;
+    this.caption(id);
+    if (!prefs.voice) { const ms = 1200 + this.line(id).text.length * 45; this.timer = setTimeout(() => this.finish(tok), ms); return; }
+    this.busy = true; $('#caption').classList.add('talking');
+    if (this.fallback) { this.speakTTS(id, tok); return; }
+    const a = this.audio;
+    a.onerror = () => { if (tok === this.token) { if (++this.errors >= 3) this.fallback = true; this.speakTTS(id, tok); } };
+    a.src = 'audio/' + id + '.mp3';
+    const p = a.play();
+    if (p && p.catch) p.catch(err => {
+      if (tok !== this.token) return;
+      if (err && err.name === 'NotAllowedError') { this.busy = false; $('#caption').classList.remove('talking'); this.timer = setTimeout(() => this.finish(tok), 1500 + this.line(id).text.length * 45); }
+      else if (err && err.name !== 'AbortError' && !a.error) { this.speakTTS(id, tok); }
+    });
+    const step = () => {
+      if (tok !== this.token) return;
+      if (a.duration && isFinite(a.duration)) this.mark(a.currentTime / a.duration);
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  },
+  mark(p) {
+    const ws = this.words, m = this.marks;
+    for (let i = 0; i < ws.length; i++) {
+      const prev = i ? m[i - 1] : 0;
+      ws[i].classList.toggle('done', m[i] <= p);
+      ws[i].classList.toggle('now', prev <= p && p < m[i]);
+    }
+  },
+  bestVoice() {
+    let vs = []; try { vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch (e) {}
+    const score = v => {
+      const n = v.name; let s = 0;
+      if (/natural|neural|online/i.test(n)) s += 60;
+      if (/premium|enhanced/i.test(n)) s += 45;
+      if (/google/i.test(n)) s += 30;
+      if (/samantha|ava|allison|serena|karen|moira|tessa|veena|rishi|neerja|aria|jenny|libby|sonia|emma/i.test(n)) s += 20;
+      if (/en[-_](IN|GB)/i.test(v.lang)) s += 8;
+      if (/female/i.test(n)) s += 3;
+      if (/espeak|compact|desktop/i.test(n)) s -= 40;
+      if (v.localService === false) s += 5;
+      return s;
+    };
+    return vs.sort((a, b) => score(b) - score(a))[0] || null;
+  },
+  speakTTS(id, tok) {
+    if (!('speechSynthesis' in window)) { this.timer = setTimeout(() => this.finish(tok), 1500 + this.line(id).text.length * 45); return; }
+    try {
+      speechSynthesis.cancel();
+      const text = this.line(id).text, chunks = text.match(/[^.!?]+[.!?]*/g) || [text], v = this.bestVoice();
+      let i = 0, spoken = 0;
+      const next = () => {
+        if (tok !== this.token) return;
+        if (i >= chunks.length) { this.finish(tok); return; }
+        const u = new SpeechSynthesisUtterance(chunks[i].trim());
+        if (v) u.voice = v; u.rate = .95; u.pitch = 1.08;
+        u.onend = () => { spoken += chunks[i].length; this.mark(spoken / text.length); i++; next(); };
+        u.onerror = u.onend;
+        speechSynthesis.speak(u);
+      };
+      next();
+    } catch (e) { this.finish(tok); }
+  },
+  finish(tok) {
+    if (tok !== this.token) return;
+    this.busy = false; $('#caption').classList.remove('talking'); cancelAnimationFrame(this.raf); this.mark(1);
+    const d = this.cur && this.cur.done; this.cur = null;
+    if (d) d();
+  },
+  stop() {
+    this.token++; clearTimeout(this.timer); cancelAnimationFrame(this.raf);
+    try { this.audio.pause(); } catch (e) {}
+    try { speechSynthesis.cancel(); } catch (e) {}
+    this.busy = false; this.cur = null; $('#caption').classList.remove('talking'); this.mark(1);
+  }
+};
+Voice.init();
+try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; } catch (e) {}
+
+/* ================================================================ thumbnails */
+const THUMB = {};
+function renderThumb(id, size = 112) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = size; const c = cv.getContext('2d');
+  const b = BODIES[id], ringy = !!b.rings, r = size * (ringy ? (id === 'saturn' ? .21 : .25) : .42), x = size / 2, y = size / 2;
+  const L = [-.55, -.35, .76];
+  if (id === 'sun') { sunGlow(c, x, y, size * .3, 0, .9); drawBody(c, 'sun', x, y, size * .3, { rot: 0, L, pitch: .2, dpr: 1 }); }
+  else if (id === 'belt') {
+    const r2 = rng(3);
+    for (let i = 0; i < 9; i++) { const rx = x + (r2() - .5) * size * .7, ry = y + (r2() - .5) * size * .6, rs = 5 + r2() * 13; rock(c, rx, ry, rs, r2); }
+  } else if (id === 'comet') {
+    const g = c.createLinearGradient(size * .22, size * .78, size * .95, size * .05);
+    g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(1, 'rgba(120,200,255,0)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(size * .18, size * .74); c.lineTo(size * .95, size * .1); c.lineTo(size * .3, size * .86); c.fill();
+    c.fillStyle = '#fff'; c.shadowColor = '#9EE6FF'; c.shadowBlur = 12; c.beginPath(); c.arc(size * .24, size * .8, size * .08, 0, TAU); c.fill();
+  } else drawBody(c, id, x, y, r, { rot: id === 'earth' ? -1.3 : 0, L, pitch: id === 'saturn' ? .42 : .25, dpr: 1, ringFlat: .42 });
+  return cv.toDataURL();
+}
+function rock(c, x, y, s, r) {
+  c.fillStyle = `rgb(${120 + r() * 50 | 0},${105 + r() * 40 | 0},${95 + r() * 30 | 0})`;
+  c.beginPath();
+  for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, rr = s * (.7 + r() * .35); c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr * .85); }
+  c.closePath(); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + s * .25, y + s * .2, s * .5, 0, TAU); c.fill();
+}
+
+/* ================================================================ views + tabs */
+const views = {};
+let current = 'explore';
+const seenIntro = {};
+function show(name, quiet) {
+  if (!views[name]) name = 'explore';
+  if (name !== current) views[current].leave?.();
+  current = name;
+  $$('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
+  $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === name ? 'true' : 'false'));
+  if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
+  views[name].enter?.(quiet);
+}
+$$('.tab').forEach(t => t.addEventListener('click', () => { Sfx.tap(); show(t.dataset.view); }));
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== current && views[h]) show(h); });
+function intro(name, id, then) {
+  if (seenIntro[name]) { Voice.stop(); if (then) then(); return; }
+  seenIntro[name] = true; Voice.say(id, then);
+}
+
+/* ================================================================ 1. EXPLORE */
+views.explore = (() => {
+  const cv = $('#exploreCv'), info = $('#info');
+  let W = 0, H = 0, S = 1, base = 1, sinE = .45, cosE = .89;
+  const cam = { x: 0, y: 0, z: 1, tx: 0, ty: 0, tz: 1 };
+  let speed = 1, simT = 0, names = true, sel = null, follow = null, t = 0, lastYrs = -1;
+  const pos = {};
+  const slots = {}; ORDER.forEach(id => slots[id] = makeSlot());
+  const infoSlot = makeSlot();
+  const start = {}; { const r = rng(42); for (const id of ORDER) start[id] = r() * TAU; }
+  const belt = [], kuiper = [];
+  { const r = rng(8); for (let i = 0; i < 480; i++) belt.push({ r: .43 + r() * .075, a: r() * TAU, s: .6 + r() * 1.3, c: 140 + r() * 70 | 0 });
+    for (let i = 0; i < 380; i++) kuiper.push({ r: .95 + r() * .14, a: r() * TAU, s: .5 + r() * 1, c: 150 + r() * 60 | 0 }); }
+  const comet = { th: 2.4, a: .62, e: .82, w: 2.3 };
+  const sparks = [];
+  let tour = null;
+
+  function orbitSpeed(period) { return TAU / (Math.pow(period, .6) * 24); }
+  let topUI = 56, botUI = 92, boost = 1;
+  function layout() {
+    const f = fitCanvas(cv); W = f.w; H = f.h;
+    topUI = ($('#view-explore .over.top').offsetHeight || 46) + 14; botUI = ($('#stripRow').offsetHeight || 80) + 12;
+    const usable = H - topUI - botUI;
+    sinE = clamp((usable / W) * .66, .36, .8); cosE = Math.sqrt(1 - sinE * sinE);
+    base = Math.max(60, Math.min((W / 2 - 14) / 1.03, (usable / 2) / (1.03 * sinE + .05)));
+    boost = clamp(420 / base, 1, 1.9);
+  }
+  function worldPos(id) {
+    const b = BODIES[id];
+    if (id === 'sun') return [0, 0, 0];
+    if (b.parent) {
+      const p = worldPos(b.parent), a = start[id] + simT * TAU / 4;
+      return [p[0] + Math.cos(a) * b.orbit, p[1] + Math.sin(a) * b.orbit * .35, p[2] + Math.sin(a) * b.orbit];
+    }
+    const a = start[id] + simT * orbitSpeed(b.period);
+    const X = Math.cos(a) * b.orbit, Z = Math.sin(a) * b.orbit;
+    return [X, (b.incl || 0) * Math.sin(a + 1) , Z];
+  }
+  function toScreen(X, Y, Z) {
+    const sx = X, sy = Z * sinE - Y * cosE;
+    return [W / 2 + (sx - cam.x) * S, centerY() + (sy - cam.y) * S];
+  }
+  function centerY() { return topUI + (H - topUI - botUI) / 2; }
+  // how far (px) to slide the chosen planet so the info card does not cover it
+  function focusShift() {
+    if (info.hidden) return [0, 0];
+    if (W > 760) return [-(info.offsetWidth + 16) / 2, 0];
+    return [0, (topUI + H - info.offsetHeight - 8) / 2 - centerY()];
+  }
+  // direction from a planet to the Sun, turned into screen terms (x right, y down, z toward you),
+  // nudged a little toward the viewer so the night side is never pitch black
+  function lightFor(X, Z) {
+    const n = Math.hypot(X, Z) || 1, dx = -X / n, dz = -Z / n;
+    const v = [dx * .8, dz * sinE * .8, dz * cosE * .8 + .62];
+    const m = Math.hypot(...v) || 1; return [v[0] / m, v[1] / m, v[2] / m];
+  }
+  function bodyR(id) { return Math.max(id === 'moon' || id === 'pluto' ? 1.8 : 2.6, BODIES[id].size * S * (cam.z < 2 ? lerp(boost, 1, cam.z - 1) : 1)); }
+
+  function frame(dt) {
+    t += dt; simT += dt * speed;
+    const yrs = Math.floor(simT * orbitSpeed(1) / TAU);
+    if (yrs !== lastYrs) { lastYrs = yrs; $('#yearCount').textContent = yrs; }
+    if (follow) {
+      const p = worldPos(follow), [fx, fy] = focusShift();
+      cam.tx = p[0] - fx / S; cam.ty = p[2] * sinE - p[1] * cosE - fy / S;
+    }
+    const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 3.2);
+    cam.x = lerp(cam.x, cam.tx, k); cam.y = lerp(cam.y, cam.ty, k); cam.z = Math.exp(lerp(Math.log(cam.z), Math.log(cam.tz), k));
+    S = base * cam.z;
+    const ctx = cv.getContext('2d'), d = dprNow();
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    drawSky(ctx, W, H, t, cam.x, cam.y, dt);
+
+    // orbits
+    for (const id of ORDER) {
+      const b = BODIES[id]; if (!b.orbit || b.parent) continue;
+      ctx.beginPath();
+      for (let i = 0; i <= 120; i++) { const a = i / 120 * TAU, [x, y] = toScreen(Math.cos(a) * b.orbit, (b.incl || 0) * Math.sin(a + 1), Math.sin(a) * b.orbit); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.strokeStyle = sel === id ? 'rgba(255,181,46,.75)' : id === 'pluto' ? 'rgba(140,160,255,.12)' : 'rgba(140,160,255,.22)';
+      ctx.lineWidth = sel === id ? 2 : 1; if (id === 'pluto') ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // collect drawables with depth
+    const items = [];
+    for (const id of ORDER) {
+      if (BODIES[id].thumbOnly) continue;
+      const p = worldPos(id), [sx, sy] = toScreen(p[0], p[1], p[2]);
+      const r = id === 'sun' ? Math.max(14, BODIES.sun.size * S * (cam.z < 2 ? lerp(Math.min(boost, 1.25), 1, cam.z - 1) : 1)) : bodyR(id);
+      pos[id] = { x: sx, y: sy, r, z: p[2] };
+      items.push({ id, z: p[2] + (id === 'moon' ? 0 : 0), p });
+    }
+    const dots = (arr, front) => {
+      const sc = Math.min(2.2, Math.sqrt(cam.z));
+      for (const a of arr) {
+        const ang = a.a + simT * orbitSpeed(Math.pow(a.r / .3, 1.5)) ;
+        const Z = Math.sin(ang) * a.r; if ((Z >= 0) !== front) continue;
+        const [x, y] = toScreen(Math.cos(ang) * a.r, 0, Z);
+        if (x < -4 || y < -4 || x > W + 4 || y > H + 4) continue;
+        ctx.fillStyle = `rgb(${a.c},${a.c - 14},${a.c - 28})`; ctx.fillRect(x, y, a.s * sc, a.s * sc);
+      }
+    };
+    ctx.globalAlpha = .55; dots(kuiper, false); ctx.globalAlpha = .9; dots(belt, false); ctx.globalAlpha = 1;
+    items.sort((a, b) => a.z - b.z);
+    const sunZ = 0;
+    let sunDrawn = false;
+    const cpos = cometPos();
+    for (const it of items) {
+      if (!sunDrawn && it.z >= sunZ && it.id !== 'sun') { drawSun(ctx); sunDrawn = true; dots(belt, true); ctx.globalAlpha = .55; dots(kuiper, true); ctx.globalAlpha = 1; }
+      if (it.id === 'sun') continue;
+      const q = pos[it.id];
+      if (q.x < -q.r * 3 || q.y < -q.r * 3 || q.x > W + q.r * 3 || q.y > H + q.r * 3) continue;
+      const lp = it.id === 'moon' ? worldPos('earth') : it.p;
+      drawBody(ctx, it.id, q.x, q.y, q.r, { rot: start[it.id] - t * BODIES[it.id].spin * Math.max(speed, .15), L: lightFor(lp[0], lp[2]), pitch: Math.asin(sinE), dpr: d, slot: slots[it.id], ambient: .1 });
+    }
+    if (!sunDrawn) { drawSun(ctx); dots(belt, true); }
+    drawComet(ctx, cpos, dt);
+
+    // selection ring + names
+    if (sel && pos[sel]) {
+      const q = pos[sel], rr = q.r * (BODIES[sel].rings ? 2.4 : 1) + 8;
+      ctx.save(); ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 7]); ctx.lineDashOffset = -t * 20;
+      ctx.beginPath(); ctx.arc(q.x, q.y, rr, 0, TAU); ctx.stroke(); ctx.restore();
+    }
+    if (names) {
+      ctx.font = '600 13px Fredoka, "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      const placed = [], order = [sel, 'earth', 'sun', 'jupiter', 'saturn', 'mars', 'venus', 'mercury', 'uranus', 'neptune', 'pluto', 'moon', 'comet'];
+      for (const id of new Set(order)) {
+        if (!id || !pos[id] || (id === 'moon' && cam.z < 2.2)) continue;
+        const q = pos[id], y = q.y + q.r * (BODIES[id].rings ? (id === 'saturn' ? 1.1 : 1.9) : 1) + 6;
+        if (q.x < 0 || q.x > W || y > H) continue;
+        const tw = ctx.measureText(BODIES[id].name).width + 10, box = [q.x - tw / 2, y - 1, tw, 17];
+        if (placed.some(b => box[0] < b[0] + b[2] && b[0] < box[0] + box[2] && box[1] < b[1] + b[3] && b[1] < box[1] + box[3])) continue;
+        placed.push(box);
+        ctx.fillStyle = 'rgba(5,8,23,.6)'; ctx.fillRect(box[0], box[1], tw, 17);
+        ctx.fillStyle = id === sel ? '#FFB52E' : '#C9D0F2'; ctx.fillText(BODIES[id].name, q.x, y);
+      }
+      if (!sel && cam.z < 1.6 && pos.earth) {
+        const q = pos.earth, y = q.y - q.r - 30 - Math.sin(t * 3) * 3;
+        ctx.font = '700 13px Fredoka, sans-serif';
+        const label = 'You live here!', tw = ctx.measureText(label).width + 16;
+        ctx.fillStyle = '#FFB52E'; roundRect(ctx, q.x - tw / 2, y - 2, tw, 21, 10); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(q.x - 5, y + 19); ctx.lineTo(q.x + 5, y + 19); ctx.lineTo(q.x, y + 25); ctx.fill();
+        ctx.fillStyle = '#2A1600'; ctx.fillText(label, q.x, y + 2);
+      }
+    }
+    // tap sparkles
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]; s.life += dt; if (s.life > .6) { sparks.splice(i, 1); continue; }
+      ctx.strokeStyle = `rgba(89,224,232,${1 - s.life / .6})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(s.x, s.y, 6 + s.life * 50, 0, TAU); ctx.stroke();
+    }
+    if (!info.hidden && sel) drawInfoPlanet(dt);
+  }
+  function drawSun(ctx) {
+    const q = pos.sun; if (!q) return;
+    sunGlow(ctx, q.x, q.y, q.r, t);
+    drawBody(ctx, 'sun', q.x, q.y, q.r, { rot: -t * .05, L: [0, 0, 1], pitch: .2, dpr: dprNow(), slot: slots.sun, maxD: 300 });
+  }
+  function cometPos() {
+    const c = comet, r = c.a * (1 - c.e * c.e) / (1 + c.e * Math.cos(c.th));
+    return { r, X: Math.cos(c.th + c.w) * r, Z: Math.sin(c.th + c.w) * r };
+  }
+  function drawComet(ctx, p, dt) {
+    comet.th += dt * speed * .028 / (p.r * p.r); // fast near the Sun, slow far away
+    const [x, y] = toScreen(p.X, 0, p.Z), [sx, sy] = toScreen(0, 0, 0);
+    let dx = x - sx, dy = y - sy; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
+    const len = clamp(.09 / p.r, .05, .5) * S;
+    const g = ctx.createLinearGradient(x, y, x + dx * len, y + dy * len);
+    g.addColorStop(0, 'rgba(220,245,255,.85)'); g.addColorStop(1, 'rgba(120,200,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - dy * 3, y + dx * 3); ctx.lineTo(x + dx * len - dy * len * .14, y + dy * len + dx * len * .14); ctx.lineTo(x + dx * len + dy * len * .08, y + dy * len - dx * len * .08); ctx.lineTo(x + dy * 3, y - dx * 3); ctx.fill();
+    ctx.save(); ctx.shadowColor = '#9EE6FF'; ctx.shadowBlur = 10; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, clamp(.004 * S, 2, 7), 0, TAU); ctx.fill(); ctx.restore();
+    pos.comet = { x, y, r: 8, z: p.Z };
+  }
+  function drawInfoPlanet() {
+    const c = $('#infoCv'), d = dprNow(), size = c.clientWidth;
+    if (!size) return;
+    if (c.width !== Math.round(size * d)) { c.width = c.height = Math.round(size * d); }
+    const ctx = c.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, size, size);
+    const id = sel, b = BODIES[id], cx = size / 2;
+    if (id === 'belt') { const r2 = rng(5); for (let i = 0; i < 12; i++) rock(ctx, cx + (r2() - .5) * size * .8, cx + (r2() - .5) * size * .7 + Math.sin(t + i) * 3, 5 + r2() * 14, r2); return; }
+    if (id === 'comet') { ctx.drawImage(thumbImg('comet'), 0, 0, size, size); return; }
+    const r = size * (b.rings ? (id === 'saturn' ? .21 : .25) : id === 'sun' ? .3 : .42);
+    if (id === 'sun') sunGlow(ctx, cx, cx, r, t, .8);
+    drawBody(ctx, id, cx, cx, r, { rot: -t * (id === 'sun' ? .1 : .35) * Math.sign(b.spin || 1), L: [-.55, -.3, .78], pitch: id === 'saturn' ? .42 : .25, dpr: d, slot: infoSlot, ringFlat: .42 });
+  }
+  const thumbCache = {};
+  function thumbImg(id) { if (!thumbCache[id]) { thumbCache[id] = new Image(); thumbCache[id].src = THUMB[id]; } return thumbCache[id]; }
+
+  function select(id, opts = {}) {
+    sel = id; follow = id === 'belt' || id === 'comet' ? null : id;
+    const b = BODIES[id];
+    $('#infoKind').textContent = b.kind; $('#infoName').textContent = b.name; $('#infoNick').textContent = b.nick;
+    $('#infoFacts').innerHTML = b.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    const nextId = ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
+    $('#infoNext').textContent = 'Next: ' + BODIES[nextId].name;
+    info.hidden = false;
+    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === id ? 'true' : 'false'));
+    const tb = $(`.thumb[data-id="${id}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (id === 'belt') { cam.tx = 0; cam.ty = 0; cam.tz = 1.5; }
+    else if (id === 'comet') { const p = cometPos(); cam.tx = p.X; cam.ty = p.Z * sinE; cam.tz = 1.6; }
+    else { const want = W > 760 ? 74 : 50; cam.tz = clamp(want / (b.size * base), 1, 40); if (id === 'sun') cam.tz = clamp((W > 760 ? 110 : 70) / (b.size * base), 1, 6); }
+    Sfx.whoosh();
+    if (!opts.silent) Voice.say(id, opts.done);
+  }
+  function closeInfo() {
+    sel = null; follow = null; info.hidden = true; cam.tx = 0; cam.ty = 0; cam.tz = 1;
+    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', 'false'));
+  }
+  function stopTour() {
+    if (!tour) return; clearTimeout(tour.timer); tour = null; Voice.stop();
+    $('#tourBtn span').textContent = 'Planet tour';
+  }
+  function startTour() {
+    tour = { i: -1 }; $('#tourBtn span').textContent = 'Stop tour';
+    closeInfo();
+    const step = () => {
+      if (!tour) return;
+      tour.i++;
+      if (tour.i >= TOUR.length) { closeInfo(); const tt = tour; Voice.say('tour_end', () => { if (tour === tt) stopTour(); }); return; }
+      select(TOUR[tour.i], { done: () => { if (tour) tour.timer = setTimeout(step, 1100); } });
+    };
+    Voice.say('tour_start', () => { if (tour) tour.timer = setTimeout(step, 400); });
+  }
+
+  // input
+  const pts = new Map(); let downAt = null, moved = false, pinch0 = 0, z0 = 1;
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.offsetX, e.offsetY]); downAt = [e.offsetX, e.offsetY]; moved = false; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); z0 = cam.tz; } });
+  cv.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.offsetX, e.offsetY]);
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; const dd = Math.hypot(a[0] - b[0], a[1] - b[1]); cam.tz = clamp(z0 * dd / (pinch0 || 1), .6, 40); moved = true; return; }
+    if (downAt && Math.hypot(e.offsetX - downAt[0], e.offsetY - downAt[1]) > 7) moved = true;
+    if (moved) { follow = null; cam.tx -= (e.offsetX - prev[0]) / S; cam.ty -= (e.offsetY - prev[1]) / S; cam.x = cam.tx; cam.y = cam.ty; }
+  });
+  const up = e => {
+    pts.delete(e.pointerId);
+    if (!moved && downAt && pts.size === 0) tapAt(e.offsetX, e.offsetY);
+    if (pts.size === 0) downAt = null;
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); downAt = null; });
+  cv.addEventListener('wheel', e => { e.preventDefault(); cam.tz = clamp(cam.tz * Math.exp(-e.deltaY * .0015), .6, 40); }, { passive: false });
+  function tapAt(x, y) {
+    let best = null, bd = 1e9;
+    for (const id in pos) {
+      const q = pos[id], hit = Math.max(q.r * (BODIES[id].rings ? 1.8 : 1) + 8, 22), dd = Math.hypot(x - q.x, y - q.y);
+      if (dd < hit && dd - (q.z || 0) * 4 < bd) { best = id; bd = dd - (q.z || 0) * 4; }
+    }
+    if (!best) {
+      const X = (x - W / 2) / S + cam.x, Z = ((y - centerY()) / S + cam.y) / sinE, rr = Math.hypot(X, Z);
+      if (rr > .43 && rr < .505) best = 'belt';
+    }
+    sparks.push({ x, y, life: 0 });
+    stopTour();
+    if (best) select(best); else Sfx.twinkle();
+  }
+
+  // controls
+  $$('#view-explore .seg button').forEach(bt => bt.addEventListener('click', () => {
+    speed = +bt.dataset.speed; Sfx.tap();
+    $$('#view-explore .seg button').forEach(x => x.setAttribute('aria-pressed', x === bt ? 'true' : 'false'));
+  }));
+  $('#namesBtn').addEventListener('click', e => { names = !names; e.currentTarget.setAttribute('aria-pressed', names); Sfx.tap(); });
+  $('#zoomIn').addEventListener('click', () => { cam.tz = clamp(cam.tz * 1.5, .6, 40); Sfx.tap(); });
+  $('#zoomOut').addEventListener('click', () => { if (cam.tz <= 1.05 && !sel) { cam.tx = cam.ty = 0; } cam.tz = clamp(cam.tz / 1.5, .6, 40); if (cam.tz < 1.3 && sel) closeInfo(); Sfx.tap(); });
+  $('#infoClose').addEventListener('click', () => { stopTour(); Voice.stop(); closeInfo(); Sfx.tap(); });
+  $('#infoHear').addEventListener('click', () => { if (sel) { Sfx.tap(); Voice.say(sel); } });
+  $('#infoNext').addEventListener('click', () => { stopTour(); select(ORDER[(ORDER.indexOf(sel) + 1) % ORDER.length]); });
+  $('#tourBtn').addEventListener('click', () => { Sfx.tap(); if (tour) stopTour(); else startTour(); });
+
+  function buildStrip() {
+    $('#strip').innerHTML = ORDER.map(id => `<button class="thumb" type="button" data-id="${id}" aria-pressed="false"><img src="${THUMB[id]}" alt="">${BODIES[id].name.replace('Asteroid belt', 'Asteroids')}</button>`).join('');
+    $$('.thumb').forEach(b => b.addEventListener('click', () => { stopTour(); select(b.dataset.id); }));
+  }
+  return {
+    frame, layout, buildStrip, select, stopTour,
+    enter(quiet) { layout(); if (!quiet) intro('explore', 'explore_intro'); },
+    leave() { stopTour(); }
+  };
+})();
+
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ================================================================ 2. SIZES (true scale) */
+views.sizes = (() => {
+  const cv = $('#sizesCv'), sc = $('#sizesScroll');
+  const DIAM = { sun: 1392700, mercury: 4879, venus: 12104, earth: 12742, moon: 3475, mars: 6779, jupiter: 139820, saturn: 116460, uranus: 50724, neptune: 49244 };
+  const LIST = ['mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+  const FRUIT = { sun: ['a giant ball', 'taller than your front door 🚪'], mercury: ['a pea', ''], venus: ['another grape', '🍇'], earth: ['a little grape', '🍇'], moon: ['a peppercorn', ''], mars: ['a blueberry', '🫐'], jupiter: ['a watermelon', '🍉'], saturn: ['a football', '⚽'], uranus: ['an orange', '🍊'], neptune: ['an apple', '🍎'] };
+  let W = 0, H = 0, VW = 0, lay = [], sel = null, t = 0, edge = 70, sunR = 0, cy = 0, scale = 1, labelY = 0;
+  const slots = {}; LIST.forEach(id => slots[id] = makeSlot());
+  let pat = null;
+  function layout() {
+    const vw = sc.clientWidth, vh = sc.clientHeight;
+    H = vh; scale = (H * .44) / DIAM.jupiter;
+    cy = H * .56; edge = Math.max(40, vw * .05);
+    sunR = DIAM.sun / 2 * scale;
+    let x = edge + 34; lay = [];
+    for (const id of LIST) {
+      const r = DIAM[id] / 2 * scale, extra = id === 'saturn' ? r * 1.25 : 0, slot = Math.max(2 * r + 2 * extra, 76);
+      lay.push({ id, x: x + slot / 2, r, slot }); x += slot + 14;
+    }
+    W = Math.max(vw, x + 20); VW = vw;
+    $('#sizesTrack').style.width = W + 'px'; cv.style.width = vw + 'px';
+    labelY = cy + DIAM.jupiter / 2 * scale + 18;
+    fitCanvas(cv);
+  }
+  function frame(dt) {
+    t += dt;
+    const ctx = cv.getContext('2d'), d = dprNow(), sx0 = sc.scrollLeft;
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    drawSky(ctx, VW, H, t, sx0 / VW * 4, 0, dt);
+    ctx.translate(-sx0, 0);
+    // edge of the Sun
+    const sx = edge - sunR;
+    ctx.save();
+    if (sx + sunR + 200 > sx0) {
+    sunGlow(ctx, sx, cy, sunR, t, .35, true);
+    ctx.beginPath(); ctx.arc(sx, cy, sunR, 0, TAU); ctx.clip();
+    if (!pat && TEX.sun) { const c = document.createElement('canvas'); c.width = TEX.sun.w; c.height = TEX.sun.h; c.getContext('2d').putImageData(new ImageData(TEX.sun.data, TEX.sun.w, TEX.sun.h), 0, 0); pat = ctx.createPattern(c, 'repeat'); }
+    ctx.fillStyle = '#FFB040'; ctx.fillRect(sx - sunR, cy - sunR, sunR * 2, sunR * 2);
+    if (pat) { ctx.save(); ctx.translate(sx + sunR, cy + t * 4); ctx.scale(1.4, 1.4); ctx.globalAlpha = .9; ctx.fillStyle = pat; ctx.fillRect(-600, -2000, 1200, 4000); ctx.restore(); }
+    const g = ctx.createRadialGradient(sx, cy, sunR * .9, sx, cy, sunR);
+    g.addColorStop(0, 'rgba(255,120,30,0)'); g.addColorStop(1, 'rgba(200,60,10,.75)');
+    ctx.fillStyle = g; ctx.fillRect(sx - sunR, cy - sunR, sunR * 2, sunR * 2);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(42,22,0,.75)'; ctx.font = '700 15px Fredoka, sans-serif'; ctx.textAlign = 'left';
+    ctx.save(); ctx.translate(edge - 14, H * .2); ctx.rotate(PI / 2); ctx.fillText('The edge of the Sun', 0, 0); ctx.restore();
+    if (sel === 'sun') { ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.arc(sx, cy, sunR + 8, -.6, .6); ctx.stroke(); ctx.setLineDash([]); }
+    }
+
+    // centre line
+    ctx.strokeStyle = 'rgba(140,160,255,.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(edge + 6, cy); ctx.lineTo(W, cy); ctx.stroke();
+    ctx.textAlign = 'center';
+    for (const p of lay) {
+      if (p.x + p.slot < sx0 || p.x - p.slot > sx0 + VW) continue;
+      drawBody(ctx, p.id, p.x, cy, p.r, { rot: -t * .25, L: [-.82, -.12, .55], pitch: p.id === 'saturn' ? .42 : .15, dpr: d, slot: slots[p.id], ringFlat: .38, maxD: 320 });
+      if (sel === p.id) { ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.5; ctx.setLineDash([6, 6]); ctx.lineDashOffset = -t * 20; ctx.beginPath(); ctx.arc(p.x, cy, p.r * (p.id === 'saturn' ? 2.3 : 1) + 8, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.fillStyle = sel === p.id ? '#FFB52E' : '#F3F1FF'; ctx.font = '600 15px Fredoka, sans-serif'; ctx.fillText(BODIES[p.id].name, p.x, labelY);
+      const rel = DIAM[p.id] / DIAM.earth;
+      ctx.fillStyle = '#A8B2DE'; ctx.font = '500 12px Lexend, sans-serif';
+      ctx.fillText(p.id === 'earth' ? '1 Earth' : rel >= 1.5 ? `${Math.round(rel)} × Earth` : `${rel.toFixed(rel < .5 ? 2 : 1)} × Earth`, p.x, labelY + 19);
+    }
+  }
+  cv.addEventListener('click', e => {
+    const x = e.offsetX + sc.scrollLeft;
+    let hit = x < edge + 10 ? 'sun' : null;
+    if (!hit) for (const p of lay) if (Math.abs(x - p.x) < p.slot / 2 + 7) hit = p.id;
+    if (!hit) return;
+    sel = hit; Sfx.twinkle();
+    const [what, emo] = FRUIT[hit];
+    $('#cmpTitle').textContent = BODIES[hit].name;
+    $('#cmpText').innerHTML = hit === 'earth' ? 'Pretend Earth is <b>a little grape 🍇</b>. Tap another planet to compare.' :
+      hit === 'sun' ? 'If Earth were a grape 🍇, the Sun would be <b>a giant ball, taller than your front door 🚪</b>.' :
+      `If Earth were a grape 🍇, ${BODIES[hit].name} would be <b>${what} ${emo}</b>.`;
+    Voice.say('size_' + hit);
+  });
+  return { frame, layout, enter(quiet) { layout(); if (!quiet) intro('sizes', 'sizes_intro'); } };
+})();
+
+/* ================================================================ 3. WEIGH ME */
+views.weigh = (() => {
+  const cv = $('#weighCv');
+  const WORLDS = [
+    { id: 'mercury', g: .38, year: 88 }, { id: 'venus', g: .91, year: 225 }, { id: 'earth', g: 1, year: 365.25 },
+    { id: 'moon', g: .165, year: 365.25 }, { id: 'mars', g: .38, year: 687 }, { id: 'jupiter', g: 2.53, year: 4333 },
+    { id: 'saturn', g: 1.07, year: 10759 }, { id: 'uranus', g: .89, year: 30687 }, { id: 'neptune', g: 1.14, year: 60190 }, { id: 'sun', g: 27.9, year: 0 }
+  ];
+  const SCENE = {
+    mercury: { sky: ['#000004', '#0B0B16'], ground: '#7C746C', bigSun: 2.2, stars: 1 },
+    venus:   { sky: ['#B9762F', '#F0C474'], ground: '#8A5A2B', haze: 1 },
+    earth:   { sky: ['#4FA8F0', '#BFE5FF'], ground: '#4C9A45', clouds: 1, sunS: 1 },
+    moon:    { sky: ['#000004', '#05060F'], ground: '#9D9C97', earthUp: 1, stars: 1 },
+    mars:    { sky: ['#C68A5C', '#E7C097'], ground: '#B05A30', sunS: .6 },
+    jupiter: { sky: ['#C9A57E', '#F1E2C6'], pad: 1, bands: ['#D9B48A', '#B9855C'] },
+    saturn:  { sky: ['#D9C08C', '#F5E7C2'], pad: 1, bands: ['#E2CC98', '#C9AB72'], ringsUp: 1 },
+    uranus:  { sky: ['#7FCBD6', '#C9F0F3'], pad: 1, bands: ['#A6E0E6', '#8BCFD9'] },
+    neptune: { sky: ['#1F3FA8', '#4C78E0'], pad: 1, bands: ['#3D64CC', '#2C4CB0'], wind: 1 },
+    sun:     { sky: ['#7A1A04', '#FF8A1E'], pad: 1, fire: 1 }
+  };
+  let W = 0, H = 0, cur = 'earth', jumpT = -1, t = 0, shownKg = prefs.kg, lastKg = '';
+  const earthSlot = makeSlot();
+  function world() { return WORLDS.find(w => w.id === cur); }
+  function layout() { const f = fitCanvas(cv); W = f.w; H = f.h; }
+  function fmt(n) { return n >= 100 ? Math.round(n).toLocaleString('en-IN') : n >= 10 ? n.toFixed(0) : n.toFixed(1); }
+  function ageText(w) {
+    if (!w.year) return 'Nobody can live on the Sun!';
+    if (w.id === 'moon') return `Age: ${prefs.age}, the same as on Earth, because the Moon travels with us.`;
+    const a = prefs.age * 365.25 / w.year;
+    return `Age here: ${a >= 1 ? fmt(a) : a.toFixed(2)} ${BODIES[w.id].name} years` + (a < 1 ? ', not even 1 yet!' : '.');
+  }
+  function update() {
+    const w = world(), kg = prefs.kg * w.g;
+    $('#wTitle').textContent = cur === 'earth' ? 'At home on Earth' : 'On ' + (cur === 'moon' || cur === 'sun' ? 'the ' : '') + BODIES[cur].name;
+    $('#wMore').textContent = (cur === 'sun' ? 'Too heavy to jump at all! ' : cur === 'earth' ? '' : `Jump ${w.g < 1 ? fmt(1 / w.g) + '× higher' : fmt(1 / w.g * 100) + '% as high'} than on Earth. `) + ageText(w);
+    $('#kgOut').textContent = prefs.kg; $('#ageOut').textContent = prefs.age;
+    $$('.world').forEach(b => {
+      const ww = WORLDS.find(x => x.id === b.dataset.id);
+      b.querySelector('b').textContent = fmt(prefs.kg * ww.g) + ' kg';
+      b.setAttribute('aria-pressed', b.dataset.id === cur ? 'true' : 'false');
+    });
+  }
+  function frame(dt) {
+    t += dt;
+    const w = world(), target = prefs.kg * w.g;
+    shownKg = lerp(shownKg, target, 1 - Math.exp(-dt * 6));
+    const kgText = fmt(shownKg);
+    if (kgText !== lastKg) { lastKg = kgText; $('#wKg').innerHTML = `${kgText} <small>kg</small>`; }
+    const ctx = cv.getContext('2d'), d = dprNow(); ctx.setTransform(d, 0, 0, d, 0, 0);
+    const sc = SCENE[cur], gy = H * .8;
+    let g = ctx.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, sc.sky[0]); g.addColorStop(1, sc.sky[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (sc.stars) for (let i = 0; i < 70; i++) { const s = SKY.stars[i]; ctx.globalAlpha = .4 + .6 * Math.abs(Math.sin(t + s.p)); ctx.fillStyle = '#fff'; ctx.fillRect(s.x * W, s.y * gy * .9, s.s, s.s); }
+    ctx.globalAlpha = 1;
+    if (sc.bigSun) { sunGlow(ctx, W * .82, gy * .55, 46, t, .9); ctx.fillStyle = '#FFE7A8'; ctx.beginPath(); ctx.arc(W * .82, gy * .55, 46, 0, TAU); ctx.fill(); }
+    if (sc.sunS) { ctx.fillStyle = '#FFF4C9'; ctx.shadowColor = '#FFE38A'; ctx.shadowBlur = 30; ctx.beginPath(); ctx.arc(W * .84, gy * .2, 22 * sc.sunS, 0, TAU); ctx.fill(); ctx.shadowBlur = 0; }
+    if (sc.clouds) for (let i = 0; i < 4; i++) { const x = ((i * 260 + t * 12) % (W + 200)) - 100, y = gy * (.25 + .12 * (i % 2)); cloud(ctx, x, y, 1 + (i % 3) * .3); }
+    if (sc.earthUp) drawBody(ctx, 'earth', W * .8, gy * .26, Math.min(36, W * .07), { rot: -t * .2, L: [-.7, -.2, .68], pitch: .3, dpr: d, slot: earthSlot });
+    if (sc.ringsUp) { ctx.strokeStyle = 'rgba(160,130,80,.5)'; for (let i = 0; i < 6; i++) { ctx.lineWidth = 6 - i * .6; ctx.beginPath(); ctx.ellipse(W * .5, gy * 1.3, W * (.9 + i * .06), gy * (.95 + i * .05), -.08, PI * 1.05, PI * 1.95); ctx.stroke(); } }
+    if (sc.haze) { ctx.fillStyle = 'rgba(255,220,150,.18)'; ctx.fillRect(0, gy * .5, W, gy * .5); }
+    if (sc.wind) { ctx.strokeStyle = 'rgba(220,235,255,.35)'; ctx.lineWidth = 2; for (let i = 0; i < 9; i++) { const y = (i * 53) % gy, x = ((t * 420 + i * 170) % (W + 300)) - 150; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 90, y); ctx.stroke(); } }
+    // ground or floating pad
+    if (sc.pad) {
+      for (let i = 0; i < 6; i++) { ctx.fillStyle = sc.fire ? `rgba(255,${120 + i * 20},20,${.25 + i * .08})` : sc.bands[i % 2]; const y = gy + i * (H - gy) / 6 - 18; ctx.beginPath(); ctx.moveTo(0, y); for (let x = 0; x <= W; x += 20) ctx.lineTo(x, y + Math.sin(x * .02 + t * (sc.fire ? 4 : 1) + i) * 6); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill(); }
+      const px = W < 560 ? W * .74 : W * .5;
+      ctx.fillStyle = '#3A4A8A'; roundRect(ctx, px - 80, gy - 10, 160, 22, 11); ctx.fill();
+      ctx.fillStyle = '#59E0E8'; for (let i = 0; i < 4; i++) { ctx.globalAlpha = .4 + .4 * Math.sin(t * 6 + i); ctx.fillRect(px - 62 + i * 38, gy + 12, 12, 6); } ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(5,8,23,.7)'; ctx.font = '600 12px Lexend, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(sc.fire ? 'Space pad over the Sun' : 'No ground: a floating pad!', px, gy + 40);
+    } else {
+      ctx.fillStyle = sc.ground; ctx.beginPath(); ctx.moveTo(0, gy + 8); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, gy + Math.sin(x * .013) * 8); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+      if (cur === 'moon' || cur === 'mercury') { ctx.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.ellipse((i * 137) % W, gy + 30 + (i * 23) % (H - gy - 30), 26, 7, 0, 0, TAU); ctx.fill(); } }
+    }
+    // jump physics
+    const G0 = 1280, v0 = 320, gg = G0 * w.g, hMax = v0 * v0 / (2 * gg), room = gy - 150, sk = hMax > room ? room / hMax : 1;
+    let lift = 0, air = false;
+    if (jumpT >= 0 && cur !== 'sun') {
+      jumpT += dt; const T = 2 * v0 / gg;
+      if (jumpT >= T) jumpT = -1; else { lift = (v0 * jumpT - .5 * gg * jumpT * jumpT) * sk; air = true; }
+    } else jumpT = -1;
+    const ax = W < 560 ? W * .74 : W * .5, ay = gy - 16;
+    // scale
+    ctx.fillStyle = '#E8ECFF'; roundRect(ctx, ax - 42, ay - 2, 84, 16, 6); ctx.fill();
+    ctx.fillStyle = '#16215A'; roundRect(ctx, ax - 22, ay + 1, 44, 10, 3); ctx.fill();
+    ctx.fillStyle = '#6FEA95'; ctx.font = '600 9px Lexend, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(air ? '0 kg' : fmt(target) + ' kg', ax, ay + 9.5);
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(ax, ay + 18, 26 * (1 - Math.min(.6, lift / 300)), 5, 0, 0, TAU); ctx.fill();
+    drawAstro(ctx, ax, ay - 2 - lift, Math.min(1.25, H / 380), air, cur === 'sun' ? 1 : w.g > 2 ? .5 : 0, t);
+    if (lift > room * .9) { ctx.fillStyle = '#F3F1FF'; ctx.font = '700 22px Fredoka, sans-serif'; ctx.fillText('Wheee!', ax + 70, ay - lift + 10); }
+  }
+  function cloud(ctx, x, y, s) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(x, y, 18 * s, 0, TAU); ctx.arc(x + 22 * s, y - 8 * s, 22 * s, 0, TAU); ctx.arc(x + 46 * s, y, 17 * s, 0, TAU); ctx.fill(); }
+  function drawAstro(ctx, x, y, s, air, strain, t) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    const squash = strain ? 1 - strain * .12 : 1; ctx.scale(1 + (1 - squash) * .6, squash);
+    const hy = air ? -98 : strain ? -50 : -46 + Math.sin(t * 2) * 2;
+    ctx.lineCap = 'round';
+    // legs
+    ctx.strokeStyle = '#DDE2F5'; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(-10, -30); ctx.lineTo(-12 - (air ? 4 : 0), -4); ctx.moveTo(10, -30); ctx.lineTo(12 + (air ? 4 : 0), -4); ctx.stroke();
+    ctx.fillStyle = '#5B6491'; ctx.beginPath(); ctx.ellipse(-13, -2, 10, 6, 0, 0, TAU); ctx.ellipse(13, -2, 10, 6, 0, 0, TAU); ctx.fill();
+    // backpack + body
+    ctx.fillStyle = '#B8C0E0'; roundRect(ctx, -26, -80, 52, 44, 12); ctx.fill();
+    ctx.fillStyle = '#F3F4FF'; roundRect(ctx, -21, -78, 42, 52, 16); ctx.fill();
+    ctx.fillStyle = '#FF7442'; roundRect(ctx, -12, -64, 24, 14, 4); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '700 7px Lexend, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('AYANSH', 0, -54.5);
+    // arms
+    ctx.strokeStyle = '#E6EAF8'; ctx.lineWidth = 11;
+    ctx.beginPath(); ctx.moveTo(-18, -70); ctx.lineTo(air ? -34 : -30, hy); ctx.moveTo(18, -70); ctx.lineTo(air ? 34 : 30, hy); ctx.stroke();
+    // helmet
+    ctx.fillStyle = '#F3F4FF'; ctx.beginPath(); ctx.arc(0, -98, 25, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#16215A'; roundRect(ctx, -18, -110, 36, 26, 12); ctx.fill();
+    ctx.fillStyle = 'rgba(89,224,232,.55)'; ctx.beginPath(); ctx.ellipse(-8, -102, 6, 3.5, -.5, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#F3F1FF'; ctx.beginPath(); ctx.arc(-6, -96, 2.4, 0, TAU); ctx.arc(6, -96, 2.4, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#FFB52E'; ctx.lineWidth = 2.2; ctx.beginPath();
+    if (strain) { ctx.moveTo(-5, -88); ctx.lineTo(5, -88); } else ctx.arc(0, -91, 5, .2, PI - .2);
+    ctx.stroke();
+    if (strain === 1) { ctx.fillStyle = '#7FD3FF'; ctx.beginPath(); ctx.ellipse(22, -112 + (t * 30) % 14, 3, 5, 0, 0, TAU); ctx.fill(); }
+    ctx.restore();
+  }
+  function pick(id) { cur = id; jumpT = -1; Sfx.whoosh(); update(); Voice.say('weigh_' + id); }
+  function jump() {
+    if (cur === 'sun') { Sfx.boop(); return; }
+    if (jumpT < 0) { jumpT = 0; Sfx.boing(1 / world().g); }
+  }
+  function build() {
+    $('#worlds').innerHTML = WORLDS.map(w => `<button class="world" type="button" data-id="${w.id}" aria-pressed="false"><img src="${THUMB[w.id]}" alt="">${BODIES[w.id].name}<b></b></button>`).join('');
+    $$('.world').forEach(b => b.addEventListener('click', () => pick(b.dataset.id)));
+    update();
+  }
+  const step = (k, dlt, lo, hi) => () => { prefs[k] = clamp(prefs[k] + dlt, lo, hi); savePrefs(); Sfx.tap(); update(); };
+  $('#kgMinus').addEventListener('click', step('kg', -1, 8, 90)); $('#kgPlus').addEventListener('click', step('kg', 1, 8, 90));
+  $('#ageMinus').addEventListener('click', step('age', -1, 1, 99)); $('#agePlus').addEventListener('click', step('age', 1, 1, 99));
+  $('#jumpBtn').addEventListener('click', jump); cv.addEventListener('click', jump);
+  window.addEventListener('keydown', e => { if (current === 'weigh' && e.code === 'Space' && e.target === document.body) { e.preventDefault(); jump(); } });
+  return { frame, layout, build, enter(quiet) { layout(); update(); if (!quiet) intro('weigh', 'weigh_intro'); } };
+})();
+
+/* ================================================================ 4. DAY & NIGHT + MOON SHAPES */
+views.day = (() => {
+  const cv = $('#dayCv');
+  let W = 0, H = 0, t = 0, mode = 'day', rot = 0, spin = false, anim = null, lastState = null, lastFlipTalk = 0, lastTime = '';
+  let moonA = PI * 1.25, moonPlay = false, drag = null, lastPhase = null;
+  const L = [-.86, -.1, .5]; { const m = Math.hypot(...L); L[0] /= m; L[1] /= m; L[2] /= m; }
+  const SUBSOLAR = Math.atan2(L[0], L[2]);
+  const INDIA = { lat: 21 * PI / 180, lon: 78 * PI / 180 }, PITCH = .2;
+  const eSlot = makeSlot(), e2 = makeSlot(), mSlot = makeSlot(), m2 = makeSlot();
+  rot = INDIA.lon - (SUBSOLAR + .25);
+  function layout() { const f = fitCanvas(cv); W = f.w; H = f.h; }
+  function earthR() { return Math.min(H * .34, W * .3); }
+  function indiaView() {
+    const lv = INDIA.lon - rot, cl = Math.cos(INDIA.lat);
+    const wx = cl * Math.sin(lv), wy = Math.sin(INDIA.lat), wz = cl * Math.cos(lv);
+    const cp = Math.cos(PITCH), sp = Math.sin(PITCH);
+    return { x: wx, y: -wy * cp + wz * sp, z: wy * sp + wz * cp, lv };
+  }
+  function localHour() { const h = 12 + (indiaView().lv - SUBSOLAR) * 12 / PI; return ((h % 24) + 24) % 24; }
+  function isDay() { const p = indiaView(); return p.x * L[0] + p.y * L[1] + p.z * L[2] > 0; }
+  function setSky() {
+    const h = localHour(), day = isDay(), dusk = Math.abs(h - 6.3) < .9 || Math.abs(h - 18) < .9;
+    const sky = day ? (dusk ? 'linear-gradient(#FF9A5A,#FFD39A)' : 'linear-gradient(#3E9BEA,#BDE3FF)') : (dusk ? 'linear-gradient(#2A2370,#C2607A)' : 'linear-gradient(#060B2E,#1C2A6E)');
+    const win = $('#skywin'); if (win.dataset.bg !== sky) { win.dataset.bg = sky; win.style.background = sky; }
+    const st = day ? 'day' : 'night';
+    if (win.dataset.s !== st) {
+      win.dataset.s = st;
+      win.innerHTML = day
+        ? '<svg viewBox="0 0 190 92"><circle cx="140" cy="34" r="16" fill="#FFF1B0"/><circle cx="140" cy="34" r="24" fill="#FFF1B0" opacity=".3"/><path d="M0 80q40-18 80-4t110-6v22H0z" fill="#4C9A45"/><rect x="34" y="56" width="26" height="20" fill="#F3E2C8"/><path d="M30 58l17-14 17 14z" fill="#D9603B"/></svg>'
+        : '<svg viewBox="0 0 190 92"><path d="M150 20a14 14 0 1 0 12 22a11 11 0 1 1-12-22z" fill="#FFF1C9"/><g fill="#fff"><circle cx="30" cy="18" r="1.4"/><circle cx="70" cy="30" r="1"/><circle cx="100" cy="14" r="1.3"/><circle cx="120" cy="40" r="1"/><circle cx="54" cy="44" r="1.2"/></g><path d="M0 80q40-18 80-4t110-6v22H0z" fill="#1F3A2A"/><rect x="34" y="56" width="26" height="20" fill="#3B3550"/><rect x="42" y="62" width="9" height="8" fill="#FFD36A"/><path d="M30 58l17-14 17 14z" fill="#5A2E2A"/></svg>';
+    }
+    $('#skyWord').textContent = day ? 'Daytime' : 'Night time';
+    const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 15) * 15;
+    const tt = `about ${((hh + 11) % 12) + 1}:${String(mm).padStart(2, '0')} ${hh < 12 ? 'AM' : 'PM'}`;
+    if (tt !== lastTime) { lastTime = tt; $('#skyTime').textContent = tt; }
+    if (lastState !== null && lastState !== st && performance.now() - lastFlipTalk > 7000 && !Voice.busy && !anim) { lastFlipTalk = performance.now(); Voice.say(day ? 'day_day' : 'day_night'); }
+    lastState = st;
+  }
+  function frame(dt) {
+    t += dt;
+    const ctx = cv.getContext('2d'), d = dprNow(); ctx.setTransform(d, 0, 0, d, 0, 0);
+    drawSky(ctx, W, H, t, 0, 0, dt);
+    if (mode === 'day') dayFrame(ctx, dt, d); else moonFrame(ctx, dt, d);
+  }
+  function lightRays(ctx, x0, x1, top, bot) {
+    ctx.save(); ctx.strokeStyle = 'rgba(255,214,120,.35)'; ctx.lineWidth = 2; ctx.setLineDash([10, 16]); ctx.lineDashOffset = -t * 40;
+    for (let i = 0; i < 6; i++) { const y = lerp(top, bot, i / 5); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+    ctx.restore();
+  }
+  function dayFrame(ctx, dt, d) {
+    if (anim) { const step = Math.min(anim.left, Math.max(anim.left * dt * 2.2, dt * .9)); rot -= step; anim.left -= step; if (anim.left < .002) { const a = anim; anim = null; a.done(); } }
+    else if (spin) rot -= dt * .7;
+    const R = earthR(), cx = W * .58, cy = W < 760 ? H * .58 : H * .5;
+    const sr = Math.min(H, W) * .5;
+    sunGlow(ctx, -sr * .45, cy, sr, t, .7);
+    drawBody(ctx, 'sun', -sr * .45, cy, sr, { rot: -t * .02, L: [0, 0, 1], pitch: .1, dpr: d, slot: e2, maxD: 180 });
+    lightRays(ctx, sr * .6, cx - R * 1.05, cy - R * .8, cy + R * .8);
+    drawBody(ctx, 'earth', cx, cy, R, { rot, L, pitch: PITCH, dpr: d, slot: eSlot, ambient: .1, maxD: 440 });
+    // city lights hint on the night side: a soft shade band
+    const p = indiaView();
+    if (p.z > .02) {
+      const x = cx + p.x * R, y = cy + p.y * R, a = smooth(.02, .2, p.z);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#FFB52E'; ctx.beginPath(); ctx.arc(x, y - 18, 11, PI * .85, PI * .15); ctx.lineTo(x, y); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#2A1600'; ctx.beginPath(); ctx.moveTo(x - 5, y - 17); ctx.lineTo(x, y - 22); ctx.lineTo(x + 5, y - 17); ctx.lineTo(x + 5, y - 12); ctx.lineTo(x - 5, y - 12); ctx.fill();
+      ctx.font = '700 14px Fredoka, sans-serif'; ctx.textAlign = 'left';
+      const label = "Ayansh's home", tw = ctx.measureText(label).width + 14;
+      ctx.fillStyle = 'rgba(5,8,23,.75)'; roundRect(ctx, x + 14, y - 34, tw, 22, 11); ctx.fill();
+      ctx.fillStyle = '#FFB52E'; ctx.fillText(label, x + 21, y - 18);
+      ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = '#A8B2DE'; ctx.font = '500 13px Lexend, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Drag the Earth to spin it', cx, cy + R + 22);
+    ctx.fillStyle = 'rgba(255,214,120,.9)'; ctx.font = '700 15px Fredoka, sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Sunlight', sr * .62, cy - R * .8 - 10);
+    setSky();
+  }
+  const PH = [
+    { p: 0, name: 'New Moon', line: 'phase_new' }, { p: .125, name: 'Crescent', line: 'phase_crescent' }, { p: .25, name: 'Half Moon', line: 'phase_half' }, { p: .375, name: 'Gibbous', line: 'phase_gibbous' },
+    { p: .5, name: 'Full Moon', line: 'phase_full' }, { p: .625, name: 'Gibbous', line: 'phase_gibbous' }, { p: .75, name: 'Half Moon', line: 'phase_half' }, { p: .875, name: 'Crescent', line: 'phase_crescent' }
+  ];
+  function phaseOf(a) { return ((((a - PI) / TAU) % 1) + 1) % 1; }
+  function phaseIdx(p) { return Math.round(p * 8) % 8; }
+  function moonGeom() {
+    const land = W > H * 1.15, bottom = H - 104;
+    if (land) { const R = Math.min((bottom - 70) / 2 - 24, W * .24); return { cx: W * .34, cy: 70 + (bottom - 70) / 2, R, ix: W * .78, iy: H * .45, ir: Math.min(H * .2, W * .13) }; }
+    const ir = Math.min(H * .1, W * .2), iy = 64 + ir * 1.45, top = iy + ir * 1.65 + 30;
+    const R = Math.max(40, Math.min(W * .36, (bottom - top) / 2 - 22));
+    return { cx: W * .5, cy: top + (bottom - top) / 2, R, ix: W * .5, iy, ir };
+  }
+  function moonFrame(ctx, dt, d) {
+    if (moonPlay) moonA += dt * .45;
+    const g = moonGeom(), p = phaseOf(moonA);
+    lightRays(ctx, 0, g.cx - g.R * 1.25, g.cy - g.R, g.cy + g.R);
+    ctx.fillStyle = 'rgba(255,214,120,.9)'; ctx.font = '700 15px Fredoka, sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Sunlight from this side', 16, g.cy - g.R - 14);
+    ctx.strokeStyle = 'rgba(140,160,255,.35)'; ctx.setLineDash([5, 7]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    const mx = g.cx + Math.cos(moonA) * g.R, my = g.cy - Math.sin(moonA) * g.R;
+    ctx.strokeStyle = 'rgba(255,181,46,.5)'; ctx.lineWidth = 2; ctx.setLineDash([2, 6]); ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(mx, my); ctx.stroke(); ctx.setLineDash([]);
+    drawBody(ctx, 'earth', g.cx, g.cy, g.R * .26, { rot: -t * .3, L: [-1, 0, .08], pitch: PI / 2 - .01, dpr: d, slot: eSlot, ambient: .06 });
+    drawBody(ctx, 'moon', mx, my, g.R * .11, { rot: 0, L: [-1, 0, .08], pitch: PI / 2 - .01, dpr: d, slot: mSlot, ambient: .05 });
+    ctx.strokeStyle = 'rgba(89,224,232,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(mx, my, g.R * .11 + 9 + Math.sin(t * 4) * 2, 0, TAU); ctx.stroke();
+    ctx.fillStyle = '#C9D0F2'; ctx.font = '600 13px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Earth', g.cx, g.cy + g.R * .26 + 16); ctx.fillText('Drag me!', mx, my + g.R * .11 + 26);
+    // what Ayansh sees
+    ctx.fillStyle = 'rgba(13,20,52,.9)'; roundRect(ctx, g.ix - g.ir * 1.5, g.iy - g.ir * 1.45, g.ir * 3, g.ir * 3.1, 18); ctx.fill();
+    ctx.strokeStyle = '#2B3A7A'; ctx.lineWidth = 2; ctx.stroke();
+    const ph = 2 * PI * p;
+    drawBody(ctx, 'moon', g.ix, g.iy, g.ir, { rot: 0, L: [Math.sin(ph), 0, -Math.cos(ph)], pitch: .05, dpr: d, slot: m2, ambient: .07 });
+    ctx.fillStyle = '#A8B2DE'; ctx.font = '500 12px Lexend, sans-serif'; ctx.fillText('What Ayansh sees from Earth', g.ix, g.iy - g.ir - 12);
+    const pi = phaseIdx(p);
+    ctx.fillStyle = '#FFB52E'; ctx.font = '700 20px Fredoka, sans-serif'; ctx.fillText(PH[pi].name, g.ix, g.iy + g.ir + 26);
+    if (pi !== lastPhase) {
+      $$('.phase').forEach((b, i) => b.setAttribute('aria-pressed', i === pi ? 'true' : 'false'));
+      if (lastPhase !== null && drag && !Voice.busy) Voice.say(PH[pi].line);
+      lastPhase = pi;
+    }
+  }
+  function animateTo(targetRot, done) {
+    let left = ((rot - targetRot) % TAU + TAU) % TAU; if (left < .05) left += TAU;
+    spin = false; $('#spinBtn').setAttribute('aria-pressed', 'false');
+    anim = { left, done };
+  }
+  $('#makeDay').addEventListener('click', () => { Sfx.whoosh(); Voice.stop(); animateTo(INDIA.lon - (SUBSOLAR + .25), () => { lastState = 'day'; Voice.say('day_day'); }); });
+  $('#makeNight').addEventListener('click', () => { Sfx.whoosh(); Voice.stop(); animateTo(INDIA.lon - (SUBSOLAR + PI * .75), () => { lastState = 'night'; Voice.say('day_night'); }); });
+  $('#spinBtn').addEventListener('click', e => { spin = !spin; anim = null; e.currentTarget.setAttribute('aria-pressed', spin); Sfx.tap(); });
+  $('#moonPlay').addEventListener('click', e => { moonPlay = !moonPlay; e.currentTarget.setAttribute('aria-pressed', moonPlay); e.currentTarget.lastChild.textContent = moonPlay ? 'Pause' : 'Play'; Sfx.tap(); });
+  cv.addEventListener('pointerdown', e => {
+    cv.setPointerCapture(e.pointerId);
+    if (mode === 'day') { drag = { x: e.offsetX }; anim = null; }
+    else { drag = { moon: true }; moonPlay = false; $('#moonPlay').setAttribute('aria-pressed', 'false'); $('#moonPlay').lastChild.textContent = 'Play'; moveMoon(e); }
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (mode === 'day') { rot -= (e.offsetX - drag.x) / earthR(); drag.x = e.offsetX; }
+    else moveMoon(e);
+  });
+  const end = () => { drag = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  function moveMoon(e) { const g = moonGeom(); moonA = Math.atan2(-(e.offsetY - g.cy), e.offsetX - g.cx); }
+  function setMode(m) {
+    mode = m; Sfx.tap();
+    $('#modeDay').setAttribute('aria-pressed', m === 'day'); $('#modeMoon').setAttribute('aria-pressed', m === 'moon');
+    $('#skycard').hidden = m !== 'day'; $('#dayBtns').hidden = m !== 'day'; $('#moonBtns').hidden = m !== 'moon';
+    lastPhase = null;
+    if (m === 'moon') intro('moon', 'moon_intro'); else intro('day', 'day_intro');
+  }
+  $('#modeDay').addEventListener('click', () => setMode('day')); $('#modeMoon').addEventListener('click', () => setMode('moon'));
+  function build() {
+    $('#phases').innerHTML = PH.map((ph, i) => {
+      const c = document.createElement('canvas'); c.width = c.height = 72; const a = 2 * PI * ph.p;
+      drawBody(c.getContext('2d'), 'moon', 36, 36, 32, { rot: 0, L: [Math.sin(a), 0, -Math.cos(a)], pitch: .05, dpr: 1, ambient: .1 });
+      return `<button class="phase" type="button" data-i="${i}" aria-pressed="false"><img src="${c.toDataURL()}" alt="">${ph.name}</button>`;
+    }).join('');
+    $$('.phase').forEach(b => b.addEventListener('click', () => {
+      const ph = PH[+b.dataset.i]; moonPlay = false; moonA = PI + ph.p * TAU; lastPhase = +b.dataset.i;
+      $$('.phase').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      Sfx.twinkle(); Voice.say(ph.line);
+    }));
+  }
+  return { frame, layout, build, enter(quiet) { layout(); if (!quiet) intro(mode === 'day' ? 'day' : 'moon', mode === 'day' ? 'day_intro' : 'moon_intro'); } };
+})();
+
+/* ================================================================ 5. SPACE RACE */
+views.trip = (() => {
+  const cv = $('#tripCv');
+  const DEST = {
+    moon:    { dist: '384,400 km away', car: 'About 5 months', rocket: 'Apollo rocket: 3 days', light: '1 second', frac: 3 / 160 },
+    mars:    { dist: '56 million km away, at its closest', car: 'More than 60 years', rocket: 'Rocket: about 7 months', light: '3 minutes', frac: .6 / 64 },
+    sun:     { dist: '150 million km away', car: 'About 170 years', rocket: 'Solar probe: 3 months', light: '8 minutes', frac: .25 / 171 },
+    jupiter: { dist: '590 million km away, at its closest', car: 'About 700 years', rocket: 'Juno: 5 years', light: 'About 35 minutes', frac: 5 / 700 },
+    neptune: { dist: '4.3 billion km away', car: 'About 5,000 years', rocket: 'Voyager 2: 12 years', light: '4 hours', frac: 12 / 5000 }
+  };
+  let W = 0, H = 0, t = 0, dest = 'moon', race = -1;
+  const eSlot = makeSlot(), dSlot = makeSlot();
+  function layout() { const f = fitCanvas(cv); W = f.w; H = f.h; }
+  function frame(dt) {
+    t += dt; if (race >= 0) race += dt;
+    const ctx = cv.getContext('2d'), d = dprNow(); ctx.setTransform(d, 0, 0, d, 0, 0);
+    drawSky(ctx, W, H, t, 0, 0, dt);
+    const top = W < 600 ? 118 : 70, bot = H - 76, er = clamp(Math.min(W, H) * .1, 26, 70), ex = er + 18, cy = (top + bot) / 2;
+    const dr = dest === 'sun' ? er * 1.2 : dest === 'moon' ? er * .55 : er * .95, dx = W - dr - 18;
+    if (dest === 'sun') sunGlow(ctx, dx, cy, dr, t, .8);
+    drawBody(ctx, 'earth', ex, cy, er, { rot: -t * .3, L: [.7, -.3, .65], pitch: .25, dpr: d, slot: eSlot });
+    drawBody(ctx, dest, dx, cy, dr, { rot: -t * .2, L: [-.7, -.3, .65], pitch: dest === 'saturn' ? .4 : .25, dpr: d, slot: dSlot });
+    ctx.fillStyle = '#F3F1FF'; ctx.font = '700 16px Fredoka, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Earth', ex, cy + er + 22); ctx.fillText(BODIES[dest].name, dx, cy + dr + 22);
+    ctx.fillStyle = '#A8B2DE'; ctx.font = '500 13px Lexend, sans-serif'; ctx.fillText(DEST[dest].dist, W / 2, top + 4);
+    const x0 = ex + er + 14, x1 = dx - dr - 14, lanes = [cy - (bot - top) * .26, cy, cy + (bot - top) * .26];
+    const info = DEST[dest], T = 3.2;
+    const e = x => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
+    const pr = [race < 0 ? 0 : e(race / .45), race < 0 ? 0 : e(race / T), race < 0 ? 0 : Math.min(1, info.frac * clamp(race / T, 0, 1) + (race > T ? (race - T) * .002 : 0))];
+    const names = ['Light', 'Rocket', 'Car'];
+    for (let i = 0; i < 3; i++) {
+      const y = lanes[i];
+      ctx.strokeStyle = i === 0 ? 'rgba(255,240,180,.25)' : i === 1 ? 'rgba(89,224,232,.25)' : 'rgba(170,170,190,.35)';
+      ctx.lineWidth = i === 2 ? 10 : 2; ctx.setLineDash(i === 2 ? [] : [4, 8]); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.setLineDash([]);
+      if (i === 2) { ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([12, 12]); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.setLineDash([]); }
+      const x = lerp(x0 + 20, x1 - 20, pr[i]);
+      if (i === 0) {
+        if (race >= 0) { const g = ctx.createLinearGradient(x0, y, x, y); g.addColorStop(0, 'rgba(255,240,180,0)'); g.addColorStop(1, 'rgba(255,250,220,.9)'); ctx.strokeStyle = g; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x, y); ctx.stroke(); }
+        ctx.save(); ctx.shadowColor = '#FFF3B0'; ctx.shadowBlur = 18; ctx.fillStyle = '#FFFBE6'; ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.fill(); ctx.restore();
+      } else if (i === 1) drawRocket(ctx, x, y, race >= 0 && pr[1] < 1, t);
+      else drawCar(ctx, x, y, t, race >= 0);
+      ctx.textAlign = 'left'; ctx.fillStyle = '#A8B2DE'; ctx.font = '600 13px Fredoka, sans-serif'; ctx.fillText(names[i], x0, y - 16);
+      const doneAt = [.45, T, T][i];
+      if (race >= doneAt) {
+        const label = i === 0 ? info.light : i === 1 ? info.rocket : 'Still driving… ' + info.car;
+        ctx.font = '700 17px Fredoka, sans-serif'; const tw = ctx.measureText(label).width + 20;
+        const lx = i === 2 ? Math.min(x + 40, x1 - tw) : x1 - tw - 30;
+        ctx.fillStyle = i === 2 ? 'rgba(255,109,138,.92)' : 'rgba(255,181,46,.95)'; roundRect(ctx, lx, y + 12, tw, 28, 14); ctx.fill();
+        ctx.fillStyle = '#1A0E00'; ctx.fillText(label, lx + 10, y + 31);
+      }
+    }
+  }
+  function drawRocket(ctx, x, y, flame, t) {
+    ctx.save(); ctx.translate(x, y);
+    if (flame) { ctx.fillStyle = '#FFB52E'; ctx.beginPath(); ctx.moveTo(-14, -5); ctx.lineTo(-30 - Math.random() * 12, 0); ctx.lineTo(-14, 5); ctx.fill(); ctx.fillStyle = '#FFF1B0'; ctx.beginPath(); ctx.moveTo(-14, -3); ctx.lineTo(-22 - Math.random() * 6, 0); ctx.lineTo(-14, 3); ctx.fill(); }
+    ctx.fillStyle = '#FF6D8A'; ctx.beginPath(); ctx.moveTo(-12, -6); ctx.lineTo(-18, -13); ctx.lineTo(-4, -6); ctx.moveTo(-12, 6); ctx.lineTo(-18, 13); ctx.lineTo(-4, 6); ctx.fill();
+    ctx.fillStyle = '#F3F4FF'; ctx.beginPath(); ctx.moveTo(-14, -7); ctx.lineTo(8, -7); ctx.quadraticCurveTo(22, 0, 8, 7); ctx.lineTo(-14, 7); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#59E0E8'; ctx.beginPath(); ctx.arc(2, 0, 3.6, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  function drawCar(ctx, x, y, t, moving) {
+    ctx.save(); ctx.translate(x, y - 6 + (moving ? Math.sin(t * 20) * .6 : 0));
+    ctx.fillStyle = '#FF7442'; roundRect(ctx, -20, -6, 40, 12, 4); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-11, -6); ctx.lineTo(-6, -14); ctx.lineTo(8, -14); ctx.lineTo(13, -6); ctx.fill();
+    ctx.fillStyle = '#BDE3FF'; ctx.fillRect(-5, -12, 6, 6); ctx.fillRect(3, -12, 6, 6);
+    ctx.fillStyle = '#1B1E33'; ctx.beginPath(); ctx.arc(-11, 7, 5, 0, TAU); ctx.arc(11, 7, 5, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  function build() {
+    $('#dests').innerHTML = Object.keys(DEST).map(id => `<button class="dest" type="button" data-id="${id}" aria-pressed="${id === dest}"><img src="${THUMB[id]}" alt="">${BODIES[id].name}</button>`).join('');
+    $$('.dest').forEach(b => b.addEventListener('click', () => { dest = b.dataset.id; race = -1; Sfx.tap(); $$('.dest').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); }));
+  }
+  $('#goBtn').addEventListener('click', () => { race = 0; Sfx.whoosh(); Voice.say('trip_' + dest); });
+  return { frame, layout, build, enter(quiet) { layout(); if (!quiet) intro('trip', 'trip_intro'); } };
+})();
+
+/* ================================================================ 6. QUIZ */
+views.quiz = (() => {
+  const bg = $('#quizBg');
+  const QS = [
+    { id: 'q_home', a: 'earth', pool: ['mars', 'venus', 'neptune', 'jupiter'] },
+    { id: 'q_rings', a: 'saturn', pool: ['jupiter', 'earth', 'mars', 'neptune'] },
+    { id: 'q_big', a: 'jupiter', pool: ['mercury', 'earth', 'mars', 'venus'] },
+    { id: 'q_red', a: 'mars', pool: ['neptune', 'uranus', 'earth', 'saturn'] },
+    { id: 'q_star', a: 'sun', pool: ['earth', 'moon', 'mars', 'jupiter'] },
+    { id: 'q_hot', a: 'venus', pool: ['uranus', 'neptune', 'earth', 'moon'] },
+    { id: 'q_close', a: 'mercury', pool: ['neptune', 'saturn', 'jupiter', 'uranus'] },
+    { id: 'q_moon', a: 'moon', pool: ['sun', 'jupiter', 'saturn', 'mars'] },
+    { id: 'q_side', a: 'uranus', pool: ['earth', 'mars', 'venus', 'mercury'] },
+    { id: 'q_far', a: 'neptune', pool: ['mercury', 'venus', 'earth', 'mars'] }
+  ];
+  let qi = 0, stars = [], tried = false, locked = false, t = 0, burst = [];
+  const R = rng(Date.now() & 0xffff);
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const starSvg = on => `<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="${on ? '#FFB52E' : 'none'}" stroke="${on ? '#FFE3A0' : '#2B3A7A'}" stroke-width="1.6"/></svg>`;
+  function drawStars() { $('#qstars').innerHTML = QS.map((q, i) => starSvg(stars[i])).join(''); }
+  function ask() {
+    const q = QS[qi]; tried = false; locked = false;
+    $('#qnum').textContent = `Question ${qi + 1} of ${QS.length}`;
+    $('#qtext').textContent = LINES[q.id].text;
+    const opts = shuffle([q.a, ...shuffle(q.pool.slice()).slice(0, 2)]);
+    $('#opts').innerHTML = opts.map(id => `<button class="opt" type="button" data-id="${id}"><img src="${THUMB[id]}" alt="">${BODIES[id].name}</button>`).join('');
+    $$('.opt').forEach(b => b.addEventListener('click', () => answer(b)));
+    Voice.say(q.id);
+  }
+  function answer(b) {
+    if (locked) return;
+    const q = QS[qi];
+    if (b.dataset.id === q.a) {
+      locked = true; b.classList.add('right'); stars[qi] = !tried; drawStars(); Sfx.chime(); confetti(b);
+      Voice.say('right' + (1 + (qi % 3)), () => setTimeout(next, 500));
+    } else {
+      tried = true; b.classList.add('wrong'); b.disabled = true; Sfx.boop(); Voice.say('wrong' + (1 + (qi % 2)));
+    }
+  }
+  function next() {
+    if (current !== 'quiz') return;
+    qi++;
+    if (qi >= QS.length) {
+      $('#qcard').hidden = true; $('#badge').hidden = false;
+      const n = stars.filter(Boolean).length;
+      $('#badgeText').textContent = `You won ${n} out of ${QS.length} stars on the first try!`;
+      Sfx.chime(); confetti($('#badge')); Voice.say('quiz_end');
+      return;
+    }
+    ask();
+  }
+  function restart() { qi = 0; stars = []; drawStars(); $('#qcard').hidden = false; $('#badge').hidden = true; ask(); }
+  $('#again').addEventListener('click', () => { Sfx.tap(); restart(); });
+  $('#qhear').addEventListener('click', () => { Sfx.tap(); Voice.say(QS[Math.min(qi, QS.length - 1)].id); });
+  function confetti(el) {
+    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const cols = ['#FFB52E', '#59E0E8', '#6FEA95', '#FF6D8A', '#F3F1FF'];
+    for (let i = 0; i < 40; i++) { const a = Math.random() * TAU, s = 150 + Math.random() * 300; burst.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 200, life: 0, c: cols[i % 5], r: 3 + Math.random() * 4 }); }
+  }
+  function frame(dt) {
+    t += dt;
+    const f = fitCanvas(bg); drawSky(f.ctx, f.w, f.h, t, 0, 0, dt);
+    const bc = $('#burst');
+    if (burst.length || bc.dataset.on) {
+      const g = fitCanvas(bc); g.ctx.clearRect(0, 0, g.w, g.h);
+      for (let i = burst.length - 1; i >= 0; i--) {
+        const p = burst[i]; p.life += dt; p.vy += 600 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+        if (p.life > 1.4) { burst.splice(i, 1); continue; }
+        g.ctx.globalAlpha = 1 - p.life / 1.4; g.ctx.fillStyle = p.c; g.ctx.fillRect(p.x, p.y, p.r, p.r * 1.6);
+      }
+      g.ctx.globalAlpha = 1; bc.dataset.on = burst.length ? '1' : '';
+    }
+  }
+  return {
+    frame, layout() {},
+    enter(quiet) {
+      drawStars();
+      if (quiet) return;
+      if (!seenIntro.quiz) { seenIntro.quiz = true; restartLater(); }
+      else if (!$('#qcard').hidden) Voice.say(QS[qi].id);
+    }
+  };
+  function restartLater() { qi = 0; stars = []; drawStars(); $('#qcard').hidden = false; $('#badge').hidden = true; Voice.say('quiz_intro', () => { if (current === 'quiz') ask(); }); prepFirst(); }
+  function prepFirst() { const q = QS[0]; $('#qnum').textContent = `Question 1 of ${QS.length}`; $('#qtext').textContent = LINES[q.id].text; $('#opts').innerHTML = ''; }
+})();
+
+/* ================================================================ wiring */
+function setTog(el, on) { el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+setTog($('#voiceTog'), prefs.voice); setTog($('#soundTog'), prefs.sound);
+$('#voiceTog').addEventListener('click', e => {
+  prefs.voice = !prefs.voice; savePrefs(); setTog(e.currentTarget, prefs.voice);
+  if (prefs.voice) Voice.say('voice_on'); else Voice.stop();
+});
+$('#soundTog').addEventListener('click', e => { prefs.sound = !prefs.sound; savePrefs(); setTog(e.currentTarget, prefs.sound); Sfx.tap(); });
+$('#replay').addEventListener('click', () => { if (Voice.lastId) Voice.say(Voice.lastId); });
+$('#hush').addEventListener('click', () => { views.explore.stopTour(); Voice.stop(); });
+
+let last = performance.now(), started = false;
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  try { views[current].frame(dt); } catch (e) { console.error(e); }
+  requestAnimationFrame(loop);
+}
+new ResizeObserver(() => views[current].layout()).observe($('#stage'));
+
+(async function boot() {
+  buildSky();
+  views.explore.layout();
+  requestAnimationFrame(loop);
+  const jobs = Object.keys(TEX_JOBS);
+  for (let i = 0; i < jobs.length; i++) {
+    await sleep(0);
+    TEX[jobs[i]] = TEX_JOBS[jobs[i]]();
+    $('#load').textContent = `Painting the planets… ${Math.round((i + 1) / jobs.length * 100)}%`;
+  }
+  await sleep(0);
+  for (const id of ORDER) THUMB[id] = renderThumb(id);
+  views.explore.buildStrip(); views.weigh.build(); views.day.build(); views.trip.build();
+  $('#load').textContent = 'Ready for launch!';
+  const btn = $('#blast'); btn.disabled = false; btn.focus({ preventScroll: true });
+  const hash = location.hash.slice(1);
+  btn.addEventListener('click', () => {
+    Sfx.init(); Sfx.whoosh();
+    $('#start').classList.add('gone'); setTimeout(() => { $('#start').hidden = true; }, 700);
+    started = true;
+    if (hash && views[hash] && hash !== 'explore') { show(hash); }
+    else { seenIntro.explore = true; show('explore', true); Voice.say('welcome', () => setTimeout(() => { if (current === 'explore' && !Voice.busy) Voice.say('explore_intro'); }, 600)); }
+  }, { once: true });
+})();
+</script>
+</body>
+</html>
