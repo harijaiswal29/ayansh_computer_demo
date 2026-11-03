@@ -102,28 +102,46 @@ const E3 = (() => {
   }
 
   /* ---------------------------------------------------------------- Earth: day side, city lights at night, shiny seas */
-  function earthMaterial() {
+  // o.tile: [x, y, w, h] of the whole map this piece of sphere covers; o.relief: how strongly mountains are shaded
+  function earthMaterial(o = {}) {
+    const tile = o.tile || [0, 0, 1, 1];
     return new T.ShaderMaterial({
-      uniforms: { day: { value: tex('earth_day') }, night: { value: tex('earth_night') }, spec: { value: tex('earth_spec') }, sunDir: { value: new T.Vector3(1, 0, 0) }, nightBoost: { value: 1.4 } },
+      uniforms: {
+        day: { value: tex('earth_day') }, dayTile: { value: new T.Vector4(...tile) }, tile: { value: new T.Vector4(...tile) },
+        night: { value: tex(o.night || 'earth_night') }, spec: { value: tex('earth_spec') }, bump: { value: tex(o.bump || 'earth_bump') },
+        relief: { value: o.relief || 0 }, texel: { value: o.texel || 1 / 2048 },
+        sunDir: { value: new T.Vector3(1, 0, 0) }, nightBoost: { value: 1.4 }, dayK: { value: 1 }
+      },
       clipping: true,
-      vertexShader: `varying vec2 vUv; varying vec3 vN; varying vec3 vP;
+      vertexShader: `varying vec2 vUv; varying vec3 vN; varying vec3 vP; varying vec3 vE; varying vec3 vNo;
         #include <clipping_planes_pars_vertex>
-        void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position,1.0); vP = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal);
+          vec3 e = vec3(normal.z, 0.0, -normal.x); vE = normalize(mat3(modelMatrix) * (length(e) > 0.0001 ? e : vec3(1.0, 0.0, 0.0)));
+          vNo = normalize(cross(vN, vE));
+          vec4 w = modelMatrix * vec4(position,1.0); vP = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
           #include <clipping_planes_vertex>
         }`,
-      fragmentShader: `uniform sampler2D day, night, spec; uniform vec3 sunDir; uniform float nightBoost; varying vec2 vUv; varying vec3 vN; varying vec3 vP;
+      fragmentShader: `uniform sampler2D day, night, spec, bump; uniform vec4 dayTile, tile; uniform float relief, texel, dayK; uniform vec3 sunDir; uniform float nightBoost;
+        varying vec2 vUv; varying vec3 vN; varying vec3 vP; varying vec3 vE; varying vec3 vNo;
         #include <clipping_planes_pars_fragment>
         void main(){
           #include <clipping_planes_fragment>
-          vec3 n = normalize(vN); float d = dot(n, normalize(sunDir));
-          vec3 dayC = texture2D(day, vUv).rgb, nightC = texture2D(night, vUv).rgb; float sea = texture2D(spec, vUv).r;
-          float lit = smoothstep(-0.12, 0.35, d);
-          vec3 col = dayC * (0.04 + 1.05 * max(d, 0.0) + 0.12 * lit);
+          vec2 g = tile.xy + vUv * tile.zw;
+          vec3 n0 = normalize(vN), n = n0;
+          if (relief > 0.0) {
+            float hx = texture2D(bump, g + vec2(texel, 0.0)).r - texture2D(bump, g - vec2(texel, 0.0)).r;
+            float hy = texture2D(bump, g + vec2(0.0, texel)).r - texture2D(bump, g - vec2(0.0, texel)).r;
+            n = normalize(n0 - relief * (hx * normalize(vE) + hy * normalize(vNo)));
+          }
+          float d = dot(n0, normalize(sunDir)), dl = dot(n, normalize(sunDir));
+          vec3 dayC = texture2D(day, dayTile.xy + vUv * dayTile.zw).rgb, nightC = texture2D(night, g).rgb; float sea = texture2D(spec, g).r;
+          float lit = smoothstep(-0.12, 0.35, d) * dayK;
+          vec3 col = dayC * (0.03 + (1.05 * max(mix(dl, d, sea), 0.0) + 0.12) * lit);
           vec3 v = normalize(cameraPosition - vP); vec3 h = normalize(normalize(sunDir) + v);
           col += vec3(1.0, 0.92, 0.78) * pow(max(dot(n, h), 0.0), 90.0) * sea * 0.32 * lit;
-          col += nightC * nightC * nightBoost * 1.6 * (1.0 - smoothstep(-0.25, 0.12, d));
+          col += nightC * nightC * nightBoost * 1.6 * (1.0 - smoothstep(-0.25, 0.12, d) * dayK);
           float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0);
-          col += vec3(0.3, 0.55, 1.0) * rim * smoothstep(-0.3, 0.4, d) * 0.6;
+          col += vec3(0.3, 0.55, 1.0) * rim * smoothstep(-0.3, 0.4, d) * 0.6 * dayK;
           gl_FragColor = vec4(col, 1.0);
         }`
     });
@@ -194,13 +212,35 @@ const E3 = (() => {
   // keep Earth's day/night line and the glow pointing at the Sun
   const _v = new T.Vector3(), _w = new T.Vector3();
   function lightPlanet(p, sunWorld) {
-    p.getWorldPosition(_w); _v.copy(sunWorld).sub(_w).normalize();
-    if (p.body && p.body.material.uniforms && p.body.material.uniforms.sunDir) p.body.material.uniforms.sunDir.value.copy(_v);
-    if (p.atmo) p.atmo.material.uniforms.sunDir.value.copy(_v);
+    p.getWorldPosition(_w); _v.copy(sunWorld).sub(_w).normalize(); lightDir(p, _v);
   }
   function lightDir(p, dir) {
-    if (p.body && p.body.material.uniforms && p.body.material.uniforms.sunDir) p.body.material.uniforms.sunDir.value.copy(dir).normalize();
+    for (const b of p.tiles || [p.body]) if (b && b.material.uniforms && b.material.uniforms.sunDir) b.material.uniforms.sunDir.value.copy(dir).normalize();
     if (p.atmo) p.atmo.material.uniforms.sunDir.value.copy(dir).normalize();
+  }
+  /* A sharper Earth: the sphere is built from 8 pieces, each with its own 2048-pixel part of an 8192-pixel map.
+     The pieces start with the normal map and switch to the sharp ones when loadSharp() is called. */
+  function earthHD(r, o = {}) {
+    const g = new T.Group(), spin = new T.Group(); g.add(spin); g.spin = spin; g.radius = r; g.pid = 'earth'; g.tiles = [];
+    for (let row = 0; row < 2; row++) for (let col = 0; col < 4; col++) {
+      const tile = [col / 4, row ? 0 : .5, .25, .5];
+      const m = earthMaterial({ tile, relief: o.relief ?? 2.2, bump: 'earth_bump4k', night: 'earth_night4k', texel: 1 / 4096 });
+      const mesh = new T.Mesh(new T.SphereGeometry(r, 64, 64, col * Math.PI / 2, Math.PI / 2, row * Math.PI / 2, Math.PI / 2), m);
+      mesh.key = `earth8k_${row}${col}`; spin.add(mesh); g.tiles.push(mesh);
+    }
+    g.body = g.tiles[0];
+    const cm = new T.MeshLambertMaterial({ color: 0xffffff, transparent: true, depthWrite: false, opacity: 0 });
+    tex('earth_clouds4k').ready.then(t => { cm.alphaMap = t; cm.opacity = .9; cm.needsUpdate = true; });
+    const clouds = new T.Mesh(new T.SphereGeometry(r * 1.006, 128, 64), cm); g.clouds = clouds; spin.add(clouds);
+    const at = atmosphere(r, 0x5aa0ff, o.atmoStrength ?? 1.1, o.atmoScale ?? 1.035); g.add(at); g.atmo = at;
+    let asked = false;
+    g.loadSharp = () => {
+      if (asked) return; asked = true;
+      const max = shared ? shared.capabilities.maxTextureSize : 4096;
+      if (max < 2048) return;
+      for (const mesh of g.tiles) tex(mesh.key).ready.then(t => { if (!t.loaded) return; const u = mesh.material.uniforms; u.day.value = t; u.dayTile.value.set(0, 0, 1, 1); });
+    };
+    return g;
   }
   // map coordinates on a planet sphere (three.js puts longitude 0 on +X, east towards −Z)
   function latLonToVec(lat, lon, r = 1) {
@@ -222,7 +262,7 @@ const E3 = (() => {
         const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
         if (pts.size === 2) { const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); this.goalDist = Math.min(this.max, Math.max(this.min, pd * pinch / Math.max(1, d))); moved = true; return; }
         if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) moved = true;
-        if (moved && this.enabled) { this.dragAt = performance.now(); this.goalYaw -= (e.clientX - prev[0]) * .006; this.goalPitch = Math.min(this.maxPitch, Math.max(this.minPitch, this.goalPitch + (e.clientY - prev[1]) * .005)); this.auto = 0; }
+        if (moved && this.enabled) { this.dragAt = performance.now(); const k = this.rotSpeed ?? 1; this.goalYaw -= (e.clientX - prev[0]) * .006 * k; this.goalPitch = Math.min(this.maxPitch, Math.max(this.minPitch, this.goalPitch + (e.clientY - prev[1]) * .005 * k)); this.auto = 0; }
       });
       const up = e => { const was = pts.has(e.pointerId); pts.delete(e.pointerId); if (was && !moved && pts.size === 0 && this.onTap) { const r = el.getBoundingClientRect(); this.onTap(e.clientX - r.left, e.clientY - r.top); } if (!pts.size) down = null; };
       el.addEventListener('pointerup', up); el.addEventListener('pointercancel', e => { pts.delete(e.pointerId); down = null; });
@@ -513,5 +553,5 @@ const E3 = (() => {
     scene.add(l); scene.add(l.target); return l;
   }
 
-  return { T, tex, canvasTex, glow, renderer, attach, rod, fit, snapshot, envFor, starfield, planet, lightPlanet, lightDir, atmosphere, Orbit, toScreen, latLonToVec, vecToLatLon, mats, MODELS, terrain, rocks, sunLight, label, flagTex, box, cyl, sph, at, dishMesh, loadScript };
+  return { T, tex, canvasTex, glow, renderer, attach, rod, fit, snapshot, earthHD, earthMaterial, envFor, starfield, planet, lightPlanet, lightDir, atmosphere, Orbit, toScreen, latLonToVec, vecToLatLon, mats, MODELS, terrain, rocks, sunLight, label, flagTex, box, cyl, sph, at, dishMesh, loadScript };
 })();

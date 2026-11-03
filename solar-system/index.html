@@ -202,6 +202,35 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 .opt.wrong{border-color:var(--rose);opacity:.55;animation:shake .4s}
 @keyframes pop{50%{transform:scale(1.07)}}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.qmenu{width:100%;max-width:860px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
+.qmenu h2{font-size:clamp(28px,5vw,40px)}
+.qmenu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;width:100%}
+.qpick{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;border-radius:24px;border:3px solid var(--line);background:var(--panel);text-align:center}
+.qpick:hover,.qpick:focus-visible{border-color:var(--sun)}
+.qpick b{font-family:var(--display);font-size:22px;color:var(--sun)}
+.qpick span:last-child{font-size:14px;color:var(--dim)}
+.qicon{display:block;width:96px;height:96px}
+.qicon img{width:100%;height:100%;object-fit:contain}
+.qtop{width:100%;max-width:720px;display:flex}
+.opt .otext{font-size:17px;line-height:1.25;padding:0 4px}
+.opt .obig{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;color:var(--cyan)}
+.wicard{position:absolute;top:66px;left:var(--gut-l);right:var(--gut-r);max-width:760px;margin:0 auto;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:12px 16px;text-align:center}
+.wicard.compact{max-width:520px;padding:6px 12px}
+.wicard.compact h2{font-size:18px}
+.wiopt[hidden]{display:none}
+.wicard .num{margin:0;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);font-weight:600}
+.wicard h2{font-size:clamp(20px,3.4vw,30px);font-weight:700}
+.wiopts{position:absolute;left:var(--gut-l);right:var(--gut-r);bottom:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:900px;margin:0 auto}
+.wiopt{padding:12px 10px;border-radius:18px;border:3px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:18px;line-height:1.25;min-height:64px}
+.wiopt.right{border-color:var(--mint);background:#0F3324;animation:pop .4s}
+.wiopt.wrong{border-color:var(--rose);opacity:.55;animation:shake .4s}
+.wiopts .btn{grid-column:1/-1;justify-self:center}
+.emode{flex:none;padding:7px 14px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim);white-space:nowrap}
+.emode[aria-pressed="true"]{border-color:var(--sun);color:#2A1600;background:var(--sun)}
+#view-earth .over.top{flex-wrap:nowrap}
+#view-earth .over.top .emodes{flex:1;min-width:0}
+.earthbot{flex-direction:column;align-items:stretch;gap:6px}
+.earthbot .picker .emode{background:rgba(13,20,52,.85)}
 .badge{width:100%;max-width:520px;text-align:center;background:var(--panel);border:3px solid var(--sun);border-radius:28px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .badge h2{font-size:34px;color:var(--sun)}
 .badge p{margin:0;color:var(--dim)}
@@ -262,6 +291,15 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   .readout p{font-size:12px;line-height:1.3}
   .jump{right:auto;left:var(--gut-l)}
   .opt{font-size:16px;padding:10px 4px}
+  .qmenu-grid{grid-template-columns:1fr}
+  .qpick{flex-direction:row;text-align:left;padding:10px 12px;gap:12px}
+  .qpick .qicon{width:64px;height:64px;flex:none}
+  .qpick b{font-size:19px;display:block}
+  .wicard{top:58px;padding:8px 12px}
+  .wiopts{grid-template-columns:1fr;gap:6px}
+  .wiopt{min-height:44px;font-size:15px;padding:8px}
+  .opt .otext{font-size:14px}
+  .opt .obig{font-size:32px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -414,21 +452,51 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       <canvas class="full" id="earthCv" aria-label="Planet Earth explorer"></canvas>
       <div class="over top">
         <button class="btn small" id="earthBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Space</button>
-        <div class="seg scrolly" role="group" aria-label="Earth activities" id="earthModes">
-          <button type="button" data-m="globe" aria-pressed="true">Globe</button>
-          <button type="button" data-m="india" aria-pressed="false">India</button>
-          <button type="button" data-m="inside" aria-pressed="false">Inside</button>
-          <button type="button" data-m="volcano" aria-pressed="false">Volcano</button>
-          <button type="button" data-m="water" aria-pressed="false">Rain</button>
+        <div class="picker emodes" role="group" aria-label="Earth activities" id="earthModes">
+          <button type="button" class="emode" data-m="globe" aria-pressed="true">Globe</button>
+          <button type="button" class="emode" data-m="india" aria-pressed="false">India</button>
+          <button type="button" class="emode" data-m="seasons" aria-pressed="false">Seasons</button>
+          <button type="button" class="emode" data-m="tides" aria-pressed="false">Tides</button>
+          <button type="button" class="emode" data-m="eclipse" aria-pressed="false">Eclipses</button>
+          <button type="button" class="emode" data-m="aurora" aria-pressed="false">Auroras</button>
+          <button type="button" class="emode" data-m="storm" aria-pressed="false">Storm &amp; rainbow</button>
+          <button type="button" class="emode" data-m="cyclone" aria-pressed="false">Cyclone</button>
+          <button type="button" class="emode" data-m="plates" aria-pressed="false">Earthquakes</button>
+          <button type="button" class="emode" data-m="volcano" aria-pressed="false">Volcano</button>
+          <button type="button" class="emode" data-m="water" aria-pressed="false">Rain cycle</button>
+          <button type="button" class="emode" data-m="inside" aria-pressed="false">Inside Earth</button>
         </div>
       </div>
-      <div class="over bottom" id="earthCtl"></div>
+      <div class="over bottom earthbot"><div class="picker" id="earthPlaces" hidden aria-label="Fly to a place"></div><div class="cluster" id="earthCtl"></div></div>
+    </section>
+
+    <!-- What If game (whatif.js) -->
+    <section class="view" id="view-whatif" hidden aria-label="What if game">
+      <canvas class="full" id="whatifCv" aria-label="A 3D picture showing what would happen"></canvas>
+      <div class="over top">
+        <button class="btn small" id="wiBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Quizzes</button>
+        <div class="qstars" id="wiStars" aria-label="Stars won"></div>
+      </div>
+      <div class="wicard" id="wiCard" aria-live="polite">
+        <p class="num" id="wiNum"></p>
+        <h2 id="wiQ"></h2>
+      </div>
+      <div class="wiopts" id="wiOpts"></div>
     </section>
 
     <!-- 7. Quiz -->
     <section class="view" id="view-quiz" hidden aria-label="Space quiz">
       <canvas class="full" id="quizBg" aria-hidden="true"></canvas>
       <div class="quiz" id="quiz">
+        <div class="qmenu" id="qmenu">
+          <h2>Pick a quiz</h2>
+          <div class="qmenu-grid">
+            <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span>10 questions about the Sun, planets and Moon</span></button>
+            <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span>Spacecraft, Earth and everything we explored</span></button>
+            <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span>Big imagination questions, then watch what happens</span></button>
+          </div>
+        </div>
+        <div class="qtop" id="qtop" hidden><button class="btn small" id="qBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Quizzes</button></div>
         <div class="qstars" id="qstars" aria-label="Stars won"></div>
         <div class="qcard" id="qcard">
           <p class="num" id="qnum"></p>
@@ -440,7 +508,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
           <svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="#FFB52E" stroke="#FFE3A0" stroke-width="1"/></svg>
           <h2>Space Expert Ayansh!</h2>
           <p id="badgeText"></p>
-          <button class="btn go" id="again" type="button">Play again</button>
+          <div class="cluster" style="justify-content:center"><button class="btn go" id="again" type="button">Play again</button><button class="btn" id="toMenu" type="button">Other quizzes</button></div>
         </div>
       </div>
     </section>
@@ -509,6 +577,7 @@ const store = {
 };
 const prefs = Object.assign({ voice: true, sound: true, kg: 22, age: 7 }, store.get('ayansh-space', {}));
 const savePrefs = () => store.set('ayansh-space', prefs);
+const readyHooks = [];  // set-up steps that need the planet pictures; run once they are loaded
 function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
 function fitCanvas(cv) {
   const r = cv.getBoundingClientRect(), d = dprNow();
@@ -1056,7 +1125,7 @@ function show(name, quiet) {
   if (name !== current) views[current].leave?.();
   current = name;
   $$('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
-  const tab = { visit: 'explore', earth: 'explore' }[name] || name;
+  const tab = { visit: 'explore', earth: 'explore', whatif: 'quiz' }[name] || name;
   $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === tab ? 'true' : 'false'));
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   views[name].enter?.(quiet);
@@ -1525,10 +1594,11 @@ views.trip = (() => {
   return { frame, layout, build, enter(quiet) { layout(); if (!quiet) intro('trip', 'trip_intro'); } };
 })();
 
-/* ================================================================ 6. QUIZ */
+/* ================================================================ 6. QUIZZES: a menu, the Planet Quiz and the Space Adventure Quiz (What If lives in whatif.js) */
 views.quiz = (() => {
   const bg = $('#quizBg');
-  const QS = [
+  // Planet Quiz: the answer and a pool of wrong planets to pick two from
+  const PLANET_QS = [
     { id: 'q_home', a: 'earth', pool: ['mars', 'venus', 'neptune', 'jupiter'] },
     { id: 'q_rings', a: 'saturn', pool: ['jupiter', 'earth', 'mars', 'neptune'] },
     { id: 'q_big', a: 'jupiter', pool: ['mercury', 'earth', 'mars', 'venus'] },
@@ -1539,54 +1609,105 @@ views.quiz = (() => {
     { id: 'q_moon', a: 'moon', pool: ['sun', 'jupiter', 'saturn', 'mars'] },
     { id: 'q_side', a: 'uranus', pool: ['earth', 'mars', 'venus', 'mercury'] },
     { id: 'q_far', a: 'neptune', pool: ['mercury', 'venus', 'earth', 'mars'] }
+  ].map(q => ({ id: q.id, planet: q }));
+  // Space Adventure Quiz: the first option is the right one. p: planet picture, c: spacecraft picture, t: words, n: a big number
+  const P = id => ({ p: id }), C = id => ({ c: id }), X = s => ({ t: s }), N = s => ({ n: s });
+  const ADV_QS = [
+    { id: 'aq_ch3', o: [C('chandrayaan'), C('mangalyaan'), C('voyager')] },
+    { id: 'aq_record', o: [C('voyager'), C('juno'), C('perseverance')] },
+    { id: 'aq_sunrises', o: [N('16'), N('1'), N('100')] },
+    { id: 'aq_lightest', o: [P('moon'), P('jupiter'), P('earth')] },
+    { id: 'aq_heli', o: [X('Ingenuity'), X('Pragyan'), X('Huygens')] },
+    { id: 'aq_titan', o: [X('Titan, a moon of Saturn'), X('Io, a moon of Jupiter'), X('Our Moon')] },
+    { id: 'aq_tail', o: [X('Away from the Sun'), X('Towards the Sun'), X('Always down')] },
+    { id: 'aq_shape', o: [X('We see different amounts of its sunny side'), X('It shrinks and grows'), X('Clouds cover parts of it')] },
+    { id: 'aq_center', o: [X('A ball of super hot metal'), X('A giant lake of water'), X('An empty cave')] },
+    { id: 'aq_ocean', o: [X('Pacific Ocean'), X('Indian Ocean'), X('Atlantic Ocean')] },
+    { id: 'aq_launch', o: [X('Sriharikota'), X('Agra'), X('Kanyakumari')] },
+    { id: 'aq_redspot', o: [P('jupiter'), P('mars'), P('neptune')] },
+    { id: 'aq_parker', o: [X('Its heat shield'), X('Its camera'), X('Its antenna')] },
+    { id: 'aq_race', o: [X('A beam of light'), X('A rocket'), X('A car')] },
+    { id: 'aq_heart', o: [P('pluto'), P('mars'), P('mercury')] },
+    { id: 'aq_rainbow', o: [N('7'), N('3'), N('12')] },
+    { id: 'aq_aurora', o: [X("The Sun's wind hitting our air"), X('Giant green torches'), X('Glowing green clouds')] },
+    { id: 'aq_himalaya', o: [X('India crashed into Asia'), X('A volcano erupted'), X('Rain piled up rocks')] },
+    { id: 'aq_seasons', o: [X('Earth is tilted'), X('Earth moves closer to the Sun'), X('The Moon blocks the Sun')] },
+    { id: 'aq_mangal', o: [C('mangalyaan'), C('chandrayaan'), C('juno')] }
   ];
-  let qi = 0, stars = [], tried = false, locked = false, t = 0, burst = [];
+  const QUIZ = {
+    planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: 'Space Expert Ayansh!' },
+    adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: 'Space Adventure Champion!' }
+  };
+  let mode = null, QS = [], qi = 0, stars = [], tried = false, locked = false, t = 0;
+  const burst = [];
   const R = rng(Date.now() & 0xffff);
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
   const starSvg = on => `<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="${on ? '#FFB52E' : 'none'}" stroke="${on ? '#FFE3A0' : '#2B3A7A'}" stroke-width="1.6"/></svg>`;
-  function drawStars() { $('#qstars').innerHTML = QS.map((q, i) => starSvg(stars[i])).join(''); }
-  function ask() {
-    const q = QS[qi]; tried = false; locked = false;
-    $('#qnum').textContent = `Question ${qi + 1} of ${QS.length}`;
-    $('#qtext').textContent = LINES[q.id].text;
-    const opts = shuffle([q.a, ...shuffle(q.pool.slice()).slice(0, 2)]);
-    $('#opts').innerHTML = opts.map(id => `<button class="opt" type="button" data-id="${id}"><img src="${THUMB[id]}" alt="">${BODIES[id].name}</button>`).join('');
+  window.starSvg = starSvg;
+  function drawStars() { $('#qstars').innerHTML = mode ? QS.map((q, i) => starSvg(stars[i])).join('') : ''; }
+  const CRAFT_NAME = { chandrayaan: 'Chandrayaan-3', mangalyaan: 'Mangalyaan', voyager: 'Voyager', juno: 'Juno', perseverance: 'Perseverance' };
+  function optHTML(o) {
+    if (o.p) return `<img src="${THUMB[o.p]}" alt="">${BODIES[o.p].name}`;
+    if (o.c) return `<img src="${(window.CRAFT_ICON || {})[o.c] || ''}" alt="">${CRAFT_NAME[o.c]}`;
+    if (o.n) return `<span class="obig">${o.n}</span>`;
+    return `<span class="otext">${o.t}</span>`;
+  }
+  function showMenu(talk) {
+    mode = null; $('#qmenu').hidden = false; $('#qcard').hidden = true; $('#badge').hidden = true; $('#qtop').hidden = true; drawStars();
+    if (talk) Voice.say('quiz_menu');
+  }
+  function start(m) {
+    if (m === 'whatif') { Sfx.whoosh(); show('whatif'); return; }
+    mode = m; QS = QUIZ[m].make(); qi = 0; stars = [];
+    $('#qmenu').hidden = true; $('#qtop').hidden = false; $('#badge').hidden = true; $('#qcard').hidden = false;
+    drawStars(); ask(false); Sfx.whoosh();
+    Voice.say(QUIZ[m].intro, () => { if (current === 'quiz' && mode === m && qi === 0 && !locked) Voice.say(QS[0].id); });
+  }
+  function prep() { const q = QS[qi]; $('#qnum').textContent = `Question ${qi + 1} of ${QS.length}`; $('#qtext').textContent = LINES[q.id].text; $('#opts').innerHTML = ''; }
+  function ask(speak = true) {
+    const q = QS[qi]; tried = false; locked = false; prep();
+    let opts;
+    if (q.planet) opts = shuffle([q.planet.a, ...shuffle(q.planet.pool.slice()).slice(0, 2)]).map(id => ({ p: id, right: id === q.planet.a }));
+    else opts = shuffle(q.o.map((o, i) => ({ ...o, right: i === 0 })));
+    $('#opts').innerHTML = opts.map(o => `<button class="opt" type="button" data-right="${o.right ? 1 : 0}">${optHTML(o)}</button>`).join('');
     $$('.opt').forEach(b => b.addEventListener('click', () => answer(b)));
-    Voice.say(q.id);
+    if (speak) Voice.say(q.id);
   }
   function answer(b) {
     if (locked) return;
-    const q = QS[qi];
-    if (b.dataset.id === q.a) {
+    if (b.dataset.right === '1') {
       locked = true; b.classList.add('right'); stars[qi] = !tried; drawStars(); Sfx.chime(); confetti(b);
-      Voice.say('right' + (1 + (qi % 3)), () => setTimeout(next, 500));
+      const mine = qi, go = () => { if (qi === mine && locked) next(); };
+      Voice.say('right' + (1 + (qi % 3)), () => setTimeout(go, 500));
+      setTimeout(() => { if (!Voice.busy) go(); }, 3500);   // keeps going even if Nova was stopped
     } else {
       tried = true; b.classList.add('wrong'); b.disabled = true; Sfx.boop(); Voice.say('wrong' + (1 + (qi % 2)));
     }
   }
   function next() {
-    if (current !== 'quiz') return;
+    if (current !== 'quiz' || !mode) return;
     qi++;
     if (qi >= QS.length) {
       $('#qcard').hidden = true; $('#badge').hidden = false;
+      $('#badge h2').textContent = QUIZ[mode].title;
       const n = stars.filter(Boolean).length;
       $('#badgeText').textContent = `You won ${n} out of ${QS.length} stars on the first try!`;
-      Sfx.chime(); confetti($('#badge')); Voice.say('quiz_end');
+      Sfx.chime(); confetti($('#badge')); Voice.say(QUIZ[mode].end);
       return;
     }
     ask();
   }
-  function restart() { qi = 0; stars = []; drawStars(); $('#qcard').hidden = false; $('#badge').hidden = true; ask(); }
-  $('#again').addEventListener('click', () => { Sfx.tap(); restart(); });
-  $('#qhear').addEventListener('click', () => { Sfx.tap(); Voice.say(QS[Math.min(qi, QS.length - 1)].id); });
+  $$('.qpick').forEach(b => b.addEventListener('click', () => start(b.dataset.q)));
+  $('#again').addEventListener('click', () => { Sfx.tap(); start(mode); });
+  $('#toMenu').addEventListener('click', () => { Sfx.tap(); showMenu(true); });
+  $('#qBack').addEventListener('click', () => { Sfx.tap(); Voice.stop(); showMenu(true); });
+  $('#qhear').addEventListener('click', () => { Sfx.tap(); if (mode) Voice.say(QS[Math.min(qi, QS.length - 1)].id); });
   function confetti(el) {
     const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const cols = ['#FFB52E', '#59E0E8', '#6FEA95', '#FF6D8A', '#F3F1FF'];
     for (let i = 0; i < 40; i++) { const a = Math.random() * TAU, s = 150 + Math.random() * 300; burst.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 200, life: 0, c: cols[i % 5], r: 3 + Math.random() * 4 }); }
   }
-  function frame(dt) {
-    t += dt;
-    const f = fitCanvas(bg); drawSky(f.ctx, f.w, f.h, t, 0, 0, dt);
+  function stepBurst(dt) {
     const bc = $('#burst');
     if (burst.length || bc.dataset.on) {
       const g = fitCanvas(bc); g.ctx.clearRect(0, 0, g.w, g.h);
@@ -1598,17 +1719,25 @@ views.quiz = (() => {
       g.ctx.globalAlpha = 1; bc.dataset.on = burst.length ? '1' : '';
     }
   }
+  window.confettiAt = confetti; window.stepConfetti = stepBurst;
+  function frame(dt) {
+    t += dt;
+    const f = fitCanvas(bg); drawSky(f.ctx, f.w, f.h, t, 0, 0, dt);
+    stepBurst(dt);
+  }
+  readyHooks.push(() => setTimeout(() => {
+    $('#qiPlanets').innerHTML = `<img src="${THUMB.saturn}" alt="">`;
+    $('#qiAdv').innerHTML = `<img src="${(window.CRAFT_ICON || {}).chandrayaan || THUMB.moon}" alt="">`;
+    $('#qiWhat').innerHTML = `<img src="${THUMB.earth}" alt="">`;
+  }, 0));
   return {
     frame, layout() {},
     enter(quiet) {
-      drawStars();
       if (quiet) return;
-      if (!seenIntro.quiz) { seenIntro.quiz = true; restartLater(); }
+      if (!mode) showMenu(true);
       else if (!$('#qcard').hidden) Voice.say(QS[qi].id);
     }
   };
-  function restartLater() { qi = 0; stars = []; drawStars(); $('#qcard').hidden = false; $('#badge').hidden = true; Voice.say('quiz_intro', () => { if (current === 'quiz') ask(); }); prepFirst(); }
-  function prepFirst() { const q = QS[0]; $('#qnum').textContent = `Question 1 of ${QS.length}`; $('#qtext').textContent = LINES[q.id].text; $('#opts').innerHTML = ''; }
 })();
 
 /* ================================================================ wiring */
@@ -1630,7 +1759,6 @@ function loop(now) {
 }
 new ResizeObserver(() => views[current]?.layout?.()).observe($('#stage'));
 
-const readyHooks = [];  // other scripts add set-up steps that need the planet pictures
 // turn a real planet map (a data: URL) into pixels the sphere painter can sample
 function decodeTex(uri, alphaFromGrey) {
   return new Promise(res => {
@@ -1674,5 +1802,7 @@ function decodeTex(uri, alphaFromGrey) {
 <script src="explore3d.js"></script>
 <script src="craft.js"></script>
 <script src="visit.js"></script>
+<script src="earthfx.js"></script>
+<script src="whatif.js"></script>
 </body>
 </html>

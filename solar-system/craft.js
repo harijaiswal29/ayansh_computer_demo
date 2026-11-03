@@ -1050,8 +1050,9 @@ views.craft = (() => {
         m.rotation.set(.35, -.7, 0); m.updateMatrixWorld(true);
         const bb = new T.Box3().setFromObject(m), c = bb.getCenter(V3()), sz = bb.getSize(V3()).length();
         iconCam.position.copy(c).add(V3(0, 0, sz * 1.75)); iconCam.lookAt(c);
-        const cv = E3.snapshot(iconScene, iconCam, 96, 96, 0x000000, 0); iconScene.remove(m);
+        const cv = E3.snapshot(iconScene, iconCam, 160, 160, 0x000000, 0); iconScene.remove(m);
         const img = new Image(); img.src = cv.toDataURL(); img.width = img.height = 34; img.alt = ''; b.appendChild(img);
+        (window.CRAFT_ICON = window.CRAFT_ICON || {})[id] = img.src;
       } catch (e) { console.error(e); }
       b.appendChild(document.createTextNode(SHORT[id]));
       b.addEventListener('click', () => pick(id));

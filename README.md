@@ -43,13 +43,32 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 |---|---|---|
 | Explore | Watches the planets go round the Sun in 3D, taps any of them (or the comet or asteroid belt) to fly there, zooms right in to the surface, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
-| Explore → Earth → **Explore Earth** | A real 3D globe, a satellite picture of India, a 3D cut-away of the Earth, an erupting 3D volcano and a 3D rain cycle | Continents and oceans (tap anywhere on the globe), nine world wonders, famous places in India (Himalayas, Ganga, Thar, Taj Mahal, Sriharikota, Western Ghats, Sundarbans, Kanyakumari), digging to the centre of the Earth, making a volcano erupt, and the water cycle and monsoon |
+| Explore → Earth → **Explore Earth** | Twelve activities (below) | How our own planet works |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
-| Quiz | Answers 10 picture questions out loud | Goes over everything, with a star for each first-try answer |
+| Quiz | Picks one of three games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth) and **What If…?** | Goes over everything, with a star for each first-try answer |
+
+### Explore Earth
+
+| Activity | What Ayansh does |
+|---|---|
+| Globe | Spins a sharp 3D Earth (an 8,192-pixel NASA map, with mountain shading, clouds, shiny seas and city lights), taps continents, oceans and wonders, and uses **Fly to** to zoom right down to India, the Himalayas, the Sahara, the Amazon, the Nile, the Great Wall, the Pyramids, the Great Barrier Reef, the Grand Canyon, Niagara Falls, Mount Fuji or Antarctica. **Real time** lights the globe exactly as it is right now and tells him whether it's day or night in India |
+| India | A real satellite picture of India with pins for famous places |
+| Seasons | Watches tilted Earth go round the Sun, with the month, India's season, hours of daylight and how high the noon Sun climbs |
+| Tides | Sees the Moon pull the oceans into bulges, and the water rise and fall on a Mumbai beach |
+| Eclipses | Watches a solar eclipse from the ground, with day turning to night and the corona appearing, and a lunar eclipse turning the Moon red |
+| Auroras | Sees the solar wind steered to the poles from space, then the green curtains from a snowy hill |
+| Storm & rainbow | Counts the seconds between lightning and thunder to find how far the storm is, then brings out the Sun for a rainbow (VIBGYOR) |
+| Cyclone | Watches a cyclone spin across the Bay of Bengal and zooms into its calm eye |
+| Earthquakes | Pushes India north to raise the Himalayas, and shakes the ground while a seismometer draws the quake |
+| Volcano, Rain cycle, Inside Earth | Makes a volcano erupt, follows rain from the sea to the mountains and back, and digs to the centre of the Earth |
+
+### What If…?
+
+Ten imagination questions, each with three choices. After the right answer, a 3D scene shows what would happen: the Sun disappearing (8 more minutes of light, then dark, frozen Earth drifting away), the Moon disappearing, Earth stopping spinning, Earth moving as close as Venus, gravity switching off, Earth having rings, Earth with no air, the Moon twice as close, Earth with no tilt, and shouting in space.
 
 ### The Missions tab
 

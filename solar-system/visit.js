@@ -298,7 +298,7 @@ views.earth = (() => {
   const V3 = (x = 0, y = 0, z = 0) => new T.Vector3(x, y, z);
   let r, cam, ctl, ready = false, W = 0, H = 0, t = 0, mode = 'globe';
   const held = {}, said = new Set();
-  const top = () => ($('#view-earth .over.top').offsetHeight || 50) + 18, bottom = () => H - ($('#earthCtl').offsetHeight || 50) - 16;
+  const top = () => ($('#view-earth .over.top').offsetHeight || 50) + 18, bottom = () => H - ($('#view-earth .earthbot').offsetHeight || 50) - 16;
   function init() {
     r = E3.attach(ov); r.shadowMap.enabled = true; E3.mats(r);
     cam = new T.PerspectiveCamera(45, 1, .05, 20000);
@@ -321,7 +321,11 @@ views.earth = (() => {
       el.appendChild(b);
     }
   }
-  const view = o => { ctl.follow = null; ctl.goal.copy(o.goal || V3()); ctl.goalDist = o.dist; ctl.min = o.min; ctl.max = o.max; ctl.goalYaw = o.yaw ?? ctl.goalYaw; ctl.goalPitch = o.pitch ?? ctl.goalPitch; ctl.minPitch = o.minPitch ?? -1.4; ctl.maxPitch = o.maxPitch ?? 1.4; ctl.auto = o.auto || 0; cam.near = o.near ?? .05; cam.updateProjectionMatrix(); ctl.retarget(); if (o.snap) ctl.snap(); };
+  const places = list => {
+    const el = $('#earthPlaces'); el.innerHTML = ''; el.hidden = !list;
+    for (const [id, label, fn] of list || []) { const b = document.createElement('button'); b.type = 'button'; b.className = 'emode'; b.textContent = label; b.dataset.id = id; b.addEventListener('click', () => { Sfx.tap(); $$('#earthPlaces .emode').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); fn(); }); el.appendChild(b); }
+  };
+  const view = o => { if (o.dist > 15 && H > W && W) o = { ...o, dist: o.dist * Math.min(1.9, H / W * .9) }; ctl.rotSpeed = 1; ctl.quat = null; ctl.follow = null; ctl.goal.copy(o.goal || V3()); ctl.goalDist = o.dist; ctl.min = o.min; ctl.max = o.max; ctl.goalYaw = o.yaw ?? ctl.goalYaw; ctl.goalPitch = o.pitch ?? ctl.goalPitch; ctl.minPitch = o.minPitch ?? -1.4; ctl.maxPitch = o.maxPitch ?? 1.4; ctl.auto = o.auto || 0; cam.near = o.near ?? .05; cam.updateProjectionMatrix(); ctl.retarget(); if (o.snap) ctl.snap(); };
   const proj = v => E3.toScreen(v, cam, W, H);
   const M = {};
 
@@ -329,7 +333,14 @@ views.earth = (() => {
   const WONDERS = [
     ['everest', 'Mount Everest', 27.99, 86.93, 0xF3F1FF], ['taj', 'Taj Mahal', 27.17, 78.04, 0xFFE3F0], ['sahara', 'Sahara Desert', 23, 12, 0xFFD27A], ['amazon', 'Amazon Rainforest', -4, -62, 0x6FEA95],
     ['nile', 'River Nile', 15.6, 32.5, 0x59E0E8], ['wall', 'Great Wall of China', 40.4, 116.6, 0xFF9A6A], ['pyramids', 'Pyramids of Egypt', 29.98, 31.13, 0xFFB52E],
-    ['reef', 'Great Barrier Reef', -18.3, 147.7, 0xFF6D8A], ['trench', 'Mariana Trench', 11.35, 142.2, 0x8FB4FF]
+    ['reef', 'Great Barrier Reef', -18.3, 147.7, 0xFF6D8A], ['trench', 'Mariana Trench', 11.35, 142.2, 0x8FB4FF],
+    ['grandcanyon', 'Grand Canyon', 36.1, -112.1, 0xFF7442], ['niagara', 'Niagara Falls', 43.08, -79.07, 0x59E0E8], ['fuji', 'Mount Fuji', 35.36, 138.73, 0xF3F1FF]
+  ];
+  // places to fly to: [name, lat, lon, how close, narration]
+  const FLY = [
+    ['India', 22, 79, 15, 'e_india'], ['Himalayas', 28.5, 85, 12.2, 'w_everest'], ['Sahara', 23, 12, 15, 'w_sahara'], ['Amazon', -4, -62, 14, 'w_amazon'],
+    ['Nile', 22, 31.5, 13, 'w_nile'], ['Great Wall', 40.4, 116.6, 12.5, 'w_wall'], ['Pyramids', 29.98, 31.13, 12.2, 'w_pyramids'], ['Great Barrier Reef', -18.3, 147.7, 12.8, 'w_reef'],
+    ['Grand Canyon', 36.1, -112.1, 12.2, 'w_grandcanyon'], ['Niagara Falls', 43.08, -79.07, 12.2, 'w_niagara'], ['Mount Fuji', 35.36, 138.73, 12.2, 'w_fuji'], ['Antarctica', -78, 30, 15, 'e_antarctica']
   ];
   const NAMES = { asia: 'Asia', africa: 'Africa', europe: 'Europe', namerica: 'North America', samerica: 'South America', australia: 'Australia', antarctica: 'Antarctica', pacific: 'Pacific Ocean', atlantic: 'Atlantic Ocean', indian: 'Indian Ocean', southern: 'Southern Ocean', arctic: 'Arctic Ocean' };
   function continent(lat, lon) {
@@ -353,14 +364,22 @@ views.earth = (() => {
     if (lon >= -88 && lon <= -70 && lat > 8 && lat <= 17) return 'atlantic';
     return 'pacific';
   }
-  let globeSc, globe, pins = [], label = null, spinOn = true, turnTo = null;
+  let globeSc, globe, pins = [], label = null, spinOn = true, turnTo = null, turnLat = null, realTime = false;
+  // where the Sun is overhead right now: latitude from the date, longitude from the time of day (UTC)
+  function subsolar(now = new Date()) {
+    const start = Date.UTC(now.getUTCFullYear(), 0, 0), doy = (now - start) / 864e5;
+    const decl = -23.44 * Math.cos(TAU * (doy + 10) / 365.25);
+    const hours = now.getUTCHours() + now.getUTCMinutes() / 60;
+    return { lat: decl, lon: -(hours - 12) * 15 };
+  }
+  function flyTo(lat, lon, dist) { spinOn = false; turnTo = lon; ctl.goalPitch = clamp(lat * PI / 180, -1.35, 1.35); ctl.goalDist = dist; label = null; }
   const R = 10, sunDir = V3(-.4, .35, .85).normalize();
   M.globe = {
     make() {
       globeSc = new T.Scene(); globeSc.add(E3.starfield(6000)); globeSc.add(new T.AmbientLight(0xffffff, .15));
       const sl = new T.DirectionalLight(0xffffff, 1.4); sl.position.copy(sunDir).multiplyScalar(100); globeSc.add(sl);
-      globe = E3.planet('earth', R, { seg: 200, noTilt: true }); globeSc.add(globe);
-      globe.body.material.uniforms.nightBoost.value = .6;
+      globe = E3.earthHD(R); globeSc.add(globe);
+      for (const m of globe.tiles) m.material.uniforms.nightBoost.value = .8;
       for (const [id, nm, la, lo, col] of WONDERS) {
         const pin = new T.Group(); const head = new T.Mesh(new T.SphereGeometry(.32, 16, 8), new T.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: .35 })); head.position.y = .55; pin.add(head);
         pin.add(E3.at(E3.cyl(.04, .01, .5, E3.mats().metal, 6), 0, .25, 0));
@@ -368,12 +387,21 @@ views.earth = (() => {
         pin.wid = id; pin.nm = nm; globe.spin.add(pin); pins.push(pin);
       }
     },
-    enter() { if (!globeSc) this.make(); view({ dist: 32, min: 11.5, max: 80, pitch: .3, snap: false }); setCtl([{ id: 'spin', label: 'Spin', cyan: true }, { id: 'india', label: 'Find India', go: true }]); },
-    act(id) { if (id === 'spin') spinOn = !spinOn; if (id === 'india') { spinOn = false; turnTo = 78; ctl.goalPitch = .32; ctl.goalDist = 22; } },
+    enter() {
+      if (!globeSc) this.make();
+      view({ dist: 32, min: 10.35, max: 80, pitch: .3, snap: false });
+      setCtl([{ id: 'spin', label: 'Spin', cyan: true }, { id: 'real', label: realTime ? 'Real time: on' : 'Real time: off' }]);
+      places(FLY.map(([nm, la, lo, d, line]) => [nm, nm, () => { flyTo(la, lo, d); globe.loadSharp(); Sfx.whoosh(); Voice.say(line); }]));
+    },
+    leave() { places(null); },
+    act(id) {
+      if (id === 'spin') spinOn = !spinOn;
+      if (id === 'real') { realTime = !realTime; $('#earthCtl [data-id="real"] span').textContent = realTime ? 'Real time: on' : 'Real time: off'; if (realTime) { spinOn = false; Voice.say('e_realtime'); } }
+    },
     tap(x, y) {
       for (const p of pins) { const s = proj(p.localToWorld(V3(0, .55, 0))); const n = p.getWorldPosition(V3()).normalize(); if (s.front && n.dot(cam.position.clone().normalize()) > .15 && Math.hypot(x - s.x, y - s.y) < 22) { label = { s: p.nm, x: s.x, y: s.y - 18, life: 4 }; Sfx.twinkle(); Voice.say(p.wid === 'taj' ? 'in_taj' : 'w_' + p.wid); return; } }
       const ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2(x / W * 2 - 1, -(y / H) * 2 + 1), cam);
-      const hit = ray.intersectObject(globe.body)[0]; if (!hit) return;
+      const hit = ray.intersectObjects(globe.tiles)[0]; if (!hit) return;
       const local = globe.spin.worldToLocal(hit.point.clone()), { lat, lon } = E3.vecToLatLon(local);
       const id = landAmount(lat, lon) > .5 ? continent(lat, lon) : ocean(lat, lon);
       label = { s: NAMES[id], x, y: y - 16, life: 4 }; Sfx.twinkle(); Voice.say('e_' + id);
@@ -386,12 +414,24 @@ views.earth = (() => {
         let d = want - globe.spin.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); globe.spin.rotation.y += d * Math.min(1, dt * 3); if (Math.abs(d) < .005) turnTo = null;
       }
       globe.clouds.rotation.y += dt * .01;
-      E3.lightDir(globe, sunDir.clone().applyAxisAngle(V3(0, 1, 0), Math.atan2(cam.position.x, cam.position.z)));
+      if (ctl.dist < 22) globe.loadSharp();
+      const ps = clamp((ctl.dist - R) / 20, .06, 1); for (const p of pins) p.scale.setScalar(ps);
+      if (realTime) { const ss = subsolar(); globe.spin.updateMatrixWorld(); E3.lightDir(globe, globe.spin.localToWorld(E3.latLonToVec(ss.lat, ss.lon)).normalize()); }
+      else E3.lightDir(globe, sunDir.clone().applyAxisAngle(V3(0, 1, 0), Math.atan2(cam.position.x, cam.position.z)));
+      // the closer you zoom, the slower dragging turns the globe
+      ctl.rotSpeed = clamp((ctl.dist - R) / 22, .04, 1);
       return globeSc;
     },
     hud(ctx, dt) {
       if (label && label.life > 0) { label.life -= dt; ctx.globalAlpha = Math.min(1, label.life); hudPill(ctx, label.s, label.x, label.y, '#FFB52E', '#2A1600', 16); ctx.globalAlpha = 1; }
       hudText(ctx, 'Drag to spin · Pinch to zoom · Tap land, sea or a pin', W / 2, bottom() - 4, 13, '#C9D0F2', 'center', 600);
+      if (realTime) {
+        const now = new Date(), ist = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 6e4), h = ist.getHours(), mm = String(ist.getMinutes()).padStart(2, '0');
+        const ss = subsolar(), india = E3.latLonToVec(22, 79), sun = E3.latLonToVec(ss.lat, ss.lon), day = india.dot(sun) > 0;
+        ctx.fillStyle = 'rgba(13,20,52,.88)'; roundRect(ctx, 16, top(), 230, 52, 12); ctx.fill();
+        hudText(ctx, `In India: ${((h + 11) % 12) + 1}:${mm} ${h < 12 ? 'AM' : 'PM'}`, 28, top() + 22, 15, '#FFB52E', 'left');
+        hudText(ctx, day ? 'Daytime there right now' : 'Night-time there right now', 28, top() + 42, 12, '#F3F1FF', 'left', 600);
+      }
     }
   };
 
@@ -592,11 +632,14 @@ views.earth = (() => {
   };
 
   function setMode(m) {
+    M[mode]?.leave?.(); places(null);
     mode = m; Sfx.tap(); Voice.stop();
     $$('#earthModes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m ? 'true' : 'false'));
     r.localClippingEnabled = m === 'inside';
     M[m].enter();
-    Voice.say({ globe: 'e_globe', india: 'e_india', inside: 'e_inside', volcano: 'e_volcano', water: 'e_water' }[m]);
+    const line = M[m].line || { globe: 'e_globe', india: 'e_india', inside: 'e_inside', volcano: 'e_volcano', water: 'e_water' }[m];
+    if (line) Voice.say(line);
+    $(`#earthModes [data-m="${m}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
   }
   $$('#earthModes button').forEach(b => b.addEventListener('click', () => { if (!ready) init(); setMode(b.dataset.m); }));
   $('#earthBack').addEventListener('click', () => { Sfx.whoosh(); show('explore', true); Voice.say('visit_back'); });
@@ -624,6 +667,8 @@ views.earth = (() => {
       } else if (!quiet) setMode(mode);
       else { r.localClippingEnabled = mode === 'inside'; M[mode].enter(); }
     },
-    leave() { for (const k in held) held[k] = false; if (r) { r.localClippingEnabled = false; r.domElement.hidden = false; } }
+    leave() { for (const k in held) held[k] = false; M[mode]?.leave?.(); places(null); if (r) { r.localClippingEnabled = false; r.domElement.hidden = false; } },
+    // for earthfx.js
+    api: { M, setCtl, places, view, held, proj, top, bottom, get r() { return r; }, get cam() { return cam; }, get ctl() { return ctl; }, get W() { return W; }, get H() { return H; }, get t() { return t; }, get mode() { return mode; } }
   };
 })();

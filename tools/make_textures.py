@@ -7,6 +7,7 @@ Both sets are made from NASA imagery (Blue Marble, Black Marble city lights, mis
 
 Run:  python tools/make_textures.py <folder holding repos/> solar-system/tex
 """
+import base64, io, math, os, sys
 from PIL import Image, ImageEnhance, ImageDraw, ImageFilter
 import numpy as np
 SP = sys.argv[1]; OUT = sys.argv[2]
@@ -81,3 +82,19 @@ plut = [b for b in big if b[0] == 'pluto'][0]
 pim = Image.open(io.BytesIO(base64.b64decode(plut[1].split(',')[1]))).resize((512, 256)); small['pluto'] = save('pluto', pim, q=80)[1]
 open(f'{OUT}/small.js', 'w').write('window.TEXSMALL = {\n' + ',\n'.join(f"  {k}: '{v}'" for k, v in small.items()) + '\n};\n')
 print('small.js', os.path.getsize(f'{OUT}/small.js') // 1024, 'KB; big total', tot // 1024, 'KB')
+
+# Sharper Earth for the Earth explorer: an 8192 x 4096 map cut into 8 tiles of 2048 x 2048
+# (4 across, 2 down), so even tablets that only allow 4096-pixel textures can show it.
+e8 = Image.open(S + 'earth_10k.jpg').convert('RGB').resize((8192, 4096), Image.LANCZOS)
+e8 = ImageEnhance.Contrast(ImageEnhance.Color(e8).enhance(1.12)).enhance(1.05)
+for row in range(2):
+    for col in range(4):
+        name, uri, n = save(f'earth8k_{row}{col}', e8.crop((col * 2048, row * 2048, col * 2048 + 2048, row * 2048 + 2048)), q=82)
+        open(f'{OUT}/{name}.js', 'w').write(f"(window.TEXDATA = window.TEXDATA || {{}})['{name}'] = '{uri}';\n")
+        print(f'{name:14s} {n // 1024:5d} KB')
+name, uri, n = save('earth_clouds4k', rs(S + 'earth_clouds_4k.png', 4096, 'L'), q=80)
+open(f'{OUT}/{name}.js', 'w').write(f"(window.TEXDATA = window.TEXDATA || {{}})['{name}'] = '{uri}';\n"); print(name, n // 1024, 'KB')
+name, uri, n = save('earth_bump4k', rs(S + 'earth_topo_4k.jpg', 4096, 'L'), q=82)
+open(f'{OUT}/{name}.js', 'w').write(f"(window.TEXDATA = window.TEXDATA || {{}})['{name}'] = '{uri}';\n"); print(name, n // 1024, 'KB')
+name, uri, n = save('earth_night4k', rs(S + 'earth_night_4k.jpg', 4096), q=80)
+open(f'{OUT}/{name}.js', 'w').write(f"(window.TEXDATA = window.TEXDATA || {{}})['{name}'] = '{uri}';\n"); print(name, n // 1024, 'KB')
