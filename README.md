@@ -43,7 +43,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 |---|---|---|
 | Explore | Watches the planets go round the Sun in 3D, taps any of them (or the comet or asteroid belt) to fly there, zooms right in to the surface, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
-| Explore → Earth → **Explore Earth** | Twelve activities (below) | How our own planet works |
+| Explore → Earth → **Explore Earth** | Thirteen activities (below) | How our own planet works |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
@@ -56,6 +56,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Activity | What Ayansh does |
 |---|---|
 | Globe | Spins a sharp 3D Earth (an 8,192-pixel NASA map, with mountain shading, clouds, shiny seas and city lights), taps continents, oceans and wonders, and uses **Fly to** to zoom right down to India, the Himalayas, the Sahara, the Amazon, the Nile, the Great Wall, the Pyramids, the Great Barrier Reef, the Grand Canyon, Niagara Falls, Mount Fuji or Antarctica. **Real time** lights the globe exactly as it is right now and tells him whether it's day or night in India |
+| Earth's story | Rides a time machine through 11 stops, from 4.6 billion years ago to today: the planets forming from dust, Theia crashing in to make the Moon, the first rain and oceans, Snowball Earth, Cambrian sea creatures, giant coal forests, Pangaea (with a button to compare it with today's map), the dinosaurs (taps Brachiosaurus, Stegosaurus, T. rex, Triceratops, Pteranodon and India's own Rajasaurus), the asteroid hitting near Mexico and the dark days after, the Ice Age mammoths, and today. A clock shows when each event would happen if Earth's whole story were one day |
 | India | A real satellite picture of India with pins for famous places |
 | Seasons | Watches tilted Earth go round the Sun, with the month, India's season, hours of daylight and how high the noon Sun climbs |
 | Tides | Sees the Moon pull the oceans into bulges, and the water rise and fall on a Mumbai beach |

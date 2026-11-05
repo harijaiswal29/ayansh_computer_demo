@@ -231,6 +231,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 #view-earth .over.top .emodes{flex:1;min-width:0}
 .earthbot{flex-direction:column;align-items:stretch;gap:6px}
 .earthbot .picker .emode{background:rgba(13,20,52,.85)}
+.earthbot .picker .emode[aria-pressed="true"]{background:var(--sun)}
 .badge{width:100%;max-width:520px;text-align:center;background:var(--panel);border:3px solid var(--sun);border-radius:28px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .badge h2{font-size:34px;color:var(--sun)}
 .badge p{margin:0;color:var(--dim)}
@@ -454,6 +455,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         <button class="btn small" id="earthBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Space</button>
         <div class="picker emodes" role="group" aria-label="Earth activities" id="earthModes">
           <button type="button" class="emode" data-m="globe" aria-pressed="true">Globe</button>
+          <button type="button" class="emode" data-m="history" aria-pressed="false">Earth's story</button>
           <button type="button" class="emode" data-m="india" aria-pressed="false">India</button>
           <button type="button" class="emode" data-m="seasons" aria-pressed="false">Seasons</button>
           <button type="button" class="emode" data-m="tides" aria-pressed="false">Tides</button>
@@ -1803,6 +1805,7 @@ function decodeTex(uri, alphaFromGrey) {
 <script src="craft.js"></script>
 <script src="visit.js"></script>
 <script src="earthfx.js"></script>
+<script src="history.js"></script>
 <script src="whatif.js"></script>
 </body>
 </html>
