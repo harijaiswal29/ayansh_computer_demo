@@ -49,14 +49,14 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
-| Quiz | Picks one of three games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth) and **What If…?** | Goes over everything, with a star for each first-try answer |
+| Quiz | Picks one of four games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures) and **What If…?** | Goes over everything, with a star for each first-try answer |
 
 ### Explore Earth
 
 | Activity | What Ayansh does |
 |---|---|
 | Globe | Spins a sharp 3D Earth (an 8,192-pixel NASA map, with mountain shading, clouds, shiny seas and city lights), taps continents, oceans and wonders, and uses **Fly to** to zoom right down to India, the Himalayas, the Sahara, the Amazon, the Nile, the Great Wall, the Pyramids, the Great Barrier Reef, the Grand Canyon, Niagara Falls, Mount Fuji or Antarctica. **Real time** lights the globe exactly as it is right now and tells him whether it's day or night in India |
-| Earth's story | Rides a time machine through 11 stops, from 4.6 billion years ago to today: the planets forming from dust, Theia crashing in to make the Moon, the first rain and oceans, Snowball Earth, Cambrian sea creatures, giant coal forests, Pangaea (with a button to compare it with today's map), the dinosaurs (taps Brachiosaurus, Stegosaurus, T. rex, Triceratops, Pteranodon and India's own Rajasaurus), the asteroid hitting near Mexico and the dark days after, the Ice Age mammoths, and today. A clock shows when each event would happen if Earth's whole story were one day |
+| Earth's story | Rides a time machine through 11 stops, from 4.6 billion years ago to today: the planets forming from dust, Theia crashing in to make the Moon, the first rain and oceans, Snowball Earth, Cambrian sea creatures, giant coal forests, Pangaea, made from the real satellite map with each continent turned back to where it was (with a button to compare it with today's map), the dinosaurs (taps Brachiosaurus, Stegosaurus, T. rex, Triceratops, Pteranodon and India's own Rajasaurus), the asteroid hitting near Mexico and the dark days after, the Ice Age mammoths, and today. A clock shows when each event would happen if Earth's whole story were one day |
 | India | A real satellite picture of India with pins for famous places |
 | Seasons | Watches tilted Earth go round the Sun, with the month, India's season, hours of daylight and how high the noon Sun climbs |
 | Tides | Sees the Moon pull the oceans into bulges, and the water rise and fall on a Mumbai beach |
@@ -88,6 +88,7 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 
 ## Things to know
 
+- The Earth scenes (Earth's story, Volcano, Rain cycle, Storm, Earthquakes) share a "realism kit" in `solar-system/nature.js`: a sky with a sun and drifting clouds, ground that mixes grass, rock, sand or snow, water that ripples and reflects the sky, and leafy trees, ferns and grass. Everything is drawn from noise in the browser, so there are no extra picture files.
 - Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
 - **Voice** turns Nova on or off, **Sounds** controls the beeps. The two buttons beside her words replay or stop what she is saying.
 - If a voice file is missing, Nova falls back to the best-sounding voice the browser has.
