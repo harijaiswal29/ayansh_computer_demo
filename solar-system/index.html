@@ -204,7 +204,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .qmenu{width:100%;max-width:860px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
 .qmenu h2{font-size:clamp(28px,5vw,40px)}
-.qmenu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;width:100%}
+.qmenu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
 .qpick{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;border-radius:24px;border:3px solid var(--line);background:var(--panel);text-align:center}
 .qpick:hover,.qpick:focus-visible{border-color:var(--sun)}
 .qpick b{font-family:var(--display);font-size:22px;color:var(--sun)}
@@ -495,6 +495,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
           <div class="qmenu-grid">
             <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span>10 questions about the Sun, planets and Moon</span></button>
             <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span>Spacecraft, Earth and everything we explored</span></button>
+            <button class="qpick" type="button" data-q="earth"><span class="qicon" id="qiEarth"></span><b>Earth's Story Quiz</b><span>Baby Earth, dinosaurs, the asteroid and the Ice Age</span></button>
             <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span>Big imagination questions, then watch what happens</span></button>
           </div>
         </div>
@@ -1636,9 +1637,33 @@ views.quiz = (() => {
     { id: 'aq_seasons', o: [X('Earth is tilted'), X('Earth moves closer to the Sun'), X('The Moon blocks the Sun')] },
     { id: 'aq_mangal', o: [C('mangalyaan'), C('chandrayaan'), C('juno')] }
   ];
+  // Earth's Story Quiz. d: a creature picture made from the 3D models in history.js
+  const D = id => ({ d: id });
+  const EARTH_QS = [
+    { id: 'eq_moon', o: [X('A planet crashed into baby Earth'), X('It broke off the Sun'), X('It was made by rain')] },
+    { id: 'eq_trike', o: [D('trike'), D('stego'), D('trex')] },
+    { id: 'eq_trex', o: [D('trex'), D('brachio'), D('trike')] },
+    { id: 'eq_brachio', o: [D('brachio'), D('raja'), D('stego')] },
+    { id: 'eq_raja', o: [D('raja'), D('trex'), D('stego')] },
+    { id: 'eq_stego', o: [D('stego'), D('trike'), D('brachio')] },
+    { id: 'eq_mammoth', o: [D('mammoth'), D('trex'), D('trilobite')] },
+    { id: 'eq_trilobite', o: [D('trilobite'), D('ptero'), D('mammoth')] },
+    { id: 'eq_first', o: [D('trilobite'), D('trex'), D('mammoth')] },
+    { id: 'eq_ptero', o: [X('No, a flying cousin of the dinosaurs'), X('Yes, a flying dinosaur'), X('No, it was a bird')] },
+    { id: 'eq_asteroid', o: [X('A giant asteroid from space'), X('A very hot summer'), X('They all fell asleep')] },
+    { id: 'eq_birds', o: [X('Birds'), X('Cats'), X('Fish')] },
+    { id: 'eq_pangaea', o: [X('Pangaea'), X('Atlantis'), X('Asia')] },
+    { id: 'eq_coal', o: [X('Coal'), X('Gold'), X('Sand')] },
+    { id: 'eq_snowball', o: [X('Snowball'), X('Fireball'), X('Football')] },
+    { id: 'eq_age', o: [N('4.6 billion years'), N('2,000 years'), N('100 years')] },
+    { id: 'eq_humans', o: [X('Just before midnight'), X('At breakfast time'), X('At lunchtime')] },
+    { id: 'eq_oxygen', o: [X('Tiny living things in the sea'), X('Volcanoes'), X('The Moon')] },
+    { id: 'eq_mexico', o: [X('In the sea near Mexico'), X('In India'), X('On the Moon')] }
+  ];
   const QUIZ = {
     planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: 'Space Expert Ayansh!' },
-    adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: 'Space Adventure Champion!' }
+    adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: 'Space Adventure Champion!' },
+    earth: { intro: 'eq_intro', end: 'eq_end', make: () => { window.histIcons?.(); return shuffle(EARTH_QS.slice()).slice(0, 10); }, title: 'Time Traveller Ayansh!' }
   };
   let mode = null, QS = [], qi = 0, stars = [], tried = false, locked = false, t = 0;
   const burst = [];
@@ -1648,9 +1673,11 @@ views.quiz = (() => {
   window.starSvg = starSvg;
   function drawStars() { $('#qstars').innerHTML = mode ? QS.map((q, i) => starSvg(stars[i])).join('') : ''; }
   const CRAFT_NAME = { chandrayaan: 'Chandrayaan-3', mangalyaan: 'Mangalyaan', voyager: 'Voyager', juno: 'Juno', perseverance: 'Perseverance' };
+  const DINO_NAME = { trex: 'T. rex', trike: 'Triceratops', stego: 'Stegosaurus', brachio: 'Brachiosaurus', raja: 'Rajasaurus', mammoth: 'Woolly mammoth', trilobite: 'Trilobite', ptero: 'Pteranodon' };
   function optHTML(o) {
     if (o.p) return `<img src="${THUMB[o.p]}" alt="">${BODIES[o.p].name}`;
     if (o.c) return `<img src="${(window.CRAFT_ICON || {})[o.c] || ''}" alt="">${CRAFT_NAME[o.c]}`;
+    if (o.d) return `<img src="${(window.HIST_ICON || {})[o.d] || ''}" alt="">${DINO_NAME[o.d]}`;
     if (o.n) return `<span class="obig">${o.n}</span>`;
     return `<span class="otext">${o.t}</span>`;
   }
@@ -1731,6 +1758,7 @@ views.quiz = (() => {
     $('#qiPlanets').innerHTML = `<img src="${THUMB.saturn}" alt="">`;
     $('#qiAdv').innerHTML = `<img src="${(window.CRAFT_ICON || {}).chandrayaan || THUMB.moon}" alt="">`;
     $('#qiWhat').innerHTML = `<img src="${THUMB.earth}" alt="">`;
+    window.histIcons?.(); $('#qiEarth').innerHTML = `<img src="${(window.HIST_ICON || {}).trex || THUMB.earth}" alt="">`;
   }, 0));
   return {
     frame, layout() {},
@@ -1803,6 +1831,7 @@ function decodeTex(uri, alphaFromGrey) {
 </script>
 <script src="explore3d.js"></script>
 <script src="craft.js"></script>
+<script src="nature.js"></script>
 <script src="visit.js"></script>
 <script src="earthfx.js"></script>
 <script src="history.js"></script>

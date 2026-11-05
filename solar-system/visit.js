@@ -512,18 +512,19 @@ views.earth = (() => {
   let vSc, vGround, lava, ash, flows = [], V = null, vLight;
   M.volcano = {
     make() {
-      vSc = new T.Scene(); vSc.background = new T.Color(0x7fb2e0); vSc.fog = new T.Fog(0x9fc4e8, 120, 600);
-      vSc.add(new T.HemisphereLight(0xdfefff, 0x4a3a2a, .7));
-      const sl = new T.DirectionalLight(0xfff4e0, 1.3); sl.position.set(60, 90, 40); sl.castShadow = true; sl.shadow.mapSize.set(2048, 2048); const c = sl.shadow.camera; c.left = c.bottom = -80; c.right = c.top = 80; c.far = 400; vSc.add(sl);
-      vGround = E3.terrain({ size: 500, seg: 200, amp: 4, freq: .012, seed: 5, color: 0x6a8a4a });
+      const NT = window.NATURE; vSc = new T.Scene();
+      NT.outdoor(vSc, { top: 0x2f6cc4, horizon: 0xc4d8ec, sun: V3(.55, .55, .35), clouds: .38, near: 160, far: 900, hemiI: .38, shadowSpan: 120 });
+      vGround = E3.terrain({ size: 600, seg: 260, amp: 4, freq: .012, seed: 5 });
       const p = vGround.geometry.attributes.position, cone = (x, z) => { const d = Math.hypot(x, z); return d < 6 ? 36 - (6 - d) * 1.4 : Math.max(0, 40 * Math.exp(-Math.pow(d / 26, 1.6))); };
       for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, p.getY(i) + cone(x, z)); }
       vGround.geometry.computeVertexNormals();
-      const colors = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const h = p.getY(i), k = smooth(8, 30, h); const c3 = new T.Color(0x3f6a2a).lerp(new T.Color(0x5a4636), k); colors[i * 3] = c3.r; colors[i * 3 + 1] = c3.g; colors[i * 3 + 2] = c3.b; }
-      vGround.geometry.setAttribute('color', new T.BufferAttribute(colors, 3)); vGround.material.vertexColors = true; vGround.material.color.set(0xffffff);
+      // green farmland low down, then bare rock, then dark ash near the crater
+      NT.paintGround(vGround, (x, y, z, sl, n, n2) => { const k = smooth(5, 22, y + (n - .5) * 8); let c = NT.mixc(NT.mixc(NT.rgb(0x5a7c3a), NT.rgb(0x3c5a26), n2), NT.rgb(0x5a4a3e), k); c = NT.mixc(c, NT.rgb(0x2a2420), smooth(24, 34, y)); return [...c, Math.max(k, smooth(.3, .5, sl))]; }, 'grass', 'rock', { repeat: 110 });
       const baseH = vGround.height; vGround.height = (x, z) => baseH(x, z) + cone(x, z);
       vSc.add(vGround);
-      const sea = new T.Mesh(new T.PlaneGeometry(3000, 3000), new T.MeshStandardMaterial({ color: 0x2a6fc0, roughness: .25, metalness: .2 })); sea.rotation.x = -Math.PI / 2; sea.position.y = -1.5; vSc.add(sea);
+      const sea = NT.water(3000, 3000, { color: 0x1c4a6a, env: 1.3 }); sea.position.y = -1.5; vSc.add(sea); vSc.ticks = [sea.tick, vSc.sky.tick];
+      for (let i = 0; i < 90; i++) { const a = Math.random() * TAU, d = 70 + Math.random() * 190, x = Math.cos(a) * d, z = Math.sin(a) * d, h = vGround.height(x, z); if (h < 0 || h > 6) continue; const t = NT.plant(Math.random() < .75 ? 'broad' : 'shrub', { scale: .8 + Math.random() * .5 }); t.position.set(x, h, z); vSc.add(t); }
+      const grass = NT.scatter('grass', 3000, r => { const a = r() * TAU, d = 55 + r() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d, h = vGround.height(x, z); return h > 0 && h < 5 ? [x, h, z] : null; }, { size: 1.2, seed: 33 }); vSc.add(grass); vSc.ticks.push(grass.tick);
       const crater = new T.Mesh(new T.CircleGeometry(5, 32), new T.MeshBasicMaterial({ color: 0xff6a20 })); crater.rotation.x = -Math.PI / 2; crater.position.y = 34; vSc.add(crater); vSc.crater = crater;
       vLight = new T.PointLight(0xff7a30, 0, 120); vLight.position.set(0, 40, 0); vSc.add(vLight);
       lava = makeParticles(1500, 0xff8a30, 1.6, true); vSc.add(lava);
@@ -546,6 +547,7 @@ views.earth = (() => {
     },
     tap() { this.act('push'); },
     frame(dt) {
+      for (const f of vSc.ticks) f(dt);
       if (V.erupt > 0) {
         V.erupt -= dt; V.flow = Math.min(1, V.flow + dt / 6);
         for (let i = 0; i < 18; i++) { const a = Math.random() * TAU, s = 8 + Math.random() * 14; lava.emit(Math.cos(a), 36, Math.sin(a), Math.cos(a) * s * .5, 18 + Math.random() * 22, Math.sin(a) * s * .5, 3.5); }
@@ -575,18 +577,23 @@ views.earth = (() => {
   let wSc, wGround, sea, river, clouds, vapour, rain, WC = null, sunObj;
   M.water = {
     make() {
-      wSc = new T.Scene(); wSc.background = new T.Color(0x6eb2ea); wSc.fog = new T.Fog(0xa6d0f0, 150, 500);
-      wSc.add(new T.HemisphereLight(0xe8f4ff, 0x3a4a2a, .75));
-      const sl = new T.DirectionalLight(0xfff4e0, 1.3); sl.position.set(-60, 80, 40); sl.castShadow = true; sl.shadow.mapSize.set(2048, 2048); const c = sl.shadow.camera; c.left = c.bottom = -90; c.right = c.top = 90; c.far = 400; wSc.add(sl);
-      wGround = E3.terrain({ size: 400, seg: 180, amp: 3, freq: .015, seed: 14, color: 0x6a9a48 });
+      const NT = window.NATURE; wSc = new T.Scene();
+      NT.outdoor(wSc, { top: 0x2f6cc4, horizon: 0xc4daf0, sun: V3(-140, 110, -120), sunSize: .01, glow: .6, clouds: .18, near: 220, far: 900, hemiI: .4, shadowSpan: 110, shadowAt: V3(30, 0, 0) });
+      wGround = E3.terrain({ size: 400, seg: 220, amp: 3, freq: .015, seed: 14 });
       const p = wGround.geometry.attributes.position, shape = (x, z) => { const land = smooth(-20, 10, x); return -6 + land * 7 + Math.max(0, 46 * Math.exp(-Math.pow(Math.hypot(x - 70, z + 10) / 26, 1.5))); };
       for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, p.getY(i) * smooth(-10, 10, x) + shape(x, z)); }
       wGround.geometry.computeVertexNormals();
-      const colors = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const h = p.getY(i), c3 = h < .6 ? new T.Color(0xe0cc98) : h > 34 ? new T.Color(0xf4f7fb) : h > 20 ? new T.Color(0x7a7a6a) : new T.Color(0x5f9a44); colors[i * 3] = c3.r; colors[i * 3 + 1] = c3.g; colors[i * 3 + 2] = c3.b; }
-      wGround.geometry.setAttribute('color', new T.BufferAttribute(colors, 3)); wGround.material.vertexColors = true; wGround.material.color.set(0xffffff);
+      // beach, fields and forest, rocky slopes, snow on the peak
+      NT.paintGround(wGround, (x, y, z, sl, n, n2) => {
+        const yy = y + (n - .5) * 5; let c = NT.mixc(NT.rgb(0x5c8a3a), NT.rgb(0x3e6428), n2), r = NT.sm(.3, .5, sl);
+        c = NT.mixc(NT.rgb(0xd8c49a), c, NT.sm(.3, 1.4, y)); c = NT.mixc(c, NT.rgb(0x6e665a), NT.sm(16, 24, yy)); r = Math.max(r, NT.sm(16, 24, yy));
+        c = NT.mixc(c, NT.rgb(0xf4f7fb), NT.sm(31, 36, yy) * (1 - NT.sm(.55, .8, sl))); return [...c, r];
+      }, 'grass', 'rock', { repeat: 90 });
       const bh = wGround.height; wGround.height = (x, z) => bh(x, z) * smooth(-10, 10, x) + shape(x, z);
       wSc.add(wGround);
-      sea = new T.Mesh(new T.PlaneGeometry(2000, 2000, 1, 1), new T.MeshStandardMaterial({ color: 0x1f6fc0, roughness: .2, metalness: .3 })); sea.rotation.x = -Math.PI / 2; sea.position.y = 0; wSc.add(sea);
+      sea = NT.water(2000, 2000, { color: 0x1a4c74, env: 1.3 }); sea.position.y = 0; wSc.add(sea); wSc.ticks = [sea.tick, wSc.sky.tick];
+      for (let i = 0; i < 110; i++) { const x = -4 + Math.random() * 110, z = (Math.random() - .5) * 160, h = wGround.height(x, z); if (h < 1.2 || h > 24) continue; const t = NT.plant(h > 14 ? 'conifer' : Math.random() < .8 ? 'broad' : 'shrub', { scale: h > 14 ? .55 + Math.random() * .3 : .6 + Math.random() * .4 }); t.position.set(x, h, z); wSc.add(t); }
+      const grass = NT.scatter('grass', 2500, r => { const x = r() * 60, z = (r() - .5) * 120, h = wGround.height(x, z); return h > 1 && h < 14 ? [x, h, z] : null; }, { size: 1.1, seed: 44 }); wSc.add(grass); wSc.ticks.push(grass.tick);
       const pts = []; for (let i = 0; i <= 40; i++) { const u = i / 40, x = lerp(62, -6, u), z = -10 + Math.sin(u * 7) * 9 + u * 20; pts.push(V3(x, wGround.height(x, z) + .5, z)); }
       const flowTex = E3.canvasTex(64, 256, (g, w, h) => { g.fillStyle = '#3a8ae8'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 3; for (let i = 0; i < 10; i++) { g.beginPath(); g.moveTo(Math.random() * w, i * 26); g.lineTo(Math.random() * w, i * 26 + 14); g.stroke(); } }, true);
       river = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 120, 1.2, 8), new T.MeshStandardMaterial({ map: flowTex, roughness: .2, transparent: true, opacity: .35 })); river.scale.y = 1; wSc.add(river);
@@ -603,6 +610,7 @@ views.earth = (() => {
     },
     tap(x, y) { const s = proj(sunObj.position.clone()), c = proj(clouds.position.clone()); if (Math.hypot(x - s.x, y - s.y) < 70) this.act('sun'); else if (Math.hypot(x - c.x, y - c.y) < 110) this.act('cloud'); },
     frame(dt) {
+      for (const f of wSc.ticks) f(dt);
       if (WC.st === 'evap') {
         WC.k += dt; for (let i = 0; i < 4; i++) vapour.emit(-90 + Math.random() * 80, .5, (Math.random() - .5) * 120, 0, 6 + Math.random() * 4, 0, 7);
         WC.cloud = Math.min(.7, WC.cloud + dt * .1);

@@ -326,21 +326,40 @@
   let PL = null;
   function strataTex() { return E3.canvasTex(256, 64, (g, w, h) => { const cols = ['#7A5A3A', '#9A6E44', '#B58A58', '#8A5A3A', '#6A4A30', '#A0784A']; let y = 0; let i = 0; while (y < h) { const t = 4 + Math.random() * 9; g.fillStyle = cols[i++ % cols.length]; g.fillRect(0, y, w, t); y += t; } }, true); }
   function heightColor(h) { return h < 1.2 ? new T.Color(0x5a8a3a) : h < 7 ? new T.Color(0x6a7a3a).lerp(new T.Color(0x7a6a50), (h - 1.2) / 6) : h < 13 ? new T.Color(0x7a6a58).lerp(new T.Color(0x8a8a8a), (h - 7) / 6) : new T.Color(0xf4f7fb); }
-  function house(color) { const g = new T.Group(); g.add(E3.at(E3.box(1.6, 1.3, 1.6, new T.MeshStandardMaterial({ color })), 0, .65, 0)); const r = new T.Mesh(new T.ConeGeometry(1.35, 1, 4), new T.MeshStandardMaterial({ color: 0xa8402a })); r.rotation.y = PI / 4; r.position.y = 1.8; g.add(r); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); return g; }
+  // a small house: plastered walls, a tiled gable roof, a door and windows
+  let houseMats = null;
+  function house(color) {
+    const NT = window.NATURE;
+    if (!houseMats) {
+      const plaster = NT.detail('dirt').clone(); plaster.needsUpdate = true; plaster.repeat.set(1, 1);
+      const tiles = NT.texOf(NT.paint(128, 128, (u, v) => { const row = (v * 8) % 1, col = (u * 6 + Math.floor(v * 8) * .5) % 1, edge = Math.min(row, Math.min(col, 1 - col) * 2.5); const k = .55 + Math.min(1, edge * 8) * .4 + (Math.sin(u * 91 + v * 37) * .05); return [k * 200, k * 92, k * 62]; }));
+      tiles.repeat.set(2, 2);
+      houseMats = { plaster, roof: new T.MeshStandardMaterial({ map: tiles, bumpMap: tiles, bumpScale: .03, roughness: .8 }), dark: new T.MeshStandardMaterial({ color: 0x2a2a30, roughness: .3, metalness: .1 }), wood: new T.MeshStandardMaterial({ color: 0x6a4a2e, roughness: .9 }) };
+    }
+    const g = new T.Group(), wall = new T.MeshStandardMaterial({ color, map: houseMats.plaster, roughness: .95 });
+    g.add(E3.at(E3.box(2.2, 1.3, 1.6, wall), 0, .65, 0));
+    const tri = new T.Shape(); tri.moveTo(-.95, 0); tri.lineTo(.95, 0); tri.lineTo(0, .8); tri.closePath();
+    const gable = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: 2.2, bevelEnabled: false }), wall); gable.rotation.y = PI / 2; gable.position.set(-1.1, 1.3, 0); g.add(gable);
+    for (const s of [-1, 1]) { const r = new T.Mesh(new T.BoxGeometry(2.5, .07, 1.32), houseMats.roof); r.position.set(0, 1.72, s * .45); r.rotation.x = s * .7; g.add(r); }
+    const door = E3.box(.42, .78, .04, houseMats.wood); door.position.set(.4, .39, .81); g.add(door);
+    for (const x of [-.55, .95]) { if (x > .9) continue; const w = E3.box(.42, .34, .04, houseMats.dark); w.position.set(x, .82, .81); g.add(w); }
+    const w2 = E3.box(.04, .34, .42, houseMats.dark); w2.position.set(1.11, .82, 0); g.add(w2);
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g;
+  }
   M.plates = {
     line: 'e_plates',
     make() {
-      const sc = new T.Scene(); sc.background = new T.Color(0x9cc6ea); sc.fog = new T.Fog(0x9cc6ea, 200, 500);
-      sc.add(new T.HemisphereLight(0xeaf4ff, 0x4a3a2a, .7));
-      const sl = new T.DirectionalLight(0xfff4e0, 1.2); sl.position.set(60, 90, 50); sl.castShadow = true; sl.shadow.mapSize.set(2048, 2048); const c = sl.shadow.camera; c.left = c.bottom = -90; c.right = c.top = 90; c.far = 400; sc.add(sl);
+      const sc = new T.Scene(), NT = window.NATURE;
+      NT.outdoor(sc, { top: 0x2f6cc4, horizon: 0xc4d8ec, sun: V3(.45, .6, .4), clouds: .35, near: 220, far: 700, hemiI: .4, shadowSpan: 100, shadowAt: V3(0, 0, -5) });
       const st = strataTex(), sideMat = new T.MeshStandardMaterial({ map: st, roughness: 1 });
       const asia = new T.Group(), india = new T.Group(); sc.add(asia); sc.add(india);
       asia.add(E3.at(new T.Mesh(new T.BoxGeometry(110, 14, 60), sideMat), 0, -7.05, -30));
       india.add(E3.at(new T.Mesh(new T.BoxGeometry(60, 14, 46), sideMat), 0, -7.05, 23));
-      const top = (w, d, sx, sz) => { const g = new T.PlaneGeometry(w, d, sx, sz); g.rotateX(-PI / 2); const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 1 })); m.receiveShadow = true; m.castShadow = true; g.setAttribute('color', new T.BufferAttribute(new Float32Array(g.attributes.position.count * 3), 3)); return m; };
+      const top = (w, d, sx, sz) => { const g = new T.PlaneGeometry(w, d, sx, sz); g.rotateX(-PI / 2); const m = new T.Mesh(g, NT.groundMat('grass', 'rock', { repeat: 26 })); m.receiveShadow = true; m.castShadow = true; g.setAttribute('color', new T.BufferAttribute(new Float32Array(g.attributes.position.count * 3), 3)); g.setAttribute('splat', new T.BufferAttribute(new Float32Array(g.attributes.position.count), 1)); return m; };
       const asiaTop = top(110, 60, 160, 90); asiaTop.position.z = -30; asia.add(asiaTop);
       const indiaTop = top(60, 46, 80, 60); indiaTop.position.z = 23; india.add(indiaTop);
-      const sea = new T.Mesh(new T.PlaneGeometry(400, 400), new T.MeshStandardMaterial({ color: 0x2a6fc0, roughness: .25, metalness: .2 })); sea.rotation.x = -PI / 2; sea.position.y = -2.2; sc.add(sea);
+      const sea = NT.water(1400, 1400, { color: 0x1c4c72, env: 1.3, wave: .4 }); sea.position.y = -2.2; sc.add(sea); sc.ticks = [sea.tick, sc.sky.tick];
       const arrow = new T.Mesh(new T.ConeGeometry(2.4, 5, 16), new T.MeshStandardMaterial({ color: 0xffb52e, emissive: 0x6a3a00 })); arrow.rotation.x = -PI / 2; arrow.position.set(0, 4, 30); india.add(arrow);
       const houses = [];
       for (const [x, z, g] of [[-14, 30, india], [12, 34, india], [-30, -46, asia], [24, -48, asia], [4, -52, asia]]) { const h = house(0xf2e6d0); h.position.set(x, 0, z); g.add(h); houses.push(h); }
@@ -351,15 +370,15 @@
     shape() {
       const p = PL, k = p.push;
       for (const [mesh, zOff, isIndia] of [[p.asiaTop, -30, false], [p.indiaTop, 23, true]]) {
-        const pos = mesh.geometry.attributes.position, col = mesh.geometry.attributes.color;
+        const pos = mesh.geometry.attributes.position, col = mesh.geometry.attributes.color, spl = mesh.geometry.attributes.splat;
         for (let i = 0; i < pos.count; i++) {
           const x = pos.getX(i), z = pos.getZ(i) + zOff, n = window.noise3 ? noise3(x * .09, z * .09, 1.7) : .5, n2 = window.noise3 ? noise3(x * .25, z * .25, 4.1) : .5;
           let h = (n - .5) * 1.6;
           if (!isIndia) h += k * 19 * Math.exp(-Math.pow((z + 7) / 6.5, 2)) * (.5 + n * .7) + k * 6 * Math.exp(-Math.pow((z + 18) / 7, 2)) * n2;
           else h += k * 5 * Math.exp(-Math.pow((z - 0) / 3, 2)) * (.6 + n * .5);
-          pos.setY(i, Math.max(.05, h + .2)); const c = heightColor(h); col.setXYZ(i, c.r, c.g, c.b);
+          pos.setY(i, Math.max(.05, h + .2)); const c = heightColor(h); col.setXYZ(i, c.r, c.g, c.b); spl.setX(i, smooth(3, 9, h) * (h > 13 ? .35 : 1));
         }
-        pos.needsUpdate = true; col.needsUpdate = true; mesh.geometry.computeVertexNormals();
+        pos.needsUpdate = true; col.needsUpdate = true; spl.needsUpdate = true; mesh.geometry.computeVertexNormals();
       }
     },
     enter() { if (!PL) this.make(); A.view({ goal: V3(0, 0, -6), dist: 125, min: 30, max: 260, yaw: .85, pitch: .48 }); A.setCtl([{ id: 'push', icon: 'up', label: 'Push India north', hold: true, go: true }, { id: 'quake', label: 'Earthquake!', cyan: true }, { id: 'reset', icon: 'again', label: 'Start again' }]); },
@@ -368,7 +387,7 @@
       if (id === 'reset') { PL.push = 0; PL.saidH = false; this.shape(); }
     },
     frame(dt) {
-      const p = PL;
+      const p = PL; for (const f of p.sc.ticks) f(dt);
       if (A.held.push && p.push < 1) { p.push = Math.min(1, p.push + dt * .1); if (Math.round(p.push * 100) % 2 === 0) this.shape(); if (!p.saidH && p.push > .2) { p.saidH = true; Voice.say('e_himalaya'); } }
       p.india.position.z = (1 - p.push) * 16;
       p.arrow.position.y = 4 + Math.sin(A.t * 4) * .6; p.arrow.visible = p.push < 1;
@@ -487,19 +506,21 @@
   M.storm = {
     line: 'e_storm',
     make() {
-      const sc = new T.Scene(); sc.background = new T.Color(0x3a4352); sc.fog = new T.Fog(0x3a4352, 80, 420);
+      const sc = new T.Scene(), NT = window.NATURE; sc.fog = new T.Fog(0x56606e, 80, 420);
+      const sky = NT.sky({ top: 0x2e3644, horizon: 0x56606e, clouds: .95, cloudColor: 0x5a6270, cloudShade: 0x262c34, sun: V3(-.3, .45, .8), glow: 0, cloudScale: .45 }); sc.add(sky);
       const hemi = new T.HemisphereLight(0xc8d6ea, 0x2a3a1a, .45); sc.add(hemi);
       const sl = new T.DirectionalLight(0xfff2dc, 0); sl.position.set(-30, 40, 80); sl.castShadow = true; sl.shadow.mapSize.set(2048, 2048); const c = sl.shadow.camera; c.left = c.bottom = -80; c.right = c.top = 80; c.far = 300; sc.add(sl);
-      const ground = E3.terrain({ size: 900, seg: 140, amp: 10, freq: .006, seed: 51, color: 0x4f8a3a, flat: [[0, 0, 40]] }); sc.add(ground);
-      const trunk = new T.MeshStandardMaterial({ color: 0x5a3e28, roughness: 1 }), leaf = new T.MeshStandardMaterial({ color: 0x2f6a2a, roughness: 1 });
-      for (let i = 0; i < 46; i++) { const x = (Math.random() - .5) * 320, z = -14 - Math.random() * 230; const t = new T.Group(); t.add(E3.at(E3.cyl(.35, .5, 4, trunk, 8), 0, 2, 0)); const f = E3.sph(2.4 + Math.random() * 1.4, leaf, 12); f.position.y = 5.4; t.add(f); t.position.set(x, ground.height(x, z), z); t.traverse(o => { if (o.isMesh) o.castShadow = true; }); sc.add(t); }
+      const ground = E3.terrain({ size: 900, seg: 180, amp: 10, freq: .006, seed: 51, flat: [[0, 0, 40]] });
+      NT.paintGround(ground, (x, y, z, sl, n, n2) => [...NT.mixc(NT.mixc(NT.rgb(0x5a8a3a), NT.rgb(0x3e6a2a), n2), NT.rgb(0x7a7048), NT.sm(.6, .8, n) * .6), NT.sm(.25, .45, sl)], 'grass', 'dirt', { repeat: 130 }); sc.add(ground);
+      for (let i = 0; i < 60; i++) { const x = (Math.random() - .5) * 340, z = -16 - Math.random() * 240; const t = NT.plant(Math.random() < .8 ? 'broad' : 'shrub', { scale: .8 + Math.random() * .5 }); t.position.set(x, ground.height(x, z), z); sc.add(t); }
+      const grass = NT.scatter('grass', 2600, r => { const x = (r() - .5) * 60, z = 2 - r() * 60; return [x, ground.height(x, z), z]; }, { size: .9, seed: 21 }); sc.add(grass);
       const h = house(0xf0e2c8); h.scale.setScalar(2.6); h.position.set(-16, ground.height(-16, -30), -30); sc.add(h);
       const clouds = [];
       for (let i = 0; i < 46; i++) { const s = E3.glow(0x4a5260, 70 + Math.random() * 70, .95); s.material.blending = T.NormalBlending; s.material.fog = false; s.position.set((Math.random() - .5) * 460, 48 + Math.random() * 30, -30 - Math.random() * 260); s.home = s.position.clone(); sc.add(s); clouds.push(s); }
       const rain = makeParticles(3500, 0xaec4e4, .35, false); sc.add(rain);
       const rb = new T.Mesh(new T.RingGeometry(150, 175, 160, 1, 0, PI), rainbowMat(150, 175, .55)); rb.position.set(0, -24, -230); sc.add(rb);
       const rb2 = new T.Mesh(new T.RingGeometry(196, 210, 160, 1, 0, PI), rainbowMat(210, 196, .18)); rb2.position.copy(rb.position); sc.add(rb2);
-      ST = { sc, hemi, sl, clouds, rain, rb, rb2, clear: 0, clearing: false, bolt: null, boltT: 0, count: null, next: 3, msg: null, said: false };
+      ST = { sc, sky, grass, hemi, sl, clouds, rain, rb, rb2, clear: 0, clearing: false, bolt: null, boltT: 0, count: null, next: 3, msg: null, said: false };
     },
     enter() {
       if (!ST) this.make();
@@ -527,7 +548,10 @@
       const flash = s.boltT > 0 ? (Math.random() < .7 ? 1 : .3) : 0;
       s.boltT = Math.max(0, s.boltT - dt); if (s.bolt) s.bolt.visible = s.boltT > 0;
       const sky = new T.Color(0x3a4352).lerp(new T.Color(0x7cb8ec), c).lerp(new T.Color(0xc8d4ff), flash * .5);
-      s.sc.background.copy(sky); s.sc.fog.color.copy(sky);
+      const hor = new T.Color(0x56606e).lerp(new T.Color(0xc4daee), c).lerp(new T.Color(0xc8d4ff), flash * .5), u = s.sky.u;
+      s.sc.fog.color.copy(hor); u.hor.value.copy(hor); u.below.value.copy(hor); u.top.value.set(0x2e3644).lerp(new T.Color(0x2f6cc4), c).lerp(new T.Color(0x9aa8d8), flash * .4);
+      u.cloud.value = lerp(.95, .3, c); u.cloudCol.value.set(0x5a6270).lerp(new T.Color(0xffffff), c); u.cloudShade.value.set(0x262c34).lerp(new T.Color(0x9aa5b8), c); u.glow.value = c;
+      s.sky.tick(dt * (1 + stormy * 3)); s.grass.tick(dt * (1 + stormy * 2));
       s.hemi.intensity = lerp(.45, .85, c) + flash * 1.6; s.sl.intensity = c * 1.4;
       s.rb.material.uniforms.op.value = smooth(.5, 1, c); s.rb2.material.uniforms.op.value = smooth(.6, 1, c);
       if (c > .6 && !s.said) { s.said = true; Voice.say('e_rainbow'); }
