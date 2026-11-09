@@ -63,6 +63,7 @@ canvas.over2d{background:transparent}
 .btn.cyan{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
 .btn.small{min-height:36px;padding:5px 11px;font-size:14px;border-radius:11px;gap:6px}
 .btn.small svg{width:18px;height:18px}
+.btn:disabled{opacity:.4;pointer-events:none}
 .btn[aria-pressed="true"]{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
 .seg{display:inline-flex;background:var(--deep);border-radius:14px;padding:3px;box-shadow:inset 0 0 0 2px var(--line)}
 .seg button{border:0;background:none;border-radius:10px;padding:4px 10px;min-height:32px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim)}
@@ -301,12 +302,12 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   .rail{flex-direction:row;align-items:stretch;width:auto;gap:0;padding:3px max(3px,env(safe-area-inset-right,0px)) max(3px,env(safe-area-inset-bottom,0px)) max(3px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--line);overflow:visible}
   .who{display:none}
   .tabs{flex-direction:row;flex:1;min-width:0;gap:0}
-  .tab{flex:1;font-size:9.5px;padding:4px 0 3px}
+  .tab{flex:1;font-size:9px;padding:4px 0 3px}
   .tab svg,.tool svg{width:22px;height:22px}
   .tab .long{display:none}
   .tab .short{display:inline}
   .rail-tools{margin:0;flex-direction:row;gap:0}
-  .tool{width:36px;justify-content:center;padding:4px 0}
+  .tool{width:32px;justify-content:center;padding:4px 0}
   .tool span{display:none}
   .info{top:auto;left:var(--gut-l);right:var(--gut-r);width:auto;bottom:8px;max-height:56%;padding:10px;gap:8px;animation-name:slideup}
   @keyframes slideup{from{transform:translateY(30px);opacity:0}}
@@ -374,6 +375,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
     </button>
     <div class="tabs" role="tablist" aria-label="Activities">
       <button class="tab" role="tab" data-view="explore" aria-selected="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="4" fill="currentColor"/><ellipse cx="14" cy="14" rx="12" ry="6"/><circle cx="24.5" cy="11" r="2.4" fill="currentColor" stroke="none"/></svg><span class="long">Explore</span><span class="short">Explore</span></button>
+      <button class="tab" role="tab" data-view="birth" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 14a2 2 0 0 1 4 0a4 4 0 0 1-8 0a6 6 0 0 1 12 0a8 8 0 0 1-16 0a10 10 0 0 1 20 0"/></svg><span class="long">How it began</span><span class="short">Birth</span></button>
       <button class="tab" role="tab" data-view="sizes" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="16.5" r="4"/><circle cx="21.5" cy="14" r="6.5"/></svg><span class="long">How big?</span><span class="short">Sizes</span></button>
       <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span class="long">Weigh me</span><span class="short">Weigh</span></button>
       <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span class="long">Day &amp; Night</span><span class="short">Day</span></button>
@@ -533,6 +535,18 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         </div>
       </div>
       <div class="over bottom earthbot"><div class="picker" id="earthPlaces" hidden aria-label="Fly to a place"></div><div class="cluster" id="earthCtl"></div></div>
+    </section>
+
+    <!-- How the solar system was born (birth.js) -->
+    <section class="view" id="view-birth" hidden aria-label="How the solar system was born">
+      <canvas class="full" id="birthCv" aria-label="The story of how the solar system was born, in 3D. Drag to turn, pinch or scroll to zoom."></canvas>
+      <div class="over top"><div class="picker" id="birthSteps" role="group" aria-label="Chapters of the story"></div></div>
+      <div class="over bottom" id="birthCtl">
+        <button class="btn small" id="birthPrev" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Earlier</button>
+        <button class="btn small go" id="birthNext" type="button">Later<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="btn small" id="birthAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg>Again</button>
+        <button class="btn small cyan" id="birthAct" type="button" hidden><span></span></button>
+      </div>
     </section>
 
     <!-- What If game (whatif.js) -->
@@ -1989,5 +2003,7 @@ function decodeTex(uri, alphaFromGrey) {
 <script src="earthfx.js"></script>
 <script src="history.js"></script>
 <script src="whatif.js"></script>
+<script src="gas.js"></script>
+<script src="birth.js"></script>
 </body>
 </html>

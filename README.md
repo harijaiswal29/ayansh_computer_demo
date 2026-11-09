@@ -46,12 +46,32 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Explore | Watches the planets go round the Sun in 3D, taps any of them (or the comet or asteroid belt) to fly there, zooms right in to the surface, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
 | Explore → Earth → **Explore Earth** | Thirteen activities (below) | How our own planet works |
+| How it began | Follows the story of how the solar system was born, in ten chapters (below), pressing **Later** to move on | Where the Sun and planets came from, and why the inner planets are rocky and the outer ones are giants |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
 | Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of four games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures) and **What If…?** | Goes over everything, with a star for each first-try answer |
+
+### How it began
+
+The story runs from a cold cloud of gas to today's eight planets. The gas in the first four chapters is real 3D glowing gas: light is traced through the cloud, so thick dust hides the stars behind it and the baby Sun shines out through the gaps.
+
+| Chapter | What Ayansh sees |
+|---|---|
+| 1. A cold cloud | A dark cloud of gas and dust, lit pink by a hot young star nearby |
+| 2. A star explodes | He presses **Explode the star!** and the blast wave sweeps through the cloud and squeezes it |
+| 3. Falling and spinning | The cloud falls inward, spins faster and flattens into a disk with a hot ball in the middle |
+| 4. The Sun is born | The baby star shoots jets from its top and bottom, a gauge climbs to 10 million °C, and the Sun lights up |
+| 5. Dust to mini planets | From inside the disk: dust clumps into pebbles, boulders, then cratered mini planets many kilometres wide |
+| 6. Rocky or giant? | The disk with its rings and gaps, the snow line, and Jupiter growing first |
+| 7. The Sun's wind | The gas is swept away from the inside out, leaving planets, rocks and ice |
+| 8. Crashing worlds | Baby planets smash together until four rocky planets are left, and one crash makes the Moon |
+| 9. The big shuffle | The giant planets move outward and scatter the icy leftovers into comets, the Kuiper belt and beyond |
+| 10. Today | The finished solar system, with a button to go and explore it |
+
+Sizes and distances are squeezed so everything fits on one screen. The explosion that starts the story and the shuffle of the giant planets are what many scientists think happened, not certainties, and Nova says so.
 
 ### Explore Earth
 
@@ -92,6 +112,7 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 ## Things to know
 
 - The Earth scenes (Earth's story, Volcano, Rain cycle, Storm, Earthquakes) share a "realism kit" in `solar-system/nature.js`: a sky with a sun and drifting clouds, ground that mixes grass, rock, sand or snow, water that ripples and reflects the sky, and leafy trees, ferns and grass. Everything is drawn from noise in the browser, so there are no extra picture files.
+- The glowing gas in **How it began** is drawn by `solar-system/gas.js`, and the story itself is in `solar-system/birth.js`.
 - Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
 - **Settings** in the rail has the explorer's name, **Nova's voice** and **Sounds**. The two buttons beside Nova's words replay or stop what she is saying.
 - The name shows in the title, on buttons and labels, and on the quiz results. Nova's recorded voice can say "Ayansh". For any other name, the greeting is spoken by the device's own voice, and the few lines that mention the name use recordings that leave it out.
