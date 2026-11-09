@@ -72,7 +72,7 @@
   /* ---------------------------------------------------------------- sky: a blue (or orange) dome with a sun and drifting clouds */
   const SKY_VS = `varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`;
   const SKY_FS = `
-    uniform vec3 top, hor, below, sunCol, cloudCol, cloudShade, sunDir; uniform float sunSize, cloud, time, glow, cloudScale;
+    uniform vec3 top, hor, below, sunCol, cloudCol, cloudShade, sunDir; uniform float sunSize, cloud, time, glow, cloudScale, horPow;
     varying vec3 vDir;
     float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -80,7 +80,7 @@
     void main(){
       vec3 d = normalize(vDir), sd3 = normalize(sunDir);
       float y = d.y;
-      vec3 col = mix(hor, top, pow(clamp(y, 0.0, 1.0), 0.5));
+      vec3 col = mix(hor, top, pow(clamp(y, 0.0, 1.0), horPow));
       col = mix(col, below, 1.0 - smoothstep(-0.06, 0.0, y));
       float sd = max(dot(d, sd3), 0.0);
       col += sunCol * (pow(sd, 6.0) * 0.22 + pow(sd, 60.0) * 0.4) * glow;
@@ -104,7 +104,7 @@
       top: { value: C(o.top ?? 0x2f6fc8) }, hor: { value: C(o.horizon ?? 0xb8d4ec) }, below: { value: C(o.below ?? o.horizon ?? 0xb8d4ec) },
       sunDir: { value: (o.sun || V3(.5, .5, -.6)).clone().normalize() }, sunCol: { value: C(o.sunColor ?? 0xfff0cf) }, sunSize: { value: o.sunSize ?? 1 },
       cloud: { value: o.clouds ?? .45 }, cloudCol: { value: C(o.cloudColor ?? 0xffffff) }, cloudShade: { value: C(o.cloudShade ?? 0x9aa5b8) },
-      time: { value: 0 }, glow: { value: o.glow ?? 1 }, cloudScale: { value: o.cloudScale ?? .55 }
+      time: { value: 0 }, glow: { value: o.glow ?? 1 }, cloudScale: { value: o.cloudScale ?? .55 }, horPow: { value: o.horPow ?? .5 }
     };
     const m = new T.Mesh(new T.SphereGeometry(50, 48, 24), new T.ShaderMaterial({ uniforms: u, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: T.BackSide, depthWrite: false, fog: false }));
     m.frustumCulled = false; m.renderOrder = -10;
@@ -132,11 +132,11 @@
     const c = sl.shadow.camera, span = o.shadowSpan ?? 90; c.left = c.bottom = -span; c.right = c.top = span; c.near = 1; c.far = 500;
     scene.add(sl); scene.add(sl.target); if (o.shadowAt) sl.target.position.copy(o.shadowAt);
     if (o.shadowAt) sl.position.add(o.shadowAt);
-    const env = skyEnv(sk); if (env) { scene.environment = env; }
+    const env = o.noEnv ? null : skyEnv(sk); if (env) { scene.environment = env; }
     scene.sky = sk; scene.hemi = hemi; scene.sl = sl; scene.env = env;
     scene.setSky = p => {    // change colours later (sunset, storm…)
       for (const k of ['top', 'hor', 'below', 'sunCol', 'cloudCol', 'cloudShade']) if (p[k] != null) sk.u[k].value.set(p[k]);
-      if (p.cloud != null) sk.u.cloud.value = p.cloud; if (p.glow != null) sk.u.glow.value = p.glow;
+      if (p.cloud != null) sk.u.cloud.value = p.cloud; if (p.glow != null) sk.u.glow.value = p.glow; if (p.horPow != null) sk.u.horPow.value = p.horPow;
       if (p.hor != null) scene.fog.color.set(p.hor);
     };
     return scene;

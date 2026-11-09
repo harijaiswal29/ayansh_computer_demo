@@ -148,28 +148,73 @@
     }
   };
 
-  /* ================================================================ Eclipses */
+  /* ================================================================ Eclipses: watched from the ground (how it really looks) and from space (why it happens) */
   let EC = null;
-  const glowTexture = (draw, size = 256) => E3.canvasTex(size, size, draw);
+  const SUN_R = 16, SKY_D = 320, RS = .05, RM = 1.045, UMBRA = 2.6;   // Sun's drawn radius and distance; its share of the glare sheet; Moon and Earth-shadow sizes in Sun/Moon radii
+  // the Sun with the Moon sliding across: a bright disc that is darker at the rim, glare, then the corona, red flames and the diamond ring
+  const SUN_FS = `
+    uniform vec2 moff, beadDir; uniform float tot, glare, bead, time; varying vec2 vUv;
+    void main(){
+      vec2 p = (vUv - 0.5) / ${RS}; float r = length(p), ang = atan(p.y, p.x);
+      float moon = smoothstep(${RM} - 0.015, ${RM} + 0.015, length(p - moff));          // 0 behind the Moon
+      float mu = sqrt(max(0.0, 1.0 - r * r));
+      vec3 col = vec3(1.0, 0.95, 0.84) * (0.5 + 0.5 * mu) * 2.6 * (1.0 - smoothstep(0.985, 1.005, r)) * moon;
+      col += vec3(1.0, 0.93, 0.80) * glare * (0.55 * exp(-r * 0.75) + 0.5 / (1.0 + r * r * 0.9));
+      float st = 0.62 + 0.20 * sin(ang * 2.0 + 0.6) + 0.14 * sin(ang * 5.0 + 2.3) + 0.10 * sin(ang * 9.0 + 0.7 + time * 0.05) + 0.07 * sin(ang * 17.0 + 4.1) + 0.05 * sin(ang * 31.0 + 1.9);
+      float rr = max(r, 1.0), outside = smoothstep(0.97, 1.02, r);
+      col += vec3(0.86, 0.90, 1.0) * st * (1.5 * pow(rr, -2.6) + 0.5 * exp(-(rr - 1.0) * 7.0)) * tot * moon * outside;      // corona
+      col += vec3(1.0, 0.25, 0.42) * 2.5 * tot * moon * smoothstep(1.0, 1.02, r) * (1.0 - smoothstep(1.03, 1.11, r)) * pow(max(0.0, sin(ang * 6.0 + 1.3)), 14.0);   // red flames at the edge
+      vec2 q = p - beadDir;
+      col += vec3(1.0, 0.97, 0.90) * bead * (3.0 * exp(-length(q) * 7.0) + 0.25 / (1.0 + dot(q, q) * 3.0));               // the diamond ring
+      col *= 1.0 - smoothstep(8.0, 10.0, r);
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+  // the full Moon with Earth's round shadow sliding over it: grey in the soft outer shadow, coppery red in the dark middle
+  const MOON_VS = `uniform float rad; varying vec2 vUv, vDisc; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0), c = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0); vDisc = (mv.xy - c.xy) / rad; gl_Position = projectionMatrix * mv; }`;
+  const MOON_FS = `
+    uniform sampler2D map; uniform vec2 shOff; varying vec2 vUv, vDisc;
+    void main(){
+      vec3 tex = texture2D(map, vUv).rgb;
+      vec3 lit = tex * 1.55 * (0.84 + 0.16 * sqrt(max(0.0, 1.0 - dot(vDisc, vDisc))));
+      float d = length(vDisc - shOff);
+      float pen = 1.0 - smoothstep(${UMBRA} + 0.1, ${UMBRA} + 1.9, d), um = 1.0 - smoothstep(${UMBRA} - 0.14, ${UMBRA} + 0.05, d);
+      vec3 red = tex * vec3(1.0, 0.30, 0.13) * (0.30 + 0.55 * smoothstep(0.0, ${UMBRA}, d));
+      gl_FragColor = vec4(mix(lit * (1.0 - 0.4 * pen), red, um), 1.0);
+    }`;
   M.eclipse = {
     line: 'e_eclipse',
     make() {
-      // solar: standing on the ground looking up at the Sun
-      const ss = new T.Scene(); ss.background = new T.Color(0x6eaee6);
-      const stars = E3.starfield(3000); stars.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 0; } }); ss.add(stars);
-      const hemi = new T.HemisphereLight(0xdfefff, 0x334422, .9); ss.add(hemi);
-      const ground = E3.terrain({ size: 900, seg: 120, amp: 14, freq: .006, seed: 31, color: 0x3a5a30, flat: [[0, 0, 60]] }); ss.add(ground);
-      const tm = new T.MeshStandardMaterial({ color: 0x1f3a1c, roughness: 1 });
-      for (let i = 0; i < 40; i++) { const a = -PI / 2 + (Math.random() - .5) * 2.4, d = 60 + Math.random() * 200, x = Math.cos(a) * d, z = Math.sin(a) * d; const tr = new T.Mesh(new T.ConeGeometry(3 + Math.random() * 3, 12 + Math.random() * 10, 8), tm); tr.position.set(x, ground.height(x, z) + 6, z); ss.add(tr); }
-      const dir = V3(.12, Math.sin(.5), -Math.cos(.5)).normalize(), sunPos = dir.clone().multiplyScalar(320);
-      const sun = new T.Mesh(new T.SphereGeometry(10, 48, 24), new T.MeshBasicMaterial({ color: 0xfff6dc, fog: false })); sun.position.copy(sunPos); ss.add(sun);
-      const halo = E3.glow(0xfff0c0, 120, 1); halo.position.copy(sunPos); ss.add(halo);
-      const corona = new T.Sprite(new T.SpriteMaterial({ map: glowTexture((g, w) => { g.translate(w / 2, w / 2); for (let i = 0; i < 90; i++) { g.rotate(TAU / 90 + Math.random() * .05); const len = w * (.22 + Math.random() * .26); const gr = g.createLinearGradient(0, 0, len, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.32, 'rgba(235,240,255,.55)'); gr.addColorStop(1, 'rgba(200,215,255,0)'); g.fillStyle = gr; g.fillRect(0, -1.2, len, 2.4); } const r = g.createRadialGradient(0, 0, w * .1, 0, 0, w * .5); r.addColorStop(0, 'rgba(255,255,255,.9)'); r.addColorStop(.25, 'rgba(230,236,255,.35)'); r.addColorStop(1, 'rgba(200,210,255,0)'); g.fillStyle = r; g.beginPath(); g.arc(0, 0, w / 2, 0, TAU); g.fill(); }, 512), transparent: true, blending: T.AdditiveBlending, depthWrite: false, opacity: 0, fog: false }));
-      corona.scale.set(80, 80, 1); corona.position.copy(sunPos); ss.add(corona);
-      const moon = new T.Mesh(new T.SphereGeometry(10.4, 48, 24), new T.MeshBasicMaterial({ color: 0x08080c, fog: false })); ss.add(moon);
-      const ring = E3.glow(0xffffff, 30, 0); ss.add(ring);
-      const tang = V3().crossVectors(dir, V3(0, 1, 0)).normalize().applyAxisAngle(dir, -.25);
-      // lunar: out in space, Earth's shadow and the Moon passing through it
+      const NT = window.NATURE;
+      // ---- on the ground, looking up
+      const ss = new T.Scene(), elev = .42, dir = V3(.1, Math.sin(elev), -Math.cos(elev)).normalize(), sunPos = dir.clone().multiplyScalar(SKY_D);
+      NT.outdoor(ss, { top: 0x2f6cc4, horizon: 0xc4d8ec, sun: dir, glow: 0, clouds: .2, near: 160, far: 800, hemiI: .75, noEnv: true, shadowSpan: 90, shadowAt: V3(0, 0, -40) });
+      const stars = E3.starfield(3500); stars.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 0; o.material.fog = false; o.material.depthWrite = false; o.material.blending = T.AdditiveBlending; } }); ss.add(stars);
+      const ground = E3.terrain({ size: 900, seg: 180, amp: 16, freq: .006, seed: 31, flat: [[0, 0, 50]] });
+      NT.paintGround(ground, (x, y, z, sl, n, n2) => [...NT.mixc(NT.mixc(NT.rgb(0x587c3a), NT.rgb(0x3c6028), n2), NT.rgb(0x7a7048), NT.sm(.62, .8, n) * .6), NT.sm(.25, .45, sl)], 'grass', 'rock', { repeat: 130 }); ss.add(ground);
+      for (let i = 0; i < 70; i++) { const a = -PI / 2 + (Math.random() - .5) * 2.6, d = 55 + Math.random() * 210, x = Math.cos(a) * d, z = Math.sin(a) * d; const t = NT.plant(Math.random() < .7 ? 'broad' : 'conifer', { scale: .8 + Math.random() * .5 }); t.position.set(x, ground.height(x, z), z); ss.add(t); }
+      for (const [x, z] of [[-24, -52], [30, -70]]) { const h = house(0xf0e2c8); h.scale.setScalar(2.6); h.position.set(x, ground.height(x, z), z); h.rotation.y = x < 0 ? .5 : -.4; ss.add(h); }
+      const grass = NT.scatter('grass', 2400, r => { const x = (r() - .5) * 90, z = 6 - r() * 80; return [x, ground.height(x, z), z]; }, { size: .9, seed: 27 }); ss.add(grass);
+      const sunU = { moff: { value: new T.Vector2(9, 0) }, beadDir: { value: new T.Vector2(1, 0) }, tot: { value: 0 }, glare: { value: 1 }, bead: { value: 0 }, time: { value: 0 } };
+      const sunQuad = new T.Mesh(new T.PlaneGeometry(SUN_R / RS, SUN_R / RS), new T.ShaderMaterial({ uniforms: sunU, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: SUN_FS, transparent: true, blending: T.AdditiveBlending, depthWrite: false, fog: false }));
+      sunQuad.position.copy(sunPos); sunQuad.renderOrder = 5; ss.add(sunQuad);
+      const darkMoon = new T.Mesh(new T.CircleGeometry(RM * SUN_R * .985, 64), new T.MeshBasicMaterial({ color: 0x020203, transparent: true, opacity: 0, depthWrite: false, fog: false })); darkMoon.renderOrder = 4; ss.add(darkMoon);
+      const planets = [[V3(-.2, Math.sin(.6), -Math.cos(.6)), 7], [V3(.44, Math.sin(.3), -Math.cos(.3)), 5]].map(([d, sz]) => { const g = E3.glow(0xfff8e8, sz, 0); g.material.fog = false; g.position.copy(d.normalize().multiplyScalar(300)); ss.add(g); return g; });
+      const moonU = { map: { value: E3.tex('moon') }, shOff: { value: new T.Vector2(9, 0) }, rad: { value: SUN_R } };
+      const nightMoon = new T.Mesh(new T.SphereGeometry(SUN_R, 64, 32), new T.ShaderMaterial({ uniforms: moonU, vertexShader: MOON_VS, fragmentShader: MOON_FS, fog: false }));
+      nightMoon.position.copy(sunPos); nightMoon.rotation.set(-.3, -PI / 2 - .1, 0); ss.add(nightMoon);
+      const moonHalo = E3.glow(0xcfe0ff, 130, .4); moonHalo.material.fog = false; moonHalo.position.copy(sunPos); ss.add(moonHalo);
+
+      // ---- solar eclipse from space: the Moon's shadow is a small dark spot sliding across the Earth
+      const sp = new T.Scene(); sp.add(E3.starfield(9000)); sp.add(new T.AmbientLight(0xffffff, .05));
+      const S = V3(.25, .32, -.92).normalize();
+      const earth2 = E3.planet('earth', 6, { seg: 128, noTilt: true }); sp.add(earth2); E3.lightDir(earth2, S);
+      const moon2 = E3.planet('moon', 1.5, { seg: 48 }); sp.add(moon2); E3.lightDir(moon2, S);
+      const sunL = new T.DirectionalLight(0xffffff, 1.7); sunL.position.copy(S).multiplyScalar(100); sp.add(sunL);
+      const spotTex = E3.canvasTex(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(0,0,0,.95)'); gr.addColorStop(.1, 'rgba(0,0,0,.93)'); gr.addColorStop(.17, 'rgba(0,0,0,.5)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.clearRect(0, 0, w, h); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+      const spot = new T.Mesh(new T.SphereGeometry(6.05, 48, 24, 0, TAU, 0, .44), new T.MeshBasicMaterial({ map: spotTex, transparent: true, depthWrite: false })); sp.add(spot);
+      const beam = new T.Mesh(new T.CylinderGeometry(1.1, .3, 1, 24, 1, true), new T.MeshBasicMaterial({ color: 0x2a3050, transparent: true, opacity: .26, depthWrite: false, side: T.DoubleSide })); sp.add(beam);
+
+      // ---- lunar eclipse from space: the Moon passing through Earth's long shadow
       const ls = new T.Scene(); ls.add(E3.starfield(9000)); ls.add(new T.AmbientLight(0xffffff, .06));
       const sl = new T.DirectionalLight(0xffffff, 1.7); sl.position.set(-100, 0, 0); ls.add(sl);
       const sunG = E3.glow(0xfff0c0, 160, 1); sunG.position.set(-520, 0, 0); ls.add(sunG);
@@ -177,61 +222,129 @@
       const umbra = new T.Mesh(new T.ConeGeometry(5, 75, 48, 1, true), new T.MeshBasicMaterial({ color: 0x3a3a5a, transparent: true, opacity: .32, depthWrite: false, side: T.DoubleSide }));
       umbra.rotation.z = -PI / 2; umbra.position.x = 37.5; ls.add(umbra);
       const lmoon = E3.planet('moon', 1.4, { seg: 64 }); ls.add(lmoon); E3.lightDir(lmoon, V3(-1, 0, 0));
-      EC = { ss, ls, sun, halo, corona, moon, ring, stars, hemi, dir, sunPos, tang, lmoon, earth, sub: 'solar', k: 0, said: false };
+      EC = { ss, sp, ls, grass, stars, planets, sunQuad, darkMoon, sunU, nightMoon, moonU, moonHalo, dir, sunPos, dir2: new T.Vector2(.94, .34).normalize(), S, earth2, moon2, spot, beam, lmoon, earth, sub: 'solar', space: false, k: 0, said: false, cov: 0, f: 0 };
     },
-    enter() { if (!EC) this.make(); A.setCtl([{ id: 'solar', label: 'Solar eclipse', go: true }, { id: 'lunar', label: 'Lunar eclipse', cyan: true }, { id: 'again', icon: 'again', label: 'Again' }]); this.start('solar', false); },
+    enter() {
+      if (!EC) this.make();
+      A.setCtl([{ id: 'solar', label: 'Solar eclipse', go: true }, { id: 'lunar', label: 'Lunar eclipse', cyan: true }, { id: 'space', label: 'See it from space' }, { id: 'again', icon: 'again', label: 'Again' }]);
+      EC.space = false; this.start('solar', false);
+    },
     start(sub, talk = true) {
-      EC.sub = sub; EC.k = 0; EC.said = false;
-      if (sub === 'solar') A.view({ goal: V3(0, 8, 0), dist: 4, yaw: -.12, pitch: -.5, min: 2, max: 8, minPitch: -1.2, maxPitch: .2 });
+      const e = EC; e.sub = sub; e.k = 0; e.said = false;
+      btnLabel('space', e.space ? 'See it from the ground' : 'See it from space');
+      if (!e.space) A.view({ goal: V3(0, 6, 0), dist: 5, yaw: -.11, pitch: -.3, min: 2, max: 9, minPitch: -1.1, maxPitch: .15 });
+      else if (sub === 'solar') A.view({ goal: V3(0, 4, 0), dist: 52, yaw: 2.88, pitch: -.08, min: 12, max: 110 });
       else A.view({ goal: V3(16, 0, 0), dist: 62, yaw: .55, pitch: .35, min: 15, max: 160 });
-      cam().fov = sub === 'solar' ? 30 : 45; cam().updateProjectionMatrix();
-      if (talk) { Voice.say(sub === 'solar' ? 'e_solar' : 'e_lunar'); EC.said = true; }
+      cam().fov = e.space ? 45 : 52; cam().updateProjectionMatrix();
+      e.sunQuad.visible = e.darkMoon.visible = sub === 'solar'; e.nightMoon.visible = e.moonHalo.visible = sub === 'lunar';
+      if (talk) { Voice.say(e.space ? `e_${sub}_space` : `e_${sub}`); e.said = true; }
     },
     leave() { if (cam()) { cam().fov = 45; cam().updateProjectionMatrix(); } },
-    act(id) { if (id === 'solar' || id === 'lunar') this.start(id); if (id === 'again') this.start(EC.sub, false); },
+    act(id) {
+      if (id === 'solar' || id === 'lunar') this.start(id);
+      if (id === 'space') { EC.space = !EC.space; this.start(EC.sub); }
+      if (id === 'again') this.start(EC.sub, false);
+    },
     frame(dt) {
-      const e = EC;
+      const e = EC, C = (a, b, t) => new T.Color(a).lerp(new T.Color(b), t);
+      // ---------------- solar
       if (e.sub === 'solar') {
-        e.k = Math.min(1, e.k + dt / 26 * (Math.abs(e.k - .5) < .035 ? .22 : 1));
-        if (!e.said && e.k > .2) { e.said = true; sayFree('e_solar', 0); }
-        const off = lerp(-26, 26, e.k);
-        e.moon.position.copy(e.sunPos).multiplyScalar(.985).addScaledVector(e.tang, off);
-        const d = Math.abs(off), r1 = 10, r2 = 10.4;
+        e.k = Math.min(1, e.k + dt / 28 * (Math.abs(e.k - .5) < .03 ? .2 : 1));
+        if (!e.said && e.k > .2) { e.said = true; sayFree(e.space ? 'e_solar_space' : 'e_solar', 0); }
+        const s = lerp(-2.5, 2.5, e.k), d = Math.abs(s), r1 = 1, r2 = RM;
         let cov;
         if (d >= r1 + r2) cov = 0; else if (d <= r2 - r1) cov = 1;
         else { const a1 = Math.acos((d * d + r1 * r1 - r2 * r2) / (2 * d * r1)), a2 = Math.acos((d * d + r2 * r2 - r1 * r1) / (2 * d * r2)); cov = (r1 * r1 * a1 + r2 * r2 * a2 - .5 * Math.sqrt(Math.max(0, (-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2)))) / (PI * r1 * r1); }
         e.cov = cov;
-        const dark = Math.pow(smooth(.75, 1, cov), 1.4);
-        e.ss.background.setRGB(lerp(.43, .03, dark), lerp(.68, .045, dark), lerp(.9, .12, dark));
-        e.hemi.intensity = lerp(.9, .05, dark);
-        e.stars.traverse(o => { if (o.material) o.material.opacity = dark; });
-        e.halo.material.opacity = (1 - cov) * .9 + .05; e.corona.material.opacity = smooth(.985, 1, cov);
-        e.ring.material.opacity = cov > .955 && cov < .997 ? 1 - Math.abs(cov - .976) / .021 : 0;
-        e.ring.position.copy(e.sunPos).addScaledVector(e.tang, off > 0 ? -9.6 : 9.6);
+        if (e.space) {
+          const P = E3.latLonToVec(lerp(6, 32, e.k), lerp(36, 120, e.k), 1);
+          e.spot.quaternion.setFromUnitVectors(V3(0, 1, 0), P);
+          e.moon2.position.copy(P).multiplyScalar(6).addScaledVector(e.S, 13); e.moon2.spin.rotation.y += dt * .03;
+          e.beam.position.copy(P).multiplyScalar(6.05).addScaledVector(e.S, 6.5); e.beam.scale.y = 13; e.beam.quaternion.setFromUnitVectors(V3(0, 1, 0), e.S);
+          e.spotAt = P.multiplyScalar(6.3);
+          return e.sp;
+        }
+        const u = e.sunU, tot = smooth(.985, 1, cov), dark = Math.pow(smooth(.75, 1, cov), 1.4);
+        e.moff = e.dir2.clone().multiplyScalar(s); u.moff.value.copy(e.moff);
+        u.tot.value = tot; u.glare.value = Math.pow(1 - cov, .35); u.time.value += dt;
+        u.bead.value = cov > .955 && cov < .9995 ? clamp(1 - Math.abs(cov - .98) / .024, 0, 1) : 0; u.beadDir.value.copy(e.dir2).multiplyScalar(s < 0 ? 1 : -1);
+        e.sunQuad.quaternion.copy(cam().quaternion);
+        const right = V3(1, 0, 0).applyQuaternion(cam().quaternion), up = V3(0, 1, 0).applyQuaternion(cam().quaternion);
+        e.darkMoon.position.copy(e.sunPos).addScaledVector(right, e.moff.x * SUN_R).addScaledVector(up, e.moff.y * SUN_R).multiplyScalar(.99);
+        e.darkMoon.quaternion.copy(cam().quaternion); e.darkMoon.material.opacity = smooth(.9, .995, cov);
+        // day turns to a strange twilight: deep blue overhead, a sunset glow all the way round the horizon
+        const hor = C(0xc4d8ec, 0xd8884a, dark);
+        e.ss.setSky({ top: C(0x2f6cc4, 0x060a1e, dark).getHex(), hor: hor.getHex(), below: hor.getHex(), cloudCol: C(0xffffff, 0x3a3a52, dark).getHex(), cloudShade: C(0x9aa5b8, 0x12121c, dark).getHex(), cloud: .2, horPow: lerp(.5, .24, dark) });
+        e.ss.fog.color.copy(hor).multiplyScalar(lerp(1, .4, dark)); e.ss.fog.near = 160; e.ss.fog.far = 800;
+        e.ss.hemi.color.set(0xdfeeff); e.ss.hemi.intensity = .12 + .63 * Math.pow(1 - cov, .3);
+        e.ss.sl.color.set(0xfff2dc); e.ss.sl.intensity = 1.35 * Math.sqrt(1 - cov);
+        e.stars.traverse(o => { if (o.material) o.material.opacity = dark * dark; });
+        e.planets.forEach(g => { g.material.opacity = smooth(.85, 1, cov) * .9; });
+        e.ss.sky.tick(dt); e.grass.tick(dt);
         return e.ss;
       }
-      e.k = Math.min(1, e.k + dt / 22 * (Math.abs(e.k - .5) < .06 ? .3 : 1));
-      const z = lerp(-15, 15, e.k); e.lmoon.position.set(28, .25, z); e.lmoon.spin.rotation.y += dt * .05;
-      const f = smooth(4.3, 1.2, Math.abs(z)); e.f = f;
-      const m = e.lmoon.body.material;
-      m.color.setRGB(lerp(1, .78, f), lerp(1, .3, f), lerp(1, .16, f)); m.emissive = m.emissive || new T.Color(); m.emissive.setRGB(.34 * f, .08 * f, .03 * f);
-      e.earth.spin.rotation.y += dt * .1;
-      return e.ls;
+      // ---------------- lunar
+      e.k = Math.min(1, e.k + dt / 26 * (Math.abs(e.k - .5) < .1 ? .35 : 1));
+      if (e.space) {
+        const z = lerp(-15, 15, e.k); e.lmoon.position.set(28, .25, z); e.lmoon.spin.rotation.y += dt * .05;
+        const f = smooth(4.3, 1.2, Math.abs(z)); e.f = f;
+        const m = e.lmoon.body.material;
+        m.color.setRGB(lerp(1, .78, f), lerp(1, .3, f), lerp(1, .16, f)); m.emissive = m.emissive || new T.Color(); m.emissive.setRGB(.34 * f, .08 * f, .03 * f);
+        e.earth.spin.rotation.y += dt * .1;
+        return e.ls;
+      }
+      const s = lerp(-4.9, 4.9, e.k), off = e.dir2.clone().multiplyScalar(s).add(new T.Vector2(-e.dir2.y, e.dir2.x).multiplyScalar(.45)), f = clamp((UMBRA + 1 - off.length()) / 2, 0, 1), red = smooth(.6, 1, f);
+      e.f = f; e.moonU.shOff.value.copy(off);
+      e.ss.setSky({ top: C(0x03050f, 0x010207, red).getHex(), hor: C(0x0e1836, 0x080d20, red).getHex(), below: 0x0a1024, cloudCol: 0x1c2238, cloudShade: 0x05070d, cloud: .12, horPow: .5 });
+      e.ss.fog.color.set(0x0a1024); e.ss.fog.near = 120; e.ss.fog.far = 700;
+      e.ss.hemi.color.set(0x8aa0d0); e.ss.hemi.intensity = lerp(.26, .15, f);
+      e.ss.sl.color.copy(C(0xcfdcff, 0xff7848, red)); e.ss.sl.intensity = lerp(.42, .05, f);
+      e.stars.traverse(o => { if (o.material) o.material.opacity = lerp(.7, 1, f); });
+      e.planets.forEach(g => { g.material.opacity = 0; });
+      e.moonHalo.material.opacity = lerp(.42, .06, f); e.moonHalo.material.color.copy(C(0xcfe0ff, 0xff8050, red));
+      e.ss.sky.tick(dt); e.grass.tick(dt);
+      return e.ss;
     },
     hud(ctx) {
       const e = EC, T0 = A.top();
-      if (e.sub === 'solar') {
-        panel(ctx, 16, T0, 210, 50);
+      if (e.sub === 'solar' && e.space) {
+        label3(ctx, e.moon2.position.clone().add(V3(0, 2.4, 0)), 'Moon');
+        if (e.spotAt) label3(ctx, e.spotAt, "The Moon's shadow", 'rgba(13,20,52,.9)', '#FFB52E');
+        label3(ctx, E3.latLonToVec(21, 79, 6.2), 'India', 'rgba(255,181,46,.92)', '#2A1600', 11);
+        panel(ctx, 16, T0, 250, 50);
+        hudText(ctx, 'Dark spot: the Sun is fully covered', 30, T0 + 21, 13, '#FFB52E', 'left');
+        hudText(ctx, 'Grey ring around it: only partly covered', 30, T0 + 40, 12, '#F3F1FF', 'left', 600);
+        hudPill(ctx, 'Sunlight comes from behind you', A.W / 2, A.bottom() - 6, 'rgba(255,181,46,.9)', '#2A1600', 12);
+      } else if (e.sub === 'solar') {
+        panel(ctx, 16, T0, 224, 50);
         hudText(ctx, `Sun covered: ${Math.round(e.cov * 100)}%`, 30, T0 + 22, 16, '#FFB52E', 'left');
-        hudText(ctx, e.cov > .995 ? 'Totality! See the corona glow' : 'The Moon is sliding in front', 30, T0 + 41, 12, '#F3F1FF', 'left', 600);
+        hudText(ctx, e.cov > .995 ? 'Totality! The corona glows' : e.cov > .8 ? 'The sky darkens and it gets cooler' : e.cov > 0 ? 'The Moon is taking a bite' : 'The Moon is coming closer', 30, T0 + 41, 12, '#F3F1FF', 'left', 600);
+        // where the Moon is, while the sky is still too bright to see it
+        if (e.moff && e.cov < .97) {
+          const right = V3(1, 0, 0).applyQuaternion(cam().quaternion), up = V3(0, 1, 0).applyQuaternion(cam().quaternion);
+          const c = e.sunPos.clone().addScaledVector(right, e.moff.x * SUN_R).addScaledVector(up, e.moff.y * SUN_R), p0 = A.proj(c), p1 = A.proj(c.clone().addScaledVector(right, RM * SUN_R));
+          if (p0.front) { const rr = Math.abs(p1.x - p0.x); ctx.save(); ctx.setLineDash([5, 6]); ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p0.x, p0.y, rr, 0, TAU); ctx.stroke(); ctx.restore(); if (e.cov < .5) hudText(ctx, 'The Moon', p0.x, p0.y + rr + 16, 12, 'rgba(255,255,255,.8)', 'center', 600); }
+        }
+        // the same view through eclipse glasses
+        const gr = 40, gx = A.W - 84, gy = T0 + gr + 4, k = 15;
+        ctx.save(); ctx.beginPath(); ctx.arc(gx, gy, gr, 0, TAU); ctx.fillStyle = '#040406'; ctx.fill(); ctx.clip();
+        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.arc(gx, gy, k, 0, TAU); ctx.fill();
+        if (e.moff) { ctx.fillStyle = '#040406'; ctx.beginPath(); ctx.arc(gx + e.moff.x * k, gy - e.moff.y * k, k * RM, 0, TAU); ctx.fill(); }
+        ctx.restore(); ctx.strokeStyle = '#2B3A7A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy, gr, 0, TAU); ctx.stroke();
+        hudText(ctx, 'Through eclipse glasses', gx, gy + gr + 15, 11, '#C9D0F2', 'center', 600);
         hudPill(ctx, 'Never look at the real Sun without eclipse glasses!', A.W / 2, A.bottom() - 6, 'rgba(255,109,138,.92)', '#2A0010', 12);
-      } else {
+      } else if (e.space) {
         label3(ctx, V3(-30, 6, 0), 'Sunlight comes from here', 'rgba(255,181,46,.9)', '#2A1600');
         label3(ctx, V3(48, 5, 0), "Earth's shadow");
         label3(ctx, e.lmoon.position.clone().add(V3(0, 2.6, 0)), e.f > .9 ? 'Red Moon!' : 'Moon', e.f > .9 ? 'rgba(200,70,40,.92)' : 'rgba(13,20,52,.85)', '#fff');
-        panel(ctx, 16, T0, 210, 50);
+        panel(ctx, 16, T0, 224, 50);
         hudText(ctx, `Moon in Earth's shadow: ${Math.round(e.f * 100)}%`, 30, T0 + 22, 14, '#FFB52E', 'left');
         hudText(ctx, 'Lunar eclipses are safe to watch', 30, T0 + 41, 12, '#F3F1FF', 'left', 600);
+      } else {
+        panel(ctx, 16, T0, 224, 50);
+        hudText(ctx, `Moon in Earth's shadow: ${Math.round(e.f * 100)}%`, 30, T0 + 22, 14, '#FFB52E', 'left');
+        hudText(ctx, e.f > .98 ? 'Blood Moon! It glows coppery red' : e.f > 0 ? "Earth's round shadow creeps across" : 'A bright full Moon', 30, T0 + 41, 12, '#F3F1FF', 'left', 600);
+        hudPill(ctx, 'Lunar eclipses are safe to watch with just your eyes', A.W / 2, A.bottom() - 6, 'rgba(111,234,149,.92)', '#06301A', 12);
       }
     }
   };

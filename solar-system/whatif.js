@@ -173,7 +173,7 @@ views.whatif = (() => {
         s.drops.step(dt, 0, 0);
         ctl.goal.y = 3 + up * .5;
       },
-      hud(s, ctx) { if (state === 'show') panel(ctx, ['Gravity: switched OFF', 'Ayansh, the ball, the bench and the water…', 'everything floats up and away!']); } },
+      hud(s, ctx) { if (state === 'show') panel(ctx, ['Gravity: switched OFF', `${prefs.name}, the ball, the bench and the water…`, 'everything floats up and away!']); } },
     { id: 'rings', opts: ['A giant shining arch across the sky', 'It rains ice every day', 'We never see the Sun again'],
       make() {
         const s = groundScene({ seed: 67, trees: 24 });
@@ -295,12 +295,15 @@ views.whatif = (() => {
   }
   function finish() {
     state = 'done';
-    const n = stars.filter(Boolean).length;
-    $('#wiNum').textContent = 'All done!'; $('#wiQ').textContent = `You won ${n} out of ${WI.length} stars on the first try!`;
+    const n = stars.filter(Boolean).length, r = recordScore('whatif', n, WI.length);
+    $('#wiCard').classList.remove('compact');
+    $('#wiNum').textContent = r.pass ? `All done · ${r.pct}% · Passed` : `All done · ${r.pct}% · Not a pass yet`;
+    $('#wiQ').textContent = `${n} out of ${WI.length} right on the first try. ` + (r.pass ? (n === WI.length ? 'A perfect score!' : 'You passed!') : `You need ${r.need} to pass. Have another go!`);
     $('#wiOpts').innerHTML = `<div class="cluster" style="grid-column:1/-1;justify-content:center"><button class="btn go" type="button" id="wiAgain">Play again</button><button class="btn" type="button" id="wiMenu">Other quizzes</button></div>`;
     $('#wiAgain').addEventListener('click', () => { Sfx.tap(); stars = []; drawStars(); ask(0); });
     $('#wiMenu').addEventListener('click', () => { Sfx.tap(); show('quiz'); });
-    Sfx.chime(); window.confettiAt?.($('#wiCard')); Voice.say('wi_end');
+    if (r.pass) { Sfx.chime(); window.confettiAt?.($('#wiCard')); } else Sfx.tap();
+    sayScore(n, WI.length, r.pass, 'wi_end', () => current === 'whatif' && state === 'done');
   }
   $('#wiBack').addEventListener('click', () => { Sfx.tap(); Voice.stop(); show('quiz'); });
 

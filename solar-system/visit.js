@@ -161,7 +161,7 @@ views.visit = (() => {
 
   function chips() {
     const kg = prefs.kg * w.g, wtxt = w.g < .01 ? 'almost nothing!' : (kg >= 100 ? Math.round(kg).toLocaleString('en-IN') : kg.toFixed(kg < 10 ? 1 : 0)) + ' kg';
-    $('#visitChips').innerHTML = `<span class="chip">Ayansh weighs <b>${wtxt}</b></span><span class="chip">Temperature <b>${w.temp}</b></span>`;
+    $('#visitChips').innerHTML = `<span class="chip">${prefs.name} weighs <b>${wtxt}</b></span><span class="chip">Temperature <b>${w.temp}</b></span>`;
     $('#visitFound').textContent = `Found ${found.size} of ${w.spots.length}`;
     $('#vJump').hidden = !!w.noJump;
   }
@@ -464,26 +464,80 @@ views.earth = (() => {
     }
   };
 
-  /* ---------------- inside the Earth: a real 3D cut-away */
-  let inSc, inEarth, drill, digger, depth = 0, layerSaid = '';
-  const LAYERS = [[1, '#9A6A44'], [.985, '#C4482A'], [.55, '#F09A2A'], [.19, '#FFF0B8']];
+  /* ---------------- inside the Earth: a real 3D cut-away. A quarter of the crust and mantle is taken out, then the top corner of the
+     liquid outer core, so the solid inner core shows as a white-hot ball. The layers are painted by a shader, and the hot ones slowly move. */
+  let inSc, inEarth, drill, digger, depth = 0, layerSaid = '', inT = { value: 0 };
+  const RC = .97, RUM = .895, ROC = .546, RIC = .192;   // where the crust, upper mantle, outer core and inner core begin (share of Earth's radius)
+  const IN_VS = `
+    #include <clipping_planes_pars_vertex>
+    uniform float invR; varying vec3 vP, vN, vV;
+    void main(){
+      vP = position * invR; vN = normalMatrix * normal;
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); vV = -mvPosition.xyz;
+      gl_Position = projectionMatrix * mvPosition;
+      #include <clipping_planes_vertex>
+    }`;
+  const IN_FS = `
+    #include <clipping_planes_pars_fragment>
+    uniform float t, shrink, ball; varying vec3 vP, vN, vV;
+    float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+    float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
+                 mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
+    float fb(vec3 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * n3(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; } return s; }
+    vec3 layer(vec3 p){
+      float r = length(p); vec3 col;
+      if (r > ${RC}) {                                   // crust: cool, hard rock in thin bands
+        float n = fb(p * 60.0);
+        col = mix(vec3(0.30, 0.24, 0.19), vec3(0.58, 0.49, 0.40), n) * (0.82 + 0.18 * sin(r * 1400.0 + n * 6.0));
+      } else if (r > ${RUM}) {                           // upper mantle: dark greenish-brown rock, warmer further down
+        float n = fb(p * 24.0), k = (${RC} - r) / (${RC} - ${RUM});
+        col = mix(vec3(0.33, 0.27, 0.15), vec3(0.50, 0.17, 0.07), k) * (0.72 + n * 0.6);
+      } else if (r > ${ROC}) {                           // lower mantle: hot rock that creeps like very thick honey
+        float k = (${RUM} - r) / (${RUM} - ${ROC});
+        vec3 q = p * 5.0; q += 0.7 * vec3(fb(q + t * 0.035), fb(q + 7.3 - t * 0.03), fb(q + 3.1 + t * 0.02));
+        float n = fb(q);
+        col = mix(vec3(0.52, 0.11, 0.04), vec3(1.0, 0.44, 0.08), clamp(k * 0.85 + (n - 0.5) * 0.55, 0.0, 1.0)) * (0.78 + n * 0.5);
+        col += vec3(1.0, 0.55, 0.12) * pow(max(0.0, n - 0.6), 2.0) * 5.0;      // rising plumes
+      } else if (r > ${RIC}) {                           // outer core: liquid iron, swirling quickly
+        float k = (${ROC} - r) / (${ROC} - ${RIC});
+        vec3 q = p * 9.0; q += 1.3 * vec3(fb(q + t * 0.22), fb(q + 5.2 - t * 0.18), fb(q + 1.7 + t * 0.14));
+        float n = fb(q);
+        col = mix(vec3(1.0, 0.48, 0.05), vec3(1.0, 0.88, 0.32), clamp(k * 0.65 + n * 0.5, 0.0, 1.0)) * (0.85 + n * 0.45);
+      } else {                                           // inner core: a solid ball, white-hot
+        float n = fb(p * 30.0);
+        col = mix(vec3(1.0, 0.88, 0.5), vec3(1.0, 0.99, 0.92), 1.0 - r / ${RIC}) * (0.9 + n * 0.2);
+      }
+      float seam = min(min(abs(r - ${RC}) * 2.0, abs(r - ${RUM}) * 1.6), min(abs(r - ${ROC}), abs(r - ${RIC})));
+      return col * (0.5 + 0.5 * smoothstep(0.0, 0.007, seam));    // dark seams where the layers meet
+    }
+    void main(){
+      #include <clipping_planes_fragment>
+      vec3 col = layer(vP * shrink);
+      float facing = max(dot(normalize(vN), normalize(vV)), 0.0);
+      col *= mix(1.0, 0.62 + 0.38 * pow(facing, 0.7), ball);        // round shading on the two balls
+      gl_FragColor = vec4(col, 1.0);
+    }`;
   M.inside = {
     make() {
       inSc = new T.Scene(); inSc.add(E3.starfield(6000)); inSc.add(new T.AmbientLight(0xffffff, .35));
       const sl = new T.DirectionalLight(0xffffff, 1.2); sl.position.set(-40, 30, 60); inSc.add(sl);
-      // remove the quarter of the Earth facing us so the layers show
-      const planes = [new T.Plane(V3(-1, 0, 0), 0), new T.Plane(V3(0, 0, -1), 0)];
-      inEarth = E3.planet('earth', R, { seg: 160, noTilt: true }); inEarth.spin.rotation.y = -2.2; inSc.add(inEarth); inEarth.atmo.visible = false;
-      inEarth.traverse(o => { if (o.material) { o.material.clippingPlanes = planes; o.material.clipIntersection = true; o.material.side = T.DoubleSide; } });
-      // inner layers: spheres seen through the cut, plus the flat cut faces painted with the layers
-      const ringsTex = E3.canvasTex(512, 512, (g, s) => { const c = s / 2; for (const [k, col] of LAYERS) { const gr = g.createRadialGradient(c, c, 0, c, c, c * k); gr.addColorStop(0, col); gr.addColorStop(1, new T.Color(col).multiplyScalar(.75).getStyle()); g.fillStyle = gr; g.beginPath(); g.arc(c, c, c * k, 0, TAU); g.fill(); } g.strokeStyle = 'rgba(255,220,160,.25)'; g.lineWidth = 3; for (let i = 0; i < 9; i++) { const a = Math.random() * TAU, rr = c * (.62 + Math.random() * .3); g.beginPath(); g.ellipse(c + Math.cos(a) * rr, c + Math.sin(a) * rr, 26, 12, a, 0, TAU); g.stroke(); } });
-      for (const [rot, ax] of [[0, 'x'], [1, 'z']]) {
-        const face = new T.Mesh(new T.CircleGeometry(R * .998, 96, 0, Math.PI), new T.MeshBasicMaterial({ map: ringsTex, side: T.DoubleSide }));
-        if (ax === 'x') { face.rotation.set(0, -Math.PI / 2, -Math.PI / 2); } else { face.rotation.set(0, 0, -Math.PI / 2); face.rotation.y = 0; }
-        face.material.clippingPlanes = [new T.Plane(ax === 'x' ? V3(0, 0, 1) : V3(1, 0, 0), 0)];
-        inSc.add(face);
-      }
-      for (const [k, col] of LAYERS.slice(1)) { const s = new T.Mesh(new T.SphereGeometry(R * k, 96, 48), new T.MeshStandardMaterial({ color: col, roughness: .7, emissive: col, emissiveIntensity: k < .6 ? .45 : .15, clippingPlanes: planes, clipIntersection: true, side: T.BackSide })); inSc.add(s); }
+      const cutA = [new T.Plane(V3(-1, 0, 0), 0), new T.Plane(V3(0, 0, -1), 0)];     // crust and mantle: the quarter facing us is taken out
+      const cutB = [...cutA, new T.Plane(V3(0, -1, 0), 0)];                          // outer core: only the top corner of that quarter
+      inEarth = E3.planet('earth', R, { seg: 160, noTilt: true }); inEarth.spin.rotation.y = -2.2; inSc.add(inEarth); inEarth.atmo.visible = false; E3.lightDir(inEarth, V3(.35, .45, .82).normalize());
+      inEarth.traverse(o => { if (o.material) { o.material.clippingPlanes = cutA; o.material.clipIntersection = true; o.material.side = T.DoubleSide; } });
+      const layerMat = (shrink, ball, planes) => new T.ShaderMaterial({ uniforms: { t: inT, invR: { value: 1 / R }, shrink: { value: shrink }, ball: { value: ball } }, vertexShader: IN_VS, fragmentShader: IN_FS,
+        side: T.DoubleSide, clipping: !!planes, clippingPlanes: planes || null, clipIntersection: true });
+      // flat cut faces: a fan of triangles from the centre out to an arc
+      const fan = pts => { const g = new T.BufferGeometry(), v = [0, 0, 0], idx = []; pts.forEach(q => v.push(q.x, q.y, q.z)); for (let i = 1; i < pts.length; i++) idx.push(0, i, i + 1); g.setAttribute('position', new T.Float32BufferAttribute(v, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(new Float32Array(v.length), 3)); g.setIndex(idx); return g; };
+      const arc = (n, f) => Array.from({ length: n + 1 }, (_, i) => f(i / n)), RA = R * .999, RB = R * ROC;
+      inSc.add(new T.Mesh(fan(arc(128, u => { const a = (u - .5) * Math.PI; return V3(RA * Math.cos(a), RA * Math.sin(a), 0); })), layerMat(1, 0)));    // the face along z = 0
+      inSc.add(new T.Mesh(fan(arc(128, u => { const a = (u - .5) * Math.PI; return V3(0, RA * Math.sin(a), RA * Math.cos(a)); })), layerMat(1, 0)));    // the face along x = 0
+      inSc.add(new T.Mesh(fan(arc(64, u => { const a = u * Math.PI / 2; return V3(RB * Math.cos(a), 0, RB * Math.sin(a)); })), layerMat(1, 0)));         // the floor of the corner cut into the outer core
+      inSc.add(new T.Mesh(new T.SphereGeometry(RB, 128, 64), layerMat(.93, 1, cutB)));                                                                    // outer core, bulging out below
+      inSc.add(new T.Mesh(new T.SphereGeometry(R * RIC, 64, 40), layerMat(.8, 1)));                                                                       // inner core
+      const glow = E3.glow(0xffb040, R * 1.25, .55); inSc.add(glow);
+      const heat = new T.PointLight(0xff9a40, 1.1, R * 1.6); inSc.add(heat);
       drill = new T.Group(); const shaft = E3.cyl(.08, .08, 1, E3.mats().metal, 10); shaft.position.y = -.5; drill.add(shaft); drill.shaft = shaft;
       const bit = new T.Mesh(new T.ConeGeometry(.25, .7, 16), new T.MeshStandardMaterial({ color: 0xffb52e, metalness: .6, roughness: .3 })); bit.rotation.x = Math.PI; drill.add(bit); drill.bit = bit;
       drill.position.set(.35, R, .35); inSc.add(drill);
@@ -492,6 +546,7 @@ views.earth = (() => {
     enter() { if (!inSc) this.make(); depth = 0; layerSaid = ''; r.localClippingEnabled = true; view({ goal: V3(0, 2, 0), dist: 34, min: 14, max: 70, yaw: .78, pitch: .35, snap: false }); setCtl([{ id: 'dig', icon: 'down', label: 'Dig deeper', hold: true, go: true }, { id: 'upward', icon: 'up', label: 'Go back up', hold: true }]); },
     frame(dt) {
       if (held.dig) depth = Math.min(1, depth + dt * .1); if (held.upward) depth = Math.max(0, depth - dt * .2);
+      inT.value += dt;
       const y = R - depth * R;
       drill.bit.position.y = -depth * R; drill.bit.rotation.y += dt * 12; drill.shaft.scale.y = Math.max(.01, depth * R); drill.shaft.position.y = -depth * R / 2;
       digger.pose(held.dig ? t * 6 : 0, false);
@@ -504,7 +559,7 @@ views.earth = (() => {
       ctx.fillStyle = 'rgba(13,20,52,.88)'; roundRect(ctx, 16, T0, 220, 74, 14); ctx.fill();
       hudText(ctx, `Depth: ${km.toLocaleString('en-IN')} km`, 30, T0 + 28, 18, '#FFB52E', 'left');
       hudText(ctx, `About ${Math.round(tc).toLocaleString('en-IN')} °C down here`, 30, T0 + 54, 13, '#F3F1FF', 'left', 600);
-      for (const [nm, k, a] of [['Crust', 1.06, .55], ['Mantle', .77, .5], ['Outer core', .37, .35], ['Inner core', .02, 0]]) { const p = proj(V3(Math.cos(a) * R * k, Math.sin(a) * R * k, .05)); if (p.front) hudPill(ctx, nm, p.x, p.y, 'rgba(13,20,52,.85)', '#F3F1FF', 12); }
+      for (const [nm, k, a] of [['Crust: hard rock', 1.07, .62], ['Mantle: hot rock that creeps', .77, .55], ['Outer core: liquid iron', .44, -.55], ['Inner core: solid iron', .12, .8]]) { const p = proj(V3(Math.cos(a) * R * k, Math.sin(a) * R * k, .05)); if (p.front) hudPill(ctx, nm, p.x, p.y, 'rgba(13,20,52,.85)', '#F3F1FF', 12); }
     }
   };
 

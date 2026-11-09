@@ -33,7 +33,9 @@ He wins a star for each level, and gets a certificate after all 8.
 
 An animated, hands-on solar system in `solar-system/`. Nova, a friendly space guide, talks Ayansh through it in a recorded, natural-sounding voice, and every word she says is shown underneath so he can read along.
 
-**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`, the planet pictures in `solar-system/tex`) and open `solar-system/index.html` in a web browser. Press **Blast off!** to start. It works offline; the internet is only needed for the nicer fonts. A computer or tablet from the last few years runs the 3D smoothly.
+**To play:** keep the whole `solar-system` folder together (the voice lives in `solar-system/audio`, the planet pictures in `solar-system/tex`) and open `solar-system/index.html` in a web browser. Type the explorer's name (it starts as Ayansh) and press **Blast off!** It works offline; the internet is only needed for the nicer fonts. A computer or tablet from the last few years runs the 3D smoothly.
+
+The space view gets nearly the whole screen. The activities sit in a slim rail down the left side (along the bottom on a phone), and Nova's words are in one thin strip underneath; tap the words to open the whole message. **Full view** in the rail hides every menu so only space is left, and the **Menus** button brings them back.
 
 Everything is in real 3D with real planet pictures made from NASA images: Earth has its continents, clouds, shiny oceans and city lights on the night side. In Explore and in every 3D activity you can **drag to turn**, and **pinch, scroll or use the + and − buttons to zoom**, all the way from the whole solar system down to a planet's surface.
 
@@ -49,7 +51,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
-| Quiz | Picks one of four games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures) and **What If…?** | Goes over everything, with a star for each first-try answer |
+| Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of four games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures) and **What If…?** | Goes over everything, with a star for each first-try answer |
 
 ### Explore Earth
 
@@ -60,12 +62,13 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | India | A real satellite picture of India with pins for famous places |
 | Seasons | Watches tilted Earth go round the Sun, with the month, India's season, hours of daylight and how high the noon Sun climbs |
 | Tides | Sees the Moon pull the oceans into bulges, and the water rise and fall on a Mumbai beach |
-| Eclipses | Watches a solar eclipse from the ground, with day turning to night and the corona appearing, and a lunar eclipse turning the Moon red |
+| Eclipses | Stands in a field and watches a solar eclipse: the Moon takes a bite out of the Sun (shown in a little "through eclipse glasses" window), the sky turns to twilight with a sunset glow all round the horizon, then the diamond ring, the corona, red flames and stars. Then a lunar eclipse at night: Earth's round shadow creeps over the full Moon and turns it coppery red. **See it from space** shows why each one happens, with the Moon's shadow as a dark spot sliding across India |
 | Auroras | Sees the solar wind steered to the poles from space, then the green curtains from a snowy hill |
 | Storm & rainbow | Counts the seconds between lightning and thunder to find how far the storm is, then brings out the Sun for a rainbow (VIBGYOR) |
 | Cyclone | Watches a cyclone spin across the Bay of Bengal and zooms into its calm eye |
 | Earthquakes | Pushes India north to raise the Himalayas, and shakes the ground while a seismometer draws the quake |
-| Volcano, Rain cycle, Inside Earth | Makes a volcano erupt, follows rain from the sea to the mountains and back, and digs to the centre of the Earth |
+| Volcano, Rain cycle | Makes a volcano erupt, and follows rain from the sea to the mountains and back |
+| Inside Earth | Drills from the surface to the centre through a cut-away Earth: banded crust, hot creeping mantle, swirling liquid outer core and the white-hot solid inner core, with the depth and temperature shown all the way down |
 
 ### What If…?
 
@@ -90,7 +93,8 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 
 - The Earth scenes (Earth's story, Volcano, Rain cycle, Storm, Earthquakes) share a "realism kit" in `solar-system/nature.js`: a sky with a sun and drifting clouds, ground that mixes grass, rock, sand or snow, water that ripples and reflects the sky, and leafy trees, ferns and grass. Everything is drawn from noise in the browser, so there are no extra picture files.
 - Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
-- **Voice** turns Nova on or off, **Sounds** controls the beeps. The two buttons beside her words replay or stop what she is saying.
+- **Settings** in the rail has the explorer's name, **Nova's voice** and **Sounds**. The two buttons beside Nova's words replay or stop what she is saying.
+- The name shows in the title, on buttons and labels, and on the quiz results. Nova's recorded voice can say "Ayansh". For any other name, the greeting is spoken by the device's own voice, and the few lines that mention the name use recordings that leave it out.
 - If a voice file is missing, Nova falls back to the best-sounding voice the browser has.
 - Distances in the Explore view are squeezed so everything fits on one screen; **How big?** shows the true sizes.
 

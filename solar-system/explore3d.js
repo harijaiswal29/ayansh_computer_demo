@@ -7,7 +7,7 @@ views.explore = (() => {
   const ORB = { mercury: 16, venus: 22.5, earth: 30, mars: 38, jupiter: 58.5, saturn: 70, uranus: 81.5, neptune: 91.5, pluto: 100 };
   const RAD = { sun: 8.5, mercury: 1.2, venus: 1.9, earth: 2, moon: .62, mars: 1.5, jupiter: 4.8, saturn: 4, uranus: 2.8, neptune: 2.7, pluto: .7 };
   const SPIN = { sun: .04, mercury: .05, venus: -.03, earth: .35, moon: .02, mars: .34, jupiter: .8, saturn: .75, uranus: -.5, neptune: .55, pluto: .06 };
-  const HOME = { dist: 205, pitch: .58, yaw: .35 };
+  const HOME = { dist: 186, pitch: .58, yaw: .35 };
   let r, scene, cam, ctl, built = false, W = 0, H = 0, t = 0, simT = 0, speed = 1, names = true, sel = null, tour = null, lastYrs = -1, offKey = '';
   const P = {}, orbitLines = {}, start = {};
   { const rr = rng(42); for (const id of ORDER) start[id] = rr() * TAU; }
@@ -171,7 +171,7 @@ views.explore = (() => {
     $('#infoFacts').innerHTML = b.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
     const nextId = ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
     $('#infoNext').textContent = 'Next: ' + BODIES[nextId].name;
-    $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : 'Visit as Ayansh';
+    $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : `Visit as ${prefs.name}`;
     info.hidden = false; offKey = '';
     $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === id ? 'true' : 'false'));
     const tb = $(`.thumb[data-id="${id}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });

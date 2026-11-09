@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap">
 <style>
-/* Layout: one full-screen mission console. A slim header, a big live space stage, Nova's subtitle strip, then six chunky toy tabs.
+/* Layout: the space stage gets nearly the whole screen. A slim rail of activities runs down the left side
+   (along the bottom on phones) and Nova's words sit in one thin strip under the stage. "Full view" hides even those.
    Single deliberate night-sky look: deep navy space, sun-gold for "you are here / chosen", cyan for things you can press. */
 :root{
   --void:#050817; --deep:#0C1331; --panel:rgba(13,20,52,.9); --raised:#16215A; --line:#2B3A7A;
@@ -30,16 +31,16 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 canvas{display:block;touch-action:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-#app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto}
+#app{height:100%;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"rail stage" "rail caption"}
 
-/* header */
-.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.2px;min-width:0}
-.brand svg{width:38px;height:38px;flex:none}
-.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim);letter-spacing:.6px;text-transform:uppercase}
-.toggles{display:flex;gap:8px;flex:none}
-.tog{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--deep);border-radius:999px;padding:5px 12px 5px 8px;font-family:var(--display);font-weight:600;font-size:15px}
+/* the rail: activities, then Full view and Settings */
+.rail{grid-area:rail;display:flex;flex-direction:column;gap:4px;width:72px;padding:6px 4px;padding-left:max(4px,env(safe-area-inset-left,0px));background:var(--void);border-right:1px solid var(--line);overflow-y:auto;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.who{display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;border-radius:12px;padding:2px 0 4px;font-family:var(--display);font-weight:700;font-size:11px;line-height:1.1;color:var(--sun);min-width:0;flex:none}
+.who svg{width:32px;height:32px}
+.who span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-tools{margin-top:auto;display:flex;flex-direction:column;gap:2px;flex:none}
+.tog{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--void);border-radius:999px;padding:6px 14px 6px 10px;min-height:42px;font-family:var(--display);font-weight:600;font-size:16px}
 .tog svg{width:22px;height:22px}
 .tog[aria-pressed="true"]{border-color:var(--cyan);color:var(--star)}
 .tog[aria-pressed="false"]{color:var(--faint)}
@@ -47,80 +48,108 @@ canvas{display:block;touch-action:none}
 .tog[aria-pressed="true"] .off{display:none}
 
 /* stage */
-#stage{position:relative;overflow:hidden;background:var(--void)}
+#stage{grid-area:stage;position:relative;overflow:hidden;background:var(--void)}
 .view{position:absolute;inset:0}
 .view > canvas.full{position:absolute;inset:0;width:100%;height:100%}
 canvas.gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 canvas.over2d{background:transparent}
 
 /* chunky buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:10px 18px;min-height:46px;font-family:var(--display);font-weight:600;font-size:18px;background:var(--raised);color:var(--star);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 #070B22;transition:transform .08s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:8px 16px;min-height:42px;font-family:var(--display);font-weight:600;font-size:17px;background:var(--raised);color:var(--star);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 #070B22;transition:transform .08s}
 .btn:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px var(--line),0 1px 0 #070B22}
 .btn svg{width:22px;height:22px;flex:none}
 .btn.go{background:var(--sun);color:#2A1600;box-shadow:0 4px 0 #A8650A}
 .btn.go:active{box-shadow:0 1px 0 #A8650A}
 .btn.cyan{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
-.btn.small{min-height:40px;padding:6px 12px;font-size:15px;border-radius:12px}
+.btn.small{min-height:36px;padding:5px 11px;font-size:14px;border-radius:11px;gap:6px}
+.btn.small svg{width:18px;height:18px}
 .btn[aria-pressed="true"]{background:var(--cyan);color:#062A2E;box-shadow:0 4px 0 #23939A}
 .seg{display:inline-flex;background:var(--deep);border-radius:14px;padding:3px;box-shadow:inset 0 0 0 2px var(--line)}
-.seg button{border:0;background:none;border-radius:11px;padding:6px 12px;min-height:38px;font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim)}
+.seg button{border:0;background:none;border-radius:10px;padding:4px 10px;min-height:32px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim)}
 .seg button[aria-pressed="true"]{background:var(--cyan);color:#062A2E}
 
 /* overlay rows inside views */
 .over{position:absolute;left:0;right:0;padding-left:var(--gut-l);padding-right:var(--gut-r);display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
 .over > *{pointer-events:auto}
-.over.top{top:10px;justify-content:space-between}
-.over.bottom{bottom:10px}
+.over.top{top:8px;justify-content:space-between}
+.over.bottom{bottom:8px}
 .cluster{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--dim)}
-.chip b{font-family:var(--display);font-size:17px;color:var(--star);font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--dim)}
+.chip b{font-family:var(--display);font-size:15px;color:var(--star);font-variant-numeric:tabular-nums}
 
 /* planet strip */
-.strip{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin;scroll-snap-type:x proximity;max-width:100%}
-.thumb{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;width:68px;padding:6px 2px 4px;border:2px solid transparent;border-radius:14px;background:rgba(12,19,49,.72);font-family:var(--display);font-weight:600;font-size:13px;color:var(--dim);scroll-snap-align:start}
-.thumb img{width:42px;height:42px;object-fit:contain}
+.strip{display:flex;gap:4px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin;scroll-snap-type:x proximity;max-width:100%}
+.thumb{flex:none;display:flex;flex-direction:column;align-items:center;gap:0;width:56px;padding:3px 1px 2px;border:2px solid transparent;border-radius:12px;background:rgba(12,19,49,.6);font-family:var(--display);font-weight:600;font-size:11px;line-height:1.15;color:var(--dim);scroll-snap-align:start}
+.thumb img{width:30px;height:30px;object-fit:contain}
 .thumb[aria-pressed="true"]{border-color:var(--sun);color:var(--star);background:rgba(40,33,20,.85)}
 
 /* explore info card */
-.info{position:absolute;top:66px;bottom:10px;right:var(--gut-r);width:min(370px,44%);background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:slidein .35s ease-out}
+.info{position:absolute;top:52px;max-height:calc(100% - 60px);right:var(--gut-r);width:min(310px,42%);background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:slidein .35s ease-out}
 @keyframes slidein{from{transform:translateX(30px);opacity:0}}
-.info .x{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--deep);font-size:24px;line-height:1}
-.info-head{display:flex;align-items:center;gap:14px;padding-right:44px}
-.info-head canvas{width:120px;height:120px;flex:none}
+.info .x{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--deep);font-size:24px;line-height:1}
+.info-head{display:flex;align-items:center;gap:10px;padding-right:40px}
+.info-head canvas{width:76px;height:76px;flex:none}
 .info-head .kind{margin:0;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);font-weight:600}
-.info-head h2{font-size:36px;font-weight:700}
-.info-head .nick{margin:2px 0 0;color:var(--sun);font-family:var(--display);font-weight:600;font-size:17px}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
-.facts div{background:var(--deep);border-radius:14px;padding:8px 10px;min-width:0}
-.facts dt{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:600}
-.facts dd{margin:2px 0 0;font-family:var(--display);font-weight:600;font-size:16px;line-height:1.2}
-.info-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
-.info-actions .btn{flex:1 1 140px}
+.info-head h2{font-size:28px;font-weight:700}
+.info-head .nick{margin:1px 0 0;color:var(--sun);font-family:var(--display);font-weight:600;font-size:15px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}
+.facts div{background:var(--deep);border-radius:12px;padding:5px 9px;min-width:0}
+.facts dt{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:600}
+.facts dd{margin:1px 0 0;font-family:var(--display);font-weight:600;font-size:15px;line-height:1.2}
+.info-actions{display:flex;gap:6px;flex-wrap:wrap}
+.info-actions .btn{flex:1 1 120px;min-height:38px;padding:6px 10px;font-size:15px}
 .info-actions #infoVisit{flex-basis:100%}
 
-/* Nova's subtitle strip */
-.caption{display:flex;align-items:center;gap:12px;padding-block:8px;padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--deep);border-top:1px solid var(--line);min-height:76px}
-.nova{width:54px;height:54px;flex:none}
+/* Nova's words: one thin strip. Tap the words to open the whole message */
+.caption{grid-area:caption;display:flex;align-items:center;gap:10px;padding:4px var(--gut-r) 4px 12px;background:var(--deep);border-top:1px solid var(--line);min-height:50px}
+.nova{width:38px;height:38px;flex:none}
 .nova .mouth{transform-origin:32px 43px;transition:transform .1s}
 .caption.talking .nova .mouth{animation:talk .28s infinite alternate}
 .caption.talking .nova{animation:bob 1.2s ease-in-out infinite}
 @keyframes talk{to{transform:scaleY(.25)}}
 @keyframes bob{50%{transform:translateY(-2px)}}
-.say{flex:1;min-width:0;margin:0;font-size:18px;line-height:1.4;max-height:4.3em;overflow-y:auto;color:var(--star)}
+.say{position:relative;flex:1;min-width:0;margin:0;font-size:15.5px;line-height:1.32;max-height:2.64em;overflow:hidden;color:var(--star);cursor:pointer}
+.caption.open .say{max-height:38vh;overflow-y:auto}
 .say .w{transition:color .15s}
 .caption.talking .say .w{color:var(--faint)}
 .caption.talking .say .w.done{color:var(--star)}
 .caption.talking .say .w.now{color:var(--sun)}
-.say .who{font-family:var(--display);font-weight:700;color:var(--cyan);margin-right:6px}
-.round{width:46px;height:46px;flex:none;border-radius:50%;border:2px solid var(--line);background:var(--raised);display:grid;place-items:center}
-.round svg{width:22px;height:22px}
+.say .who2{font-family:var(--display);font-weight:700;color:var(--cyan);margin-right:6px}
+.round{width:36px;height:36px;flex:none;border-radius:50%;border:2px solid var(--line);background:var(--raised);display:grid;place-items:center}
+.round svg{width:18px;height:18px}
 
 /* tabs */
-.tabs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding-top:6px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px));padding-left:var(--gut-l);padding-right:var(--gut-r);background:var(--void);border-top:1px solid var(--line)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:14px;padding:6px 2px;font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim);min-width:0}
-.tab svg{width:28px;height:28px}
-.tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tabs{display:flex;flex-direction:column;gap:2px;flex:none}
+.tab,.tool{display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;border-radius:12px;padding:5px 1px;font-family:var(--display);font-weight:600;font-size:10.5px;line-height:1.1;color:var(--dim);min-width:0}
+.tab svg,.tool svg{width:24px;height:24px;flex:none}
+.tab span,.tool span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tab .short{display:none}
 .tab[aria-selected="true"]{background:var(--sun);color:#2A1600}
+.tool{color:var(--faint)}
+.tool:hover,.tab:hover{color:var(--star)}
+.tab[aria-selected="true"]:hover{color:#2A1600}
+
+/* Full view: only the stage, Nova's words as subtitles, and one button to bring the menus back */
+body.clean #app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"stage"}
+body.clean .rail,body.clean .over,body.clean .info,body.clean .hud,body.clean .skycard,body.clean .compare{display:none!important}
+body.clean .caption{position:fixed;z-index:34;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom,0px));width:max-content;max-width:min(760px,calc(100% - 150px));background:rgba(5,8,23,.66);border:0;border-radius:14px;min-height:0;padding:6px 14px;opacity:0;pointer-events:none;transition:opacity .4s}
+body.clean .caption.talking{opacity:1}
+body.clean .caption .nova,body.clean .caption .round{display:none}
+.unclean{position:fixed;z-index:35;left:max(10px,env(safe-area-inset-left,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:rgba(13,20,52,.78);color:var(--star);border-radius:999px;padding:6px 12px 6px 9px;min-height:40px;font-family:var(--display);font-weight:600;font-size:14px}
+.unclean svg{width:20px;height:20px}
+
+/* settings sheet and the name box */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,8,23,.66);padding:16px}
+.sheet{width:min(420px,100%);max-height:100%;overflow-y:auto;background:var(--deep);border:2px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.sheet h2{font-size:24px}
+.sheet .row{display:flex;gap:8px;flex-wrap:wrap}
+.sheet .hint{margin:0}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--dim);text-align:left;width:100%}
+.field input{font-family:var(--display);font-weight:600;font-size:20px;color:var(--star);background:var(--void);border:2px solid var(--line);border-radius:14px;padding:8px 14px;min-height:48px;width:100%}
+.field input::placeholder{color:var(--faint);font-weight:500}
+.field input:focus{outline:3px solid var(--cyan);outline-offset:2px;border-color:var(--cyan)}
+.start-box .field{max-width:320px;text-align:center}
+.start-box .field input{text-align:center}
 
 /* sizes */
 .scroller{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden}
@@ -155,7 +184,7 @@ canvas.over2d{background:transparent}
 .world[aria-pressed="true"]{border-color:var(--sun);background:#241C10}
 
 /* day & night */
-.skycard{position:absolute;top:62px;right:var(--gut-r);width:190px;border-radius:18px;overflow:hidden;border:2px solid var(--line);background:var(--panel)}
+.skycard{position:absolute;top:52px;right:var(--gut-r);width:190px;border-radius:18px;overflow:hidden;border:2px solid var(--line);background:var(--panel)}
 .skywin{height:92px;position:relative;transition:background .6s}
 .skywin svg{position:absolute;inset:0;width:100%;height:100%}
 .skycard p{margin:0;padding:8px 12px;font-size:14px;color:var(--dim)}
@@ -167,19 +196,20 @@ canvas.over2d{background:transparent}
 
 /* trip */
 .dests{display:flex;gap:6px;flex-wrap:wrap}
-.dest{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:16px;color:var(--dim)}
-.dest img{width:34px;height:34px}
+.dest{display:flex;align-items:center;gap:5px;padding:2px 10px 2px 3px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim)}
+.dest img{width:28px;height:28px}
 .dest[aria-pressed="true"]{border-color:var(--sun);color:var(--star)}
 
 /* spacecraft + visits */
-.picker{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px;max-width:100%;scrollbar-width:thin}
-.craft{flex:none;display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim);white-space:nowrap}
+.picker{display:flex;gap:5px;overflow-x:auto;padding:2px 2px 4px;max-width:100%;scrollbar-width:thin}
+.craft{flex:none;display:flex;align-items:center;gap:5px;padding:2px 10px 2px 3px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim);white-space:nowrap}
 .craft canvas{width:34px;height:34px;flex:none}
 .craft[aria-pressed="true"]{border-color:var(--sun);color:var(--star);background:#241C10}
-.hud{position:absolute;top:66px;left:var(--gut-l);max-width:min(380px,60%);background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 12px;pointer-events:none}
+.hud{position:absolute;top:52px;left:var(--gut-l);max-width:min(380px,60%);background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 12px;pointer-events:none}
 .hud h3{font-size:20px;color:var(--sun)}
 .hud p{margin:2px 0 0;font-size:13px;color:var(--dim);line-height:1.35}
-.btn.hold{min-width:58px;font-size:20px;user-select:none;-webkit-user-select:none}
+.btn.hold{min-width:52px;user-select:none;-webkit-user-select:none}
+.btn.hold:not(.small){font-size:19px}
 .btn.hold.on{background:var(--cyan);color:#062A2E}
 .seg.scrolly{overflow-x:auto;max-width:100%}
 input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
@@ -208,13 +238,13 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 .qpick{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;border-radius:24px;border:3px solid var(--line);background:var(--panel);text-align:center}
 .qpick:hover,.qpick:focus-visible{border-color:var(--sun)}
 .qpick b{font-family:var(--display);font-size:22px;color:var(--sun)}
-.qpick span:last-child{font-size:14px;color:var(--dim)}
+.qpick .what{font-size:14px;color:var(--dim)}
 .qicon{display:block;width:96px;height:96px}
 .qicon img{width:100%;height:100%;object-fit:contain}
 .qtop{width:100%;max-width:720px;display:flex}
 .opt .otext{font-size:17px;line-height:1.25;padding:0 4px}
 .opt .obig{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;color:var(--cyan)}
-.wicard{position:absolute;top:66px;left:var(--gut-l);right:var(--gut-r);max-width:760px;margin:0 auto;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:12px 16px;text-align:center}
+.wicard{position:absolute;top:52px;left:var(--gut-l);right:var(--gut-r);max-width:760px;margin:0 auto;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:12px 16px;text-align:center}
 .wicard.compact{max-width:520px;padding:6px 12px}
 .wicard.compact h2{font-size:18px}
 .wiopt[hidden]{display:none}
@@ -225,7 +255,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 .wiopt.right{border-color:var(--mint);background:#0F3324;animation:pop .4s}
 .wiopt.wrong{border-color:var(--rose);opacity:.55;animation:shake .4s}
 .wiopts .btn{grid-column:1/-1;justify-self:center}
-.emode{flex:none;padding:7px 14px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:15px;color:var(--dim);white-space:nowrap}
+.emode{flex:none;padding:5px 11px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-family:var(--display);font-weight:600;font-size:14px;color:var(--dim);white-space:nowrap}
 .emode[aria-pressed="true"]{border-color:var(--sun);color:#2A1600;background:var(--sun)}
 #view-earth .over.top{flex-wrap:nowrap}
 #view-earth .over.top .emodes{flex:1;min-width:0}
@@ -233,8 +263,25 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 .earthbot .picker .emode{background:rgba(13,20,52,.85)}
 .earthbot .picker .emode[aria-pressed="true"]{background:var(--sun)}
 .badge{width:100%;max-width:520px;text-align:center;background:var(--panel);border:3px solid var(--sun);border-radius:28px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.badge h2{font-size:34px;color:var(--sun)}
+.badge h2{font-size:32px;color:var(--sun)}
 .badge p{margin:0;color:var(--dim)}
+.badge.fail{border-color:var(--line)}
+.badge.fail > svg path{fill:none;stroke:var(--faint)}
+.badge.fail h2{color:var(--star)}
+.mark{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
+.mark .pct{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;color:var(--star);font-variant-numeric:tabular-nums}
+.mark .verdict{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.6px;text-transform:uppercase;border-radius:999px;padding:6px 16px}
+.mark .verdict.pass{background:var(--mint);color:#06301A}
+.mark .verdict.fail{background:var(--raised);color:var(--star);box-shadow:inset 0 0 0 2px var(--rose)}
+.meter{position:relative;width:100%;max-width:380px;height:16px;border-radius:999px;background:var(--void);box-shadow:inset 0 0 0 2px var(--line);margin:4px 0 20px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--rose);transition:width .8s ease-out}
+.meter.pass i{background:var(--mint)}
+.meter b{position:absolute;left:80%;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:var(--sun)}
+.meter span{position:absolute;left:80%;top:22px;transform:translateX(-50%);font-size:12px;color:var(--sun);font-weight:600;white-space:nowrap}
+.qscore{margin:0;font-size:13px;color:var(--dim)}
+.qscore b{color:var(--star);font-family:var(--display);font-size:15px}
+.qpick .best{display:inline-block;margin-top:4px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--void);box-shadow:inset 0 0 0 1px var(--line);color:var(--dim)}
+.qpick .best.pass{color:var(--mint);box-shadow:inset 0 0 0 1px var(--mint)}
 .burst{position:fixed;pointer-events:none;inset:0;width:100%;height:100%;z-index:30}
 
 /* start screen */
@@ -250,12 +297,18 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 
 @media (max-width:760px){
   body{font-size:16px}
-  .brand{font-size:18px}
-  .brand small{display:none}
-  .brand svg{width:30px;height:30px}
-  .tog span{display:none}
-  .tog{padding:6px}
-  .info{top:auto;left:var(--gut-l);right:var(--gut-r);width:auto;bottom:8px;max-height:60%;padding:12px;gap:10px;animation-name:slideup}
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"stage" "caption" "rail"}
+  .rail{flex-direction:row;align-items:stretch;width:auto;gap:0;padding:3px max(3px,env(safe-area-inset-right,0px)) max(3px,env(safe-area-inset-bottom,0px)) max(3px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--line);overflow:visible}
+  .who{display:none}
+  .tabs{flex-direction:row;flex:1;min-width:0;gap:0}
+  .tab{flex:1;font-size:9.5px;padding:4px 0 3px}
+  .tab svg,.tool svg{width:22px;height:22px}
+  .tab .long{display:none}
+  .tab .short{display:inline}
+  .rail-tools{margin:0;flex-direction:row;gap:0}
+  .tool{width:36px;justify-content:center;padding:4px 0}
+  .tool span{display:none}
+  .info{top:auto;left:var(--gut-l);right:var(--gut-r);width:auto;bottom:8px;max-height:56%;padding:10px;gap:8px;animation-name:slideup}
   @keyframes slideup{from{transform:translateY(30px);opacity:0}}
   .info-head canvas{width:84px;height:84px}
   .info-actions{order:1;margin-top:0}
@@ -263,12 +316,11 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   .info-actions .btn{min-height:42px;padding:6px 12px;font-size:16px}
   .info-head h2{font-size:28px}
   .facts dd{font-size:15px}
-  .say{font-size:16px}
-  .nova{width:44px;height:44px}
-  .caption{min-height:66px;gap:8px}
-  .round{width:42px;height:42px}
-  .tab{font-size:11px}
-  .tab svg{width:24px;height:24px}
+  .say{font-size:14px}
+  .nova{width:34px;height:34px}
+  .caption{min-height:46px;gap:8px;padding-left:var(--gut-l)}
+  .round{width:34px;height:34px}
+  .mark .pct{font-size:44px}
   .weigh{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
   .weigh-side{border-left:0;border-top:1px solid var(--line);padding-left:var(--gut-l)}
   .readout .big{font-size:32px}
@@ -277,17 +329,16 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   .world{font-size:11px;padding:6px 2px}
   .world img{width:34px;height:34px}
   .world b{font-size:14px}
-  .skycard{width:150px;top:58px}
+  .skycard{width:150px;top:50px}
   .skywin{height:70px}
   .opts{gap:8px}
   #namesBtn{display:none}
-  .hud{top:62px;max-width:calc(100% - 32px);padding:6px 10px}
+  .hud{top:50px;max-width:calc(100% - 32px);padding:6px 10px}
   .hud h3{font-size:16px}
   .hud p{font-size:12px}
   .craft{font-size:13px}
   .btn.hold{min-width:52px}
   .seg button{padding:6px 9px;font-size:14px}
-  .tab span{white-space:normal;line-height:1.1;text-align:center}
   .readout{right:auto;max-width:56%;padding:8px 10px}
   .readout p{font-size:12px;line-height:1.3}
   .jump{right:auto;left:var(--gut-l)}
@@ -296,11 +347,18 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   .qpick{flex-direction:row;text-align:left;padding:10px 12px;gap:12px}
   .qpick .qicon{width:64px;height:64px;flex:none}
   .qpick b{font-size:19px;display:block}
-  .wicard{top:58px;padding:8px 12px}
+  .wicard{top:50px;padding:8px 12px}
   .wiopts{grid-template-columns:1fr;gap:6px}
   .wiopt{min-height:44px;font-size:15px;padding:8px}
   .opt .otext{font-size:14px}
   .opt .obig{font-size:32px}
+}
+/* short, wide screens (a phone on its side): icons only in the rail */
+@media (min-width:761px) and (max-height:540px){
+  .rail{width:52px}
+  .who span,.tab span,.tool span{display:none}
+  .who svg{width:28px;height:28px}
+  .tab,.tool{padding:6px 0}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -309,20 +367,25 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 </head>
 <body>
 <div id="app">
-  <header class="bar">
-    <div class="brand">
+  <nav class="rail" aria-label="Activities">
+    <button class="who" id="whoBtn" type="button" title="Change the explorer's name">
       <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="12" fill="#FFB52E"/><path d="M14 20a12 12 0 0 1 20-4" stroke="#FFE3A0" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="24" cy="25" rx="22" ry="7" fill="none" stroke="#59E0E8" stroke-width="3" transform="rotate(-18 24 25)"/></svg>
-      <div style="min-width:0"><span>Ayansh's Space Adventure</span><small>Explore our solar system with Nova</small></div>
+      <span data-t="{n}">Ayansh</span>
+    </button>
+    <div class="tabs" role="tablist" aria-label="Activities">
+      <button class="tab" role="tab" data-view="explore" aria-selected="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="4" fill="currentColor"/><ellipse cx="14" cy="14" rx="12" ry="6"/><circle cx="24.5" cy="11" r="2.4" fill="currentColor" stroke="none"/></svg><span class="long">Explore</span><span class="short">Explore</span></button>
+      <button class="tab" role="tab" data-view="sizes" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="16.5" r="4"/><circle cx="21.5" cy="14" r="6.5"/></svg><span class="long">How big?</span><span class="short">Sizes</span></button>
+      <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span class="long">Weigh me</span><span class="short">Weigh</span></button>
+      <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span class="long">Day &amp; Night</span><span class="short">Day</span></button>
+      <button class="tab" role="tab" data-view="trip" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/><circle cx="14" cy="10" r="1.8"/></svg><span class="long">Space race</span><span class="short">Race</span></button>
+      <button class="tab" role="tab" data-view="craft" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="11" y="10" width="6" height="8" rx="1.5"/><path d="M3 9h7v10H3zM18 9h7v10h-7zM10 14h1M17 14h1M14 10V6M12 5h4"/></svg><span class="long">Missions</span><span class="short">Missions</span></button>
+      <button class="tab" role="tab" data-view="quiz" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3l3.2 6.6 7.3.9-5.4 5 1.4 7.2L14 19.2l-6.5 3.5 1.4-7.2-5.4-5 7.3-.9z"/></svg><span class="long">Quiz</span><span class="short">Quiz</span></button>
     </div>
-    <div class="toggles">
-      <button class="tog" id="voiceTog" type="button" aria-pressed="true" title="Nova talks out loud">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg><span>Voice</span>
-      </button>
-      <button class="tog" id="soundTog" type="button" aria-pressed="true" title="Beeps and whooshes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path class="off" d="M3 3l18 18"/></svg><span>Sounds</span>
-      </button>
+    <div class="rail-tools">
+      <button class="tool" id="cleanBtn" type="button" title="Hide the menus and see only space"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6"/></svg><span>Full view</span></button>
+      <button class="tool" id="gearBtn" type="button" title="Name, voice and sounds"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h10M21 8h2M5 20h2M13 20h10M5 14h18"/><circle cx="18" cy="8" r="3"/><circle cx="10" cy="20" r="3"/></svg><span>Settings</span></button>
     </div>
-  </header>
+  </nav>
 
   <main id="stage">
     <!-- 1. Explore -->
@@ -356,7 +419,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         <dl class="facts" id="infoFacts"></dl>
         <div class="info-actions">
           <button class="btn" id="infoHear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Hear again</button>
-          <button class="btn go" id="infoVisit" type="button"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg>Visit as Ayansh</button>
+          <button class="btn go" id="infoVisit" type="button"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg><span>Visit as Ayansh</span></button>
           <button class="btn cyan" id="infoNext" type="button">Next</button>
         </div>
       </aside>
@@ -375,7 +438,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
     <section class="view" id="view-weigh" hidden aria-label="How heavy would I be">
       <div class="weigh">
         <div class="weigh-stage">
-          <canvas id="weighCv" aria-label="Ayansh the astronaut standing on the chosen world. Press Jump to jump."></canvas>
+          <canvas id="weighCv" aria-label="An astronaut standing on the chosen world. Press Jump to jump."></canvas>
           <div class="readout" aria-live="polite">
             <h3 id="wTitle">On Earth</h3>
             <div class="big" id="wKg">22 <small>kg</small></div>
@@ -385,7 +448,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         </div>
         <div class="weigh-side">
           <div class="me">
-            <div class="stepper"><label for="kgOut">Ayansh weighs</label><button type="button" id="kgMinus" aria-label="Less">&minus;</button><output id="kgOut">22</output><button type="button" id="kgPlus" aria-label="More">+</button><span class="hint">kg</span></div>
+            <div class="stepper"><label for="kgOut" data-t="{n} weighs">Ayansh weighs</label><button type="button" id="kgMinus" aria-label="Less">&minus;</button><output id="kgOut">22</output><button type="button" id="kgPlus" aria-label="More">+</button><span class="hint">kg</span></div>
             <div class="stepper"><label for="ageOut">Age</label><button type="button" id="ageMinus" aria-label="Younger">&minus;</button><output id="ageOut">7</output><button type="button" id="agePlus" aria-label="Older">+</button><span class="hint">years</span></div>
           </div>
           <div class="worlds" id="worlds" aria-label="Pick a world"></div>
@@ -432,9 +495,9 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       <div class="over bottom" id="craftCtl"></div>
     </section>
 
-    <!-- Visit a world as Ayansh (visit.js) -->
+    <!-- Visit a world as the explorer (visit.js) -->
     <section class="view" id="view-visit" hidden aria-label="Visit a world">
-      <canvas class="full" id="visitCv" aria-label="Ayansh exploring a world in 3D. Tap the ground to walk there, or use the buttons. Tap glowing things to learn about them."></canvas>
+      <canvas class="full" id="visitCv" aria-label="An astronaut exploring a world in 3D. Tap the ground to walk there, or use the buttons. Tap glowing things to learn about them."></canvas>
       <div class="over top">
         <button class="btn small" id="visitBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back to space</button>
         <div class="cluster" id="visitChips"></div>
@@ -493,14 +556,15 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         <div class="qmenu" id="qmenu">
           <h2>Pick a quiz</h2>
           <div class="qmenu-grid">
-            <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span>10 questions about the Sun, planets and Moon</span></button>
-            <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span>Spacecraft, Earth and everything we explored</span></button>
-            <button class="qpick" type="button" data-q="earth"><span class="qicon" id="qiEarth"></span><b>Earth's Story Quiz</b><span>Baby Earth, dinosaurs, the asteroid and the Ice Age</span></button>
-            <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span>Big imagination questions, then watch what happens</span></button>
+            <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span class="what">10 questions about the Sun, planets and Moon <span class="best" data-best="planets" hidden></span></span></button>
+            <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span class="what">Spacecraft, Earth and everything we explored <span class="best" data-best="adventure" hidden></span></span></button>
+            <button class="qpick" type="button" data-q="earth"><span class="qicon" id="qiEarth"></span><b>Earth's Story Quiz</b><span class="what">Baby Earth, dinosaurs, the asteroid and the Ice Age <span class="best" data-best="earth" hidden></span></span></button>
+            <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span class="what">Big imagination questions, then watch what happens <span class="best" data-best="whatif" hidden></span></span></button>
           </div>
         </div>
         <div class="qtop" id="qtop" hidden><button class="btn small" id="qBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Quizzes</button></div>
         <div class="qstars" id="qstars" aria-label="Stars won"></div>
+        <p class="qscore" id="qscore" hidden></p>
         <div class="qcard" id="qcard">
           <p class="num" id="qnum"></p>
           <h2 id="qtext"></h2>
@@ -509,7 +573,9 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         </div>
         <div class="badge" id="badge" hidden>
           <svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="#FFB52E" stroke="#FFE3A0" stroke-width="1"/></svg>
-          <h2>Space Expert Ayansh!</h2>
+          <h2 id="badgeTitle">Space Expert Ayansh!</h2>
+          <div class="mark"><span class="pct" id="markPct">0%</span><span class="verdict" id="markVerdict"></span></div>
+          <div class="meter" id="markMeter"><i></i><b></b><span>Pass mark 80%</span></div>
           <p id="badgeText"></p>
           <div class="cluster" style="justify-content:center"><button class="btn go" id="again" type="button">Play again</button><button class="btn" id="toMenu" type="button">Other quizzes</button></div>
         </div>
@@ -529,27 +595,38 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       <path class="mouth" d="M26 42q6 5 12 0" stroke="#FFB52E" stroke-width="3" fill="#FFB52E" stroke-linejoin="round"/>
       <circle cx="19" cy="41" r="2.4" fill="#FF6D8A" opacity=".55"/><circle cx="45" cy="41" r="2.4" fill="#FF6D8A" opacity=".55"/>
     </svg>
-    <p class="say" id="say" aria-live="polite"><span class="who">Nova</span>Hi! Press Blast off to begin.</p>
+    <p class="say" id="say" aria-live="polite" title="Tap to open or close the whole message"><span class="who2">Nova</span>Hi! Press Blast off to begin.</p>
     <button class="round" id="replay" type="button" aria-label="Say it again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg></button>
     <button class="round" id="hush" type="button" aria-label="Stop talking"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
   </div>
 
-  <nav class="tabs" role="tablist" aria-label="Activities">
-    <button class="tab" role="tab" data-view="explore" aria-selected="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="4" fill="currentColor"/><ellipse cx="14" cy="14" rx="12" ry="6"/><circle cx="24.5" cy="11" r="2.4" fill="currentColor" stroke="none"/></svg><span>Explore</span></button>
-    <button class="tab" role="tab" data-view="sizes" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="16.5" r="4"/><circle cx="21.5" cy="14" r="6.5"/></svg><span>How big?</span></button>
-    <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span>Weigh me</span></button>
-    <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span>Day &amp; Night</span></button>
-    <button class="tab" role="tab" data-view="trip" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/><circle cx="14" cy="10" r="1.8"/></svg><span>Space race</span></button>
-    <button class="tab" role="tab" data-view="craft" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="11" y="10" width="6" height="8" rx="1.5"/><path d="M3 9h7v10H3zM18 9h7v10h-7zM10 14h1M17 14h1M14 10V6M12 5h4"/></svg><span>Missions</span></button>
-    <button class="tab" role="tab" data-view="quiz" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3l3.2 6.6 7.3.9-5.4 5 1.4 7.2L14 19.2l-6.5 3.5 1.4-7.2-5.4-5 7.3-.9z"/></svg><span>Quiz</span></button>
-  </nav>
+</div>
+
+<button class="unclean" id="uncleanBtn" type="button" hidden><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v6H4M24 10h-6V4M18 24v-6h6M4 18h6v6"/></svg>Menus</button>
+
+<div class="modal" id="settings" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <h2 id="setTitle">Settings</h2>
+    <label class="field"><span>Who is exploring?</span><input id="nameIn" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Type your name"></label>
+    <div class="row">
+      <button class="tog" id="voiceTog" type="button" aria-pressed="true" title="Nova talks out loud">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg><span>Nova's voice</span>
+      </button>
+      <button class="tog" id="soundTog" type="button" aria-pressed="true" title="Beeps and whooshes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path class="off" d="M3 3l18 18"/></svg><span>Sounds</span>
+      </button>
+    </div>
+    <p class="hint">Nova's recorded voice knows the name Ayansh. Any other name is said by this device's own voice.</p>
+    <button class="btn go" id="setDone" type="button">Done</button>
+  </div>
 </div>
 
 <div class="start" id="start">
   <div class="start-box">
-    <p class="eyebrow">Mission control to Ayansh</p>
-    <h1>Ayansh's <em>Space</em> Adventure</h1>
+    <p class="eyebrow" data-t="Mission control to {n}">Mission control to Ayansh</p>
+    <h1><span data-t="{n}'s">Ayansh's</span> <em>Space</em> Adventure</h1>
     <p>Fly around the Sun, visit all eight planets, weigh yourself on the Moon and race a beam of light. Nova, your space guide, will talk you through it.</p>
+    <label class="field"><span>Who is exploring today?</span><input id="startName" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Type your name"></label>
     <button class="btn go" id="blast" type="button" disabled><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg>Blast off!</button>
     <span class="load" id="load">Painting the planets… 0%</span>
   </div>
@@ -578,8 +655,23 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
-const prefs = Object.assign({ voice: true, sound: true, kg: 22, age: 7 }, store.get('ayansh-space', {}));
+const DEFAULT_NAME = 'Ayansh';   // Nova's recorded voice says this name; any other name is spoken by the device's own voice
+const prefs = Object.assign({ voice: true, sound: true, kg: 22, age: 7, name: DEFAULT_NAME, best: {} }, store.get('ayansh-space', {}));
 const savePrefs = () => store.set('ayansh-space', prefs);
+// letters, spaces, dots, apostrophes and hyphens only, so a name is always safe to show anywhere
+function cleanName(v) {
+  let n = String(v || ''); try { n = n.replace(/[^\p{L}\p{M} .'-]/gu, ''); } catch (e) { n = n.replace(/[^A-Za-z .'-]/g, ''); }
+  n = n.replace(/\s+/g, ' ').trim().slice(0, 16).trim();
+  if (!n || n.toLowerCase() === DEFAULT_NAME.toLowerCase()) return DEFAULT_NAME;
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+prefs.name = cleanName(prefs.name);
+// every piece of page text with {n} in its data-t gets the explorer's name
+function applyName() {
+  document.title = `${prefs.name}'s Space Adventure`;
+  $$('[data-t]').forEach(el => { el.textContent = el.dataset.t.replace(/\{n\}/g, prefs.name); });
+  const v = $('#infoVisit')?.lastChild; if (v && /^Visit as /.test(v.textContent)) v.textContent = `Visit as ${prefs.name}`;
+}
 const readyHooks = [];  // set-up steps that need the planet pictures; run once they are loaded
 function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
 function fitCanvas(cv) {
@@ -999,10 +1091,14 @@ const Voice = {
     this.audio.preload = 'auto';
     this.audio.addEventListener('ended', () => this.finish(this.token));
   },
-  line(id) { return (window.LINES && LINES[id]) || { text: '' }; },
+  // '@' is a one-off line (a greeting with the explorer's name) read by the device's own voice
+  line(id) { return id === '@' ? this.adhoc : ((window.LINES && LINES[id]) || { text: '' }); },
+  // when someone other than Ayansh is exploring, use the recording that leaves the name out
+  resolve(id) { return prefs.name !== DEFAULT_NAME && window.LINES && LINES[id + '__n'] ? id + '__n' : id; },
+  sayText(text, done) { this.adhoc = { text }; this.say('@', done); },
   caption(id) {
     const text = this.line(id).text, el = $('#say');
-    el.innerHTML = '<span class="who">Nova</span>';
+    el.innerHTML = '<span class="who2">Nova</span>';
     const parts = text.split(/(\s+)/), spans = [], marks = []; let total = 0;
     for (const p of parts) {
       if (!p.trim()) { el.appendChild(document.createTextNode(p)); continue; }
@@ -1014,11 +1110,12 @@ const Voice = {
   },
   say(id, done) {
     this.stop();
-    const tok = ++this.token; this.cur = { id, done }; this.lastId = id;
+    if (id !== '@') id = this.resolve(id);
+    const tok = ++this.token; this.cur = { id, done }; this.lastId = id; this.row = -1;
     this.caption(id);
     if (!prefs.voice) { const ms = 1200 + this.line(id).text.length * 45; this.timer = setTimeout(() => this.finish(tok), ms); return; }
     this.busy = true; $('#caption').classList.add('talking');
-    if (this.fallback) { this.speakTTS(id, tok); return; }
+    if (this.fallback || id === '@') { this.speakTTS(id, tok); return; }
     const a = this.audio;
     a.onerror = () => { if (tok === this.token) { if (++this.errors >= 3) this.fallback = true; this.speakTTS(id, tok); } };
     a.src = 'audio/' + id + '.mp3';
@@ -1040,7 +1137,9 @@ const Voice = {
     for (let i = 0; i < ws.length; i++) {
       const prev = i ? m[i - 1] : 0;
       ws[i].classList.toggle('done', m[i] <= p);
-      ws[i].classList.toggle('now', prev <= p && p < m[i]);
+      const now = prev <= p && p < m[i]; ws[i].classList.toggle('now', now);
+      // keep the line being spoken in view in the thin strip
+      if (now && ws[i].offsetTop !== this.row) { this.row = ws[i].offsetTop; const el = $('#say'); if (!$('#caption').classList.contains('open')) el.scrollTop = Math.max(0, this.row - 2); }
     }
   },
   bestVoice() {
@@ -1064,6 +1163,7 @@ const Voice = {
     try {
       speechSynthesis.cancel();
       const text = this.line(id).text, chunks = text.match(/[^.!?]+[.!?]*/g) || [text], v = this.bestVoice();
+      this.timer = setTimeout(() => this.finish(tok), 2500 + text.length * 95);   // carry on even if this device's voice never answers
       let i = 0, spoken = 0;
       const next = () => {
         if (tok !== this.token) return;
@@ -1427,7 +1527,7 @@ views.day = (() => {
       ctx.fillStyle = '#FFB52E'; ctx.beginPath(); ctx.arc(x, y - 18, 11, PI * .85, PI * .15); ctx.lineTo(x, y); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#2A1600'; ctx.beginPath(); ctx.moveTo(x - 5, y - 17); ctx.lineTo(x, y - 22); ctx.lineTo(x + 5, y - 17); ctx.lineTo(x + 5, y - 12); ctx.lineTo(x - 5, y - 12); ctx.fill();
       ctx.font = '700 14px Fredoka, sans-serif'; ctx.textAlign = 'left';
-      const label = "Ayansh's home", tw = ctx.measureText(label).width + 14;
+      const label = `${prefs.name}'s home`, tw = ctx.measureText(label).width + 14;
       ctx.fillStyle = 'rgba(5,8,23,.75)'; roundRect(ctx, x + 14, y - 34, tw, 22, 11); ctx.fill();
       ctx.fillStyle = '#FFB52E'; ctx.fillText(label, x + 21, y - 18);
       ctx.globalAlpha = 1;
@@ -1467,7 +1567,7 @@ views.day = (() => {
     ctx.strokeStyle = '#2B3A7A'; ctx.lineWidth = 2; ctx.stroke();
     const ph = 2 * PI * p;
     drawBody(ctx, 'moon', g.ix, g.iy, g.ir, { rot: 0, L: [Math.sin(ph), 0, -Math.cos(ph)], pitch: .05, dpr: d, slot: m2, ambient: .07 });
-    ctx.fillStyle = '#A8B2DE'; ctx.font = '500 12px Lexend, sans-serif'; ctx.fillText('What Ayansh sees from Earth', g.ix, g.iy - g.ir - 12);
+    ctx.fillStyle = '#A8B2DE'; ctx.font = '500 12px Lexend, sans-serif'; ctx.fillText(`What ${prefs.name} sees from Earth`, g.ix, g.iy - g.ir - 12);
     const pi = phaseIdx(p);
     ctx.fillStyle = '#FFB52E'; ctx.font = '700 20px Fredoka, sans-serif'; ctx.fillText(PH[pi].name, g.ix, g.iy + g.ir + 26);
     if (pi !== lastPhase) {
@@ -1661,9 +1761,25 @@ views.quiz = (() => {
     { id: 'eq_mexico', o: [X('In the sea near Mexico'), X('In India'), X('On the Moon')] }
   ];
   const QUIZ = {
-    planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: 'Space Expert Ayansh!' },
-    adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: 'Space Adventure Champion!' },
-    earth: { intro: 'eq_intro', end: 'eq_end', make: () => { window.histIcons?.(); return shuffle(EARTH_QS.slice()).slice(0, 10); }, title: 'Time Traveller Ayansh!' }
+    planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: () => `Space Expert ${prefs.name}!` },
+    adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: () => 'Space Adventure Champion!' },
+    earth: { intro: 'eq_intro', end: 'eq_end', make: () => { window.histIcons?.(); return shuffle(EARTH_QS.slice()).slice(0, 10); }, title: () => `Time Traveller ${prefs.name}!` }
+  };
+  // marking: a question counts when it is right on the first try, and 80% is a pass
+  const PASS = .8;
+  function drawBest() {
+    $$('[data-best]').forEach(el => { const b = (prefs.best || {})[el.dataset.best]; el.hidden = b == null; if (b != null) { el.textContent = `Best: ${b}%` + (b >= PASS * 100 ? ' · Passed' : ''); el.classList.toggle('pass', b >= PASS * 100); } });
+  }
+  function recordScore(key, n, total) {
+    const pct = Math.round(n / total * 100), pass = n >= Math.ceil(total * PASS - 1e-9);
+    prefs.best = prefs.best || {}; if (prefs.best[key] == null || pct > prefs.best[key]) { prefs.best[key] = pct; savePrefs(); }
+    drawBest(); return { pct, pass, best: prefs.best[key], need: Math.ceil(total * PASS - 1e-9) };
+  }
+  window.recordScore = recordScore;
+  // Nova reads the mark, says pass or try again, then (on a pass) her cheer for that quiz
+  window.sayScore = (n, total, pass, endId, still) => {
+    const after = () => { if (!still()) return; Voice.say(pass ? 'quiz_pass' : 'quiz_fail', pass ? () => { if (still()) Voice.say(endId); } : undefined); };
+    if (total === 10 && window.LINES && LINES['score_' + n]) Voice.say('score_' + n, after); else after();
   };
   let mode = null, QS = [], qi = 0, stars = [], tried = false, locked = false, t = 0;
   const burst = [];
@@ -1671,7 +1787,11 @@ views.quiz = (() => {
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
   const starSvg = on => `<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="${on ? '#FFB52E' : 'none'}" stroke="${on ? '#FFE3A0' : '#2B3A7A'}" stroke-width="1.6"/></svg>`;
   window.starSvg = starSvg;
-  function drawStars() { $('#qstars').innerHTML = mode ? QS.map((q, i) => starSvg(stars[i])).join('') : ''; }
+  function drawStars() {
+    $('#qstars').innerHTML = mode ? QS.map((q, i) => starSvg(stars[i])).join('') : '';
+    const el = $('#qscore'), done = stars.length, show = !!mode && done > 0 && !$('#qcard').hidden;
+    el.hidden = !show; if (show) el.innerHTML = `Right first time: <b>${stars.filter(Boolean).length} of ${done}</b> · You need ${Math.ceil(QS.length * PASS - 1e-9)} of ${QS.length} to pass`;
+  }
   const CRAFT_NAME = { chandrayaan: 'Chandrayaan-3', mangalyaan: 'Mangalyaan', voyager: 'Voyager', juno: 'Juno', perseverance: 'Perseverance' };
   const DINO_NAME = { trex: 'T. rex', trike: 'Triceratops', stego: 'Stegosaurus', brachio: 'Brachiosaurus', raja: 'Rajasaurus', mammoth: 'Woolly mammoth', trilobite: 'Trilobite', ptero: 'Pteranodon' };
   function optHTML(o) {
@@ -1718,10 +1838,16 @@ views.quiz = (() => {
     qi++;
     if (qi >= QS.length) {
       $('#qcard').hidden = true; $('#badge').hidden = false;
-      $('#badge h2').textContent = QUIZ[mode].title;
-      const n = stars.filter(Boolean).length;
-      $('#badgeText').textContent = `You won ${n} out of ${QS.length} stars on the first try!`;
-      Sfx.chime(); confetti($('#badge')); Voice.say(QUIZ[mode].end);
+      const n = stars.filter(Boolean).length, total = QS.length, r = recordScore(mode, n, total), m = mode;
+      drawStars();
+      $('#badge').classList.toggle('fail', !r.pass);
+      $('#badgeTitle').textContent = r.pass ? QUIZ[mode].title() : `Good try, ${prefs.name}!`;
+      $('#markPct').textContent = r.pct + '%';
+      const v = $('#markVerdict'); v.textContent = r.pass ? 'Passed' : 'Not yet'; v.className = 'verdict ' + (r.pass ? 'pass' : 'fail');
+      const bar = $('#markMeter'); bar.classList.toggle('pass', r.pass); bar.firstElementChild.style.width = '0%'; setTimeout(() => { bar.firstElementChild.style.width = r.pct + '%'; }, 60);
+      $('#badgeText').textContent = `${n} out of ${total} right on the first try. ` + (r.pass ? (n === total ? 'A perfect score!' : 'You passed!') : `You need ${r.need} to pass. Have another go!`) + (r.best > r.pct ? ` Your best so far: ${r.best}%.` : '');
+      if (r.pass) { Sfx.chime(); confetti($('#badge')); } else Sfx.tap();
+      sayScore(n, total, r.pass, QUIZ[mode].end, () => current === 'quiz' && mode === m && !$('#badge').hidden);
       return;
     }
     ask();
@@ -1758,7 +1884,7 @@ views.quiz = (() => {
     $('#qiPlanets').innerHTML = `<img src="${THUMB.saturn}" alt="">`;
     $('#qiAdv').innerHTML = `<img src="${(window.CRAFT_ICON || {}).chandrayaan || THUMB.moon}" alt="">`;
     $('#qiWhat').innerHTML = `<img src="${THUMB.earth}" alt="">`;
-    window.histIcons?.(); $('#qiEarth').innerHTML = `<img src="${(window.HIST_ICON || {}).trex || THUMB.earth}" alt="">`;
+    drawBest(); window.histIcons?.(); $('#qiEarth').innerHTML = `<img src="${(window.HIST_ICON || {}).trex || THUMB.earth}" alt="">`;
   }, 0));
   return {
     frame, layout() {},
@@ -1779,6 +1905,29 @@ $('#voiceTog').addEventListener('click', e => {
 });
 $('#soundTog').addEventListener('click', e => { prefs.sound = !prefs.sound; savePrefs(); setTog(e.currentTarget, prefs.sound); Sfx.tap(); });
 $('#replay').addEventListener('click', () => { if (Voice.lastId) Voice.say(Voice.lastId); });
+$('#say').addEventListener('click', () => $('#caption').classList.toggle('open'));
+
+// settings sheet: the explorer's name, Nova's voice, sounds
+function greet(then) { if (prefs.name === DEFAULT_NAME) { if (then) then(); else Voice.say('hi_ayansh'); } else Voice.sayText(`Hi ${prefs.name}!`, then); }
+function setName(v) { const n = cleanName(v), changed = n !== prefs.name; prefs.name = n; savePrefs(); applyName(); return changed; }
+function openSettings() { $('#nameIn').value = prefs.name; $('#settings').hidden = false; Sfx.tap(); }
+function closeSettings() {
+  if ($('#settings').hidden) return;
+  $('#settings').hidden = true; Sfx.tap();
+  if (setName($('#nameIn').value)) { views[current]?.rename?.(); if (started) greet(); }
+}
+$('#gearBtn').addEventListener('click', openSettings);
+$('#whoBtn').addEventListener('click', () => { openSettings(); $('#nameIn').focus(); $('#nameIn').select(); });
+$('#setDone').addEventListener('click', closeSettings);
+$('#settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
+$('#nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') closeSettings(); });
+
+// Full view: hide every menu so only space is left
+function setClean(on) { document.body.classList.toggle('clean', on); $('#uncleanBtn').hidden = !on; Sfx.tap(); views[current]?.layout?.(); }
+$('#cleanBtn').addEventListener('click', () => setClean(true));
+$('#uncleanBtn').addEventListener('click', () => setClean(false));
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#settings').hidden) closeSettings(); else if (document.body.classList.contains('clean')) setClean(false); } });
+applyName();
 $('#hush').addEventListener('click', () => { views.explore.stopTour(); Voice.stop(); });
 
 let last = performance.now(), started = false;
@@ -1819,13 +1968,17 @@ function decodeTex(uri, alphaFromGrey) {
   readyHooks.forEach(f => { try { f(); } catch (e) { console.error(e); } });
   $('#load').textContent = 'Ready for launch!';
   const btn = $('#blast'); btn.disabled = false; btn.focus({ preventScroll: true });
-  const hash = location.hash.slice(1);
+  const hash = location.hash.slice(1), nameBox = $('#startName');
+  nameBox.value = prefs.name; nameBox.addEventListener('focus', () => nameBox.select());
+  nameBox.addEventListener('input', () => { const keep = prefs.name; prefs.name = cleanName(nameBox.value); applyName(); prefs.name = keep; });
+  nameBox.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
   btn.addEventListener('click', () => {
+    setName(nameBox.value);
     Sfx.init(); Sfx.whoosh();
     $('#start').classList.add('gone'); setTimeout(() => { $('#start').hidden = true; }, 700);
     started = true;
     if (hash && views[hash] && hash !== 'explore') { show(hash); }
-    else { seenIntro.explore = true; show('explore', true); Voice.say('welcome', () => setTimeout(() => { if (current === 'explore' && !Voice.busy) Voice.say('explore_intro'); }, 600)); }
+    else { seenIntro.explore = true; show('explore', true); greet(() => Voice.say('welcome', () => setTimeout(() => { if (current === 'explore' && !Voice.busy) Voice.say('explore_intro'); }, 600))); }
   }, { once: true });
 })();
 </script>
