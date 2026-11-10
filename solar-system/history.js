@@ -614,6 +614,7 @@
   };
 
   // pictures of the creatures for the Earth's Story Quiz
+  window.HIST_SPECIES = SPECIES;   // the dinosaur models, for other scenes (India's story uses Rajasaurus)
   window.histIcons = () => {
     if (window.HIST_ICON) return window.HIST_ICON;
     const I = window.HIST_ICON = {};

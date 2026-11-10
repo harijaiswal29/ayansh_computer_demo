@@ -10,3 +10,5 @@ They were resized and saved as `.js` files by `tools/make_textures.py`, so the a
 The 3D engine is [three.js](https://threejs.org) r128 (MIT License, see `../vendor/three-LICENSE.txt`).
 
 The Pangaea globe in Earth's story is made in the browser from the same NASA Earth day, shine and bump maps: each continent is cut out and rotated to an approximate position 250 million years ago (fitted by matching coastlines). It is a rough picture for children, not a scientific reconstruction.
+
+India's story uses the same NASA Earth maps: the day map and the sharp 8k tiles for colour, the shine map to tell land from sea, and the height map for the 3D relief of India. The moving continents are worked out in the browser from approximate plate rotations fitted by matching coastlines. It is a picture for children, not a scientific reconstruction.

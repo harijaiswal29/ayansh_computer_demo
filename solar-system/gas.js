@@ -131,5 +131,5 @@ window.GAS = (() => {
       }
     };
   }
-  return { create };
+  return { create, noiseTex };
 })();

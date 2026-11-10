@@ -214,6 +214,7 @@ body.clean .caption .nova,body.clean .caption .round{display:none}
 .btn.hold.on{background:var(--cyan);color:#062A2E}
 .seg.scrolly{overflow-x:auto;max-width:100%}
 input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
+#indiaAgeWrap input.yr{width:min(220px,40vw);height:24px}
 .btn.small span:empty{display:none}
 .seg.scrolly button{flex:none}
 #view-visit .over.top,#view-earth .over.top{justify-content:flex-start}
@@ -376,11 +377,12 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
     <div class="tabs" role="tablist" aria-label="Activities">
       <button class="tab" role="tab" data-view="explore" aria-selected="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="4" fill="currentColor"/><ellipse cx="14" cy="14" rx="12" ry="6"/><circle cx="24.5" cy="11" r="2.4" fill="currentColor" stroke="none"/></svg><span class="long">Explore</span><span class="short">Explore</span></button>
       <button class="tab" role="tab" data-view="birth" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 14a2 2 0 0 1 4 0a4 4 0 0 1-8 0a6 6 0 0 1 12 0a8 8 0 0 1-16 0a10 10 0 0 1 20 0"/></svg><span class="long">How it began</span><span class="short">Birth</span></button>
+      <button class="tab" role="tab" data-view="indiastory" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 23l7.5-13 4 6.5 3-4.5 8.5 11z"/><path d="M8 13.4l2-.9 1.6 1.6"/></svg><span class="long">India's story</span><span class="short">India</span></button>
       <button class="tab" role="tab" data-view="sizes" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="16.5" r="4"/><circle cx="21.5" cy="14" r="6.5"/></svg><span class="long">How big?</span><span class="short">Sizes</span></button>
       <button class="tab" role="tab" data-view="weigh" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="6" width="20" height="17" rx="4"/><path d="M9 12a5 5 0 0 1 10 0"/><path d="M14 12l2-3"/></svg><span class="long">Weigh me</span><span class="short">Weigh</span></button>
       <button class="tab" role="tab" data-view="day" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span class="long">Day &amp; Night</span><span class="short">Day</span></button>
       <button class="tab" role="tab" data-view="trip" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/><circle cx="14" cy="10" r="1.8"/></svg><span class="long">Space race</span><span class="short">Race</span></button>
-      <button class="tab" role="tab" data-view="craft" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="11" y="10" width="6" height="8" rx="1.5"/><path d="M3 9h7v10H3zM18 9h7v10h-7zM10 14h1M17 14h1M14 10V6M12 5h4"/></svg><span class="long">Missions</span><span class="short">Missions</span></button>
+      <button class="tab" role="tab" data-view="craft" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="11" y="10" width="6" height="8" rx="1.5"/><path d="M3 9h7v10H3zM18 9h7v10h-7zM10 14h1M17 14h1M14 10V6M12 5h4"/></svg><span class="long">Missions</span><span class="short">Craft</span></button>
       <button class="tab" role="tab" data-view="quiz" aria-selected="false"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 3l3.2 6.6 7.3.9-5.4 5 1.4 7.2L14 19.2l-6.5 3.5 1.4-7.2-5.4-5 7.3-.9z"/></svg><span class="long">Quiz</span><span class="short">Quiz</span></button>
     </div>
     <div class="rail-tools">
@@ -546,6 +548,19 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         <button class="btn small go" id="birthNext" type="button">Later<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
         <button class="btn small" id="birthAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg>Again</button>
         <button class="btn small cyan" id="birthAct" type="button" hidden><span></span></button>
+      </div>
+    </section>
+
+    <!-- India's story (indiastory.js) -->
+    <section class="view" id="view-indiastory" hidden aria-label="How India was formed">
+      <canvas class="full" id="indiaCv" aria-label="The story of how India was formed, in 3D. Drag to turn, pinch or scroll to zoom."></canvas>
+      <div class="over top"><div class="picker" id="indiaSteps" role="group" aria-label="Chapters of the story"></div></div>
+      <div class="over bottom" id="indiaCtl">
+        <button class="btn small" id="indiaPrev" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Earlier</button>
+        <button class="btn small go" id="indiaNext" type="button">Later<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="btn small" id="indiaAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg>Again</button>
+        <button class="btn small cyan" id="indiaAct" type="button" hidden><span></span></button>
+        <label class="chip" id="indiaAgeWrap">Drag through time<input type="range" class="yr" id="indiaAge" min="0" max="200" step="1" value="20" aria-label="Million years ago: left is long ago, right is today"></label>
       </div>
     </section>
 
@@ -2005,5 +2020,6 @@ function decodeTex(uri, alphaFromGrey) {
 <script src="whatif.js"></script>
 <script src="gas.js"></script>
 <script src="birth.js"></script>
+<script src="indiastory.js"></script>
 </body>
 </html>

@@ -47,6 +47,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
 | Explore → Earth → **Explore Earth** | Thirteen activities (below) | How our own planet works |
 | How it began | Follows the story of how the solar system was born, in ten chapters (below), pressing **Later** to move on | Where the Sun and planets came from, and why the inner planets are rocky and the outer ones are giants |
+| India's story | Follows how India was formed, in eight chapters (below), dragging a slider through 200 million years | India was once an island that crossed an ocean and crashed into Asia, and that is why the Himalayas, the plains and the Deccan are where they are |
 | How big? | Slides along all the planets drawn at their true sizes next to the edge of the Sun | If Earth were a grape, Jupiter would be a watermelon and the Sun taller than a door |
 | Weigh me | Sets his weight and age, picks a world, presses **Jump!** | Gravity: light on the Moon, heavy on Jupiter, and how old he would be in that world's years |
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
@@ -72,6 +73,23 @@ The story runs from a cold cloud of gas to today's eight planets. The gas in the
 | 10. Today | The finished solar system, with a button to go and explore it |
 
 Sizes and distances are squeezed so everything fits on one screen. The explosion that starts the story and the shuffle of the giant planets are what many scientists think happened, not certainties, and Nova says so.
+
+### India's story
+
+The globe in the first five chapters is the real satellite map, cut into plates. Each plate is turned back to where it was, so Ayansh sees the true shapes of India, Africa, Madagascar, Antarctica and Australia fitted together. A **Drag through time** slider lets him run the last 200 million years backwards and forwards.
+
+| Chapter | What Ayansh sees |
+|---|---|
+| 1. A giant southern land | Gondwana, 180 million years ago: India squeezed between Africa, Madagascar, Antarctica (green with forests then, not ice) and Australia |
+| 2. Breaking away | Gondwana cracks apart, and India leaves Madagascar and becomes an island |
+| 3. The great journey | India races north, with a speed gauge (up to about 15 cm a year, as fast as hair grows) and the distance travelled |
+| 4. Rivers of lava | The Deccan lava glowing on the globe, then **Stand in the lava fields** (curtains of fire, creeping lava and two Rajasaurus) and **See this place today** (the step-shaped hills of the Western Ghats) |
+| 5. Crash into Asia | The Tethys Sea is squeezed shut and India pushes into Asia, right up to today |
+| 6. The Himalayas rise | A 3D relief model made from real height data: flat land crumples up into the Himalayas while a gauge counts Mount Everest up to 8,849 m |
+| 7. Rivers and plains | The Indus, Ganga, Yamuna and Brahmaputra flow across the model, and monsoon clouds rain against the mountains |
+| 8. India today | The whole of India in relief. Tapping a name (Himalayas, Thar Desert, Deccan Plateau, Western Ghats, Sundarbans and more) tells him about that place |
+
+Things that are simplified: the continents' old positions are fitted by matching coastlines, Madagascar is kept where it is today, and heights on the relief model are stretched about 13 times so the mountains show. No borders are drawn on any of the maps.
 
 ### Explore Earth
 
@@ -112,7 +130,7 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 ## Things to know
 
 - The Earth scenes (Earth's story, Volcano, Rain cycle, Storm, Earthquakes) share a "realism kit" in `solar-system/nature.js`: a sky with a sun and drifting clouds, ground that mixes grass, rock, sand or snow, water that ripples and reflects the sky, and leafy trees, ferns and grass. Everything is drawn from noise in the browser, so there are no extra picture files.
-- The glowing gas in **How it began** is drawn by `solar-system/gas.js`, and the story itself is in `solar-system/birth.js`.
+- The glowing gas in **How it began** is drawn by `solar-system/gas.js`, and the story itself is in `solar-system/birth.js`. **India's story** is in `solar-system/indiastory.js`.
 - Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
 - **Settings** in the rail has the explorer's name, **Nova's voice** and **Sounds**. The two buttons beside Nova's words replay or stop what she is saying.
 - The name shows in the title, on buttons and labels, and on the quiz results. Nova's recorded voice can say "Ayansh". For any other name, the greeting is spoken by the device's own voice, and the few lines that mention the name use recordings that leave it out.
