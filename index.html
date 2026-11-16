@@ -16,7 +16,7 @@
   --in:#2F9BEA; --think:#FF7A45; --out:#3DBB5E; --store:#F5B300; --help:#21B3A0;
   --rose:#FF5C7A; --grape:#8C6BEB; --cobalt:#3E5BD8;
   --in-soft:#DCEFFF; --think-soft:#FFE5D9; --out-soft:#DDF5E2; --store-soft:#FFF1C7; --help-soft:#D6F3EF;
-  --wood:#E6A873; --wood-dark:#C9864F;
+  --wood:#E6A873; --wood-dark:#C9864F; --sky1:#8ED2FF; --sky2:#CBEDFF;
   --display:"Baloo 2","Trebuchet MS","Segoe UI",system-ui,sans-serif;
   --body:"Andika","Trebuchet MS","Segoe UI",system-ui,sans-serif;
   color-scheme:light;
@@ -26,11 +26,14 @@
 html,body{margin:0}
 body{
   background-color:var(--ground);
-  background-image:radial-gradient(circle,var(--dot) 1.4px,transparent 1.7px);
-  background-size:22px 22px;
+  background-image:linear-gradient(180deg,var(--sky1) 0,var(--sky2) 380px,var(--ground) 1100px);
+  background-repeat:no-repeat;
   color:var(--ink);font-family:var(--body);font-size:19px;line-height:1.5;
 }
-.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 48px}
+.sky{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.cl{position:absolute;left:0;animation:drift var(--t) linear infinite;animation-delay:var(--o)}
+.bitf{position:absolute;bottom:-60px;font-family:var(--display);font-weight:800;font-size:30px;color:rgba(255,255,255,.8);text-shadow:0 2px 0 rgba(30,35,64,.12);animation:rise var(--t) linear infinite;animation-delay:var(--o)}
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 48px}
 h1,h2,h3{font-family:var(--display);line-height:1.08;text-wrap:balance;margin:0}
 svg *{vector-effect:non-scaling-stroke}
 button{font:inherit;color:inherit}
@@ -82,21 +85,37 @@ button{font:inherit;color:inherit}
 
 /* ---------- home ---------- */
 .hero{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:center;padding:22px 24px}
-.hero h1{font-size:clamp(40px,6.4vw,66px);font-weight:800}
+.hero h1{font-size:clamp(38px,5.8vw,60px);font-weight:800}
 .hero h1 .blk{display:inline-block;background:var(--in);border:3px solid var(--ink);border-radius:14px;padding:0 .18em;box-shadow:0 5px 0 var(--ink);transform:rotate(-2deg)}
 .hero p{font-size:22px;max-width:32ch;margin:.5em 0 .7em}
 .hero-art{width:100%;height:auto;display:block;overflow:visible}
 .drop{animation:drop .75s cubic-bezier(.3,1.4,.6,1) both;animation-delay:var(--d,0s)}
 .appear{animation:appear .5s ease both;animation-delay:var(--d,0s)}
-.levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:24px}
-.level{--c:var(--in);position:relative;display:flex;flex-direction:column;gap:4px;padding:14px;background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);color:var(--ink);text-decoration:none;transition:transform .15s}
-.level:hover{transform:translateY(-4px) rotate(-.8deg)}
-.level .ibox{width:78px;height:78px;border-radius:16px;background:var(--c);border:3px solid var(--ink);display:grid;place-items:center;margin-bottom:6px}
-.level .ibox svg{width:58px;height:58px}
-.lv{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.level h3{font-size:24px;font-weight:800}
-.level p{margin:0;font-size:17px;color:var(--muted)}
-.level .star{position:absolute;top:12px;right:12px;width:42px;height:42px}
+.mapcard{margin-top:24px;padding:16px 14px 8px;background:linear-gradient(180deg,#CFF2C0,#A6E096);overflow:hidden}
+.maptitle{font-size:clamp(26px,4vw,38px);font-weight:800;padding-left:6px}
+.mapsub{margin:0 0 0 6px;color:#2C5A33;font-size:18px}
+.map{position:relative;--R:46px}
+.map.narrow{--R:34px}
+.road{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.stop{position:absolute;z-index:1;transform:translate(-50%,calc(-1 * var(--R)));display:flex;flex-direction:column;align-items:center;width:164px;text-align:center;color:var(--ink);text-decoration:none;background:none;border:0;padding:0;cursor:pointer;font:inherit}
+.map.narrow .stop{width:112px}
+.disc{position:relative;width:calc(2 * var(--R));height:calc(2 * var(--R));border-radius:50%;background:var(--c);border:4px solid var(--ink);box-shadow:0 6px 0 var(--ink);display:grid;place-items:center;transition:transform .15s}
+.disc .ic{width:62%;height:62%}
+.stop:hover .disc,.stop:focus-visible .disc{transform:translateY(-5px) rotate(-6deg)}
+.stop:focus-visible{outline:none}
+.num{position:absolute;top:-8px;left:-8px;width:32px;height:32px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:17px;line-height:1}
+.disc .st{position:absolute;top:-14px;right:-16px;width:42px;height:42px}
+.name{margin-top:12px;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:1px 10px;font-family:var(--display);font-weight:800;font-size:17px;line-height:1.25;box-shadow:0 3px 0 var(--ink)}
+.map.narrow .disc{border-width:3px;box-shadow:0 4px 0 var(--ink)}
+.map.narrow .num{width:24px;height:24px;font-size:13px;top:-6px;left:-6px;border-width:2px}
+.map.narrow .disc .st{width:30px;height:30px;top:-10px;right:-12px}
+.map.narrow .name{font-size:13px;padding:0 5px;border-width:2px;margin-top:9px}
+.stop.todo .disc{filter:saturate(.45) brightness(1.1)}
+.stop.next .disc,.stop.trophy.done .disc{animation:pulse 1.5s ease-in-out infinite}
+.stop.trophy .disc{background:radial-gradient(circle at 35% 30%,#FFF4B8,#FFC233 60%,#E5A800)}
+.stop.trophy:not(.done) .disc{filter:grayscale(.75) brightness(1.08)}
+.mapbot{position:absolute;z-index:2;width:62px;height:74px;pointer-events:none;transform:translate(-50%,-100%);animation:mbob 1.3s ease-in-out infinite}
+.map.narrow .mapbot{width:44px;height:52px}
 .dim{filter:grayscale(1);opacity:.28}
 .cert{margin-top:28px;padding:26px;text-align:center;background:var(--store-soft);border-width:5px;position:relative}
 .cert h2{font-size:clamp(32px,5vw,50px);font-weight:800}
@@ -319,6 +338,61 @@ button{font:inherit;color:inherit}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));translate:-50% 0;z-index:61;display:flex;align-items:center;gap:10px;background:var(--store);border:3px solid var(--ink);border-radius:999px;padding:8px 22px 8px 10px;box-shadow:0 5px 0 var(--ink);font-family:var(--display);font-weight:800;font-size:24px;animation:toast 2.8s forwards;pointer-events:none;white-space:nowrap}
 .toast svg{width:40px;height:40px}
 
+/* ---------- characters ---------- */
+.guide .bot{transform-origin:50% 100%}
+.bot .e-happy,.bot .m-wow,.bot .m-oops{display:none}
+.bot.mood-wow .e-happy,.bot.mood-wow .m-wow,.bot.mood-oops .m-oops{display:inline}
+.bot.mood-wow .eye,.bot.mood-wow .mouth,.bot.mood-oops .mouth{display:none}
+.bot.dance{animation:dance .45s ease-in-out 5}
+.face .eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.6s infinite;animation-delay:var(--bd,0s)}
+.face .hap{display:none}
+.face.happy .hap{display:inline}
+.face.happy .eyes,.face.happy .mo{display:none}
+.sbub{transform-box:view-box;animation:popIn2 .4s cubic-bezier(.3,1.6,.6,1)}
+.w{display:inline-block;border-radius:6px;transition:background-color .12s,box-shadow .12s}
+.w.in{animation:wordIn .3s ease both;animation-delay:var(--wd,0ms)}
+.w.now{background:#FFE27A;box-shadow:0 0 0 3px #FFE27A}
+.hdisc{width:58px;height:58px;border-radius:50%;background:var(--c);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);display:grid;place-items:center;flex:none}
+.hdisc svg{width:38px;height:38px}
+.runner.hop1 svg{animation:hop .25s}
+.runner.zoom::before{content:"";position:absolute;right:92%;top:28%;width:70px;height:44%;border-radius:4px;background:repeating-linear-gradient(180deg,var(--think) 0 4px,transparent 4px 9px);opacity:.75}
+
+/* ---------- sorting game ---------- */
+.goals{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+.goal{border:3px solid var(--ink);border-radius:999px;padding:1px 14px;background:var(--paper);font-family:var(--display);font-weight:700;font-size:17px}
+.goal.ok{background:var(--out)}
+.goal.ok::before{content:"\2713  "}
+.sort{padding:16px 18px;margin-top:18px}
+.sort h3{font-size:26px}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:100px;padding:10px;border:3px dashed var(--muted);border-radius:16px;background:var(--wash)}
+.tray .done-msg{align-self:center;font-family:var(--display);font-weight:800;font-size:22px}
+.tok{width:92px;height:96px;border:3px solid var(--ink);border-radius:18px;background:var(--paper);box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-family:var(--display);font-weight:700;font-size:14px;line-height:1.1;padding:4px;color:var(--ink)}
+.tok svg{width:54px;height:50px;pointer-events:none}
+.tok.sel{background:var(--store-soft);box-shadow:0 0 0 4px var(--store),0 4px 0 var(--ink);transform:translateY(-3px)}
+.tok.drag{position:fixed;z-index:80;margin:0;pointer-events:none;cursor:grabbing;transform:rotate(-7deg) scale(1.1);box-shadow:0 12px 0 rgba(30,35,64,.35)}
+.tok.wrong{animation:shake .45s}
+.bins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.bin{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:170px;padding:12px;border:4px solid var(--ink);border-radius:22px;background:var(--in-soft);box-shadow:0 5px 0 var(--ink);cursor:pointer;font:inherit;color:var(--ink);transition:transform .15s,box-shadow .15s}
+.bin.out{background:var(--out-soft)}
+.bin .bh{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;padding:2px 22px;border:3px solid var(--ink);border-radius:999px;background:var(--in)}
+.bin.out .bh{background:var(--out)}
+.bin .bd{font-size:17px;color:var(--muted)}
+.bin .got{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.bin .got svg{width:46px;height:42px;animation:popIn .4s}
+.bin.over{transform:scale(1.04);box-shadow:0 0 0 6px var(--store),0 5px 0 var(--ink)}
+.bin.yum{animation:boing .5s}
+
+/* ---------- level complete party ---------- */
+.party{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px 16px;background:rgba(30,35,64,.55);animation:fadeIn .25s ease;overflow-y:auto}
+.pbox{position:relative;width:100%;max-width:440px;margin-top:64px;background:var(--paper);border:4px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);padding:74px 22px 22px;text-align:center;animation:popBig .55s cubic-bezier(.3,1.6,.6,1)}
+.burst{position:absolute;left:50%;top:0;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:repeating-conic-gradient(rgba(255,212,59,.9) 0 9deg,transparent 9deg 18deg);-webkit-mask:radial-gradient(circle,#000 28%,transparent 68%);mask:radial-gradient(circle,#000 28%,transparent 68%);animation:spin 10s linear infinite;pointer-events:none}
+.bigstar{position:absolute;left:50%;top:0;width:144px;height:144px;margin:-78px 0 0 -72px;animation:starIn .9s cubic-bezier(.3,1.5,.6,1) both}
+.pbox h2{font-size:clamp(34px,7vw,46px);font-weight:800}
+.ptext{font-size:22px;margin:.1em 0 .5em}
+.pstars{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+.pstars svg{width:32px;height:32px}
+.dancer{width:84px;height:100px;display:block;margin:4px auto 12px;transform-origin:50% 100%;animation:dance .5s ease-in-out infinite}
+
 /* ---------- motion ---------- */
 @keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
 @keyframes popIn{0%{transform:scale(0) rotate(var(--r,0deg))}70%{transform:scale(1.2) rotate(var(--r,0deg))}100%{transform:scale(1) rotate(var(--r,0deg))}}
@@ -334,6 +408,16 @@ button{font:inherit;color:inherit}
 @keyframes dash{to{stroke-dashoffset:-28}}
 @keyframes drop{0%{transform:translateY(-190px)}100%{transform:translateY(0)}}
 @keyframes appear{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes dance{0%,100%{transform:rotate(0) translateY(0)}25%{transform:rotate(-10deg) translateY(-7px)}75%{transform:rotate(10deg) translateY(-7px)}}
+@keyframes wordIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes popIn2{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 var(--ink),0 0 0 0 rgba(255,212,59,.95)}50%{box-shadow:0 6px 0 var(--ink),0 0 0 14px rgba(255,212,59,0)}}
+@keyframes mbob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,calc(-100% - 9px))}}
+@keyframes drift{from{transform:translateX(-260px)}to{transform:translateX(calc(100vw + 40px))}}
+@keyframes rise{from{transform:translateY(0) rotate(0)}to{transform:translateY(-120vh) rotate(30deg)}}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes popBig{from{transform:scale(.3)}to{transform:scale(1)}}
+@keyframes starIn{from{transform:scale(0) rotate(-200deg)}to{transform:scale(1) rotate(0)}}
 @keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes anGlow{0%,28%{transform:scale(1.06);box-shadow:0 0 0 6px var(--glow)}34%,100%{transform:scale(1);box-shadow:0 0 0 0 transparent}}
 @keyframes fall{to{transform:translateY(140px) rotate(60deg);opacity:0}}
@@ -354,7 +438,6 @@ button{font:inherit;color:inherit}
 .cloud{animation:nudge 5s ease-in-out infinite}
 
 /* ---------- small screens ---------- */
-@media (max-width:900px){.levels{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:780px){
   .hero{grid-template-columns:1fr}
   .mem,.bin,.code{grid-template-columns:1fr}
@@ -366,6 +449,10 @@ button{font:inherit;color:inherit}
   .choices{grid-template-columns:1fr}
   .choice{flex-direction:row;justify-content:flex-start;text-align:left}
   .choice svg{width:72px;height:62px}
+  .tok{width:78px;height:84px;font-size:12px}
+  .tok svg{width:44px;height:40px}
+  .bin .bh{font-size:28px;padding:2px 16px}
+  .hdisc{width:46px;height:46px}.hdisc svg{width:30px;height:30px}
   .info{grid-template-columns:76px minmax(0,1fr);gap:12px;padding:14px}
   .info .big{width:76px;height:76px}.info .big svg{width:58px;height:58px}
   .info h3{font-size:28px}
@@ -377,7 +464,6 @@ button{font:inherit;color:inherit}
   .memrule,.results{grid-template-columns:1fr}
   .bit b{font-size:20px}
 }
-@media (max-width:420px){.levels{grid-template-columns:1fr}.level{flex-direction:row;align-items:center;gap:12px}.level .ibox{margin:0;flex:none}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -568,8 +654,51 @@ button{font:inherit;color:inherit}
       <circle cx="17" cy="27" r="2.8" fill="#1E2340"/>
       <path d="M28 22 Q32 30 28 38" fill="none" stroke="#1E2340" stroke-width="2"/>
     </symbol>
+    <symbol id="s-cloud" viewBox="0 0 120 60">
+      <path d="M20 52 A14 14 0 0 1 22 26 A20 20 0 0 1 58 16 A22 22 0 0 1 98 26 A14 14 0 0 1 102 52 Z" fill="#FFFFFF"/>
+    </symbol>
+    <symbol id="s-mic" viewBox="0 0 60 80">
+      <path d="M12 32 Q12 54 30 54 Q48 54 48 32" fill="none" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/>
+      <path d="M30 54 V68" stroke="#1E2340" stroke-width="3"/>
+      <rect x="16" y="66" width="28" height="8" rx="4" fill="#3B4270" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="19" y="4" width="22" height="42" rx="11" fill="#9AA3C7" stroke="#1E2340" stroke-width="3"/>
+      <path d="M19 18 H41 M19 26 H41 M19 34 H41" stroke="#5E6590" stroke-width="2"/>
+    </symbol>
+    <symbol id="s-cam" viewBox="0 0 70 72">
+      <path d="M26 52 L18 68 H52 L44 52 Z" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="35" cy="30" r="25" fill="#3B4270" stroke="#1E2340" stroke-width="3"/>
+      <circle cx="35" cy="30" r="13" fill="#9AD8FF" stroke="#1E2340" stroke-width="2.5"/>
+      <circle cx="35" cy="30" r="6" fill="#1E2340"/>
+      <circle cx="31" cy="26" r="2.5" fill="#FFFFFF"/>
+      <circle cx="53" cy="13" r="3.5" fill="#FF5C7A" stroke="#1E2340" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="s-headphones" viewBox="0 0 80 72">
+      <path d="M14 46 C12 12 68 12 66 46" fill="none" stroke="#1E2340" stroke-width="9" stroke-linecap="round"/>
+      <path d="M14 46 C12 12 68 12 66 46" fill="none" stroke="#FF5C7A" stroke-width="4" stroke-linecap="round"/>
+      <rect x="5" y="38" width="18" height="28" rx="8" fill="#FF5C7A" stroke="#1E2340" stroke-width="3"/>
+      <rect x="57" y="38" width="18" height="28" rx="8" fill="#FF5C7A" stroke="#1E2340" stroke-width="3"/>
+    </symbol>
+    <symbol id="s-trophy" viewBox="0 0 60 64">
+      <path d="M15 12 H5 C5 26 12 30 18 30 M45 12 H55 C55 26 48 30 42 30" fill="none" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/>
+      <path d="M14 5 H46 V20 C46 33 38 40 30 40 C22 40 14 33 14 20 Z" fill="#FFC233" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 11 V20" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      <rect x="26" y="40" width="8" height="10" fill="#E5A800" stroke="#1E2340" stroke-width="2.5"/>
+      <rect x="15" y="50" width="30" height="10" rx="3" fill="#8C5A2B" stroke="#1E2340" stroke-width="2.5"/>
+    </symbol>
   </defs>
 </svg>
+
+<div class="sky" aria-hidden="true">
+  <svg class="cl" style="top:3%;width:170px;height:85px;--t:95s;--o:-10s"><use href="#s-cloud"/></svg>
+  <svg class="cl" style="top:20%;width:120px;height:60px;--t:120s;--o:-70s"><use href="#s-cloud"/></svg>
+  <svg class="cl" style="top:44%;width:200px;height:100px;--t:140s;--o:-35s"><use href="#s-cloud"/></svg>
+  <svg class="cl" style="top:70%;width:140px;height:70px;--t:110s;--o:-90s"><use href="#s-cloud"/></svg>
+  <span class="bitf" style="left:5%;--t:26s;--o:-4s">1</span>
+  <span class="bitf" style="left:23%;--t:31s;--o:-18s">0</span>
+  <span class="bitf" style="left:48%;--t:28s;--o:-9s">1</span>
+  <span class="bitf" style="left:72%;--t:34s;--o:-25s">0</span>
+  <span class="bitf" style="left:92%;--t:29s;--o:-13s">1</span>
+</div>
 
 <div class="wrap">
 
@@ -599,8 +728,12 @@ button{font:inherit;color:inherit}
       <rect x="85" y="38" width="9" height="18" rx="3" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/>
       <rect x="14" y="20" width="72" height="54" rx="16" fill="#5ED3C3" stroke="#1E2340" stroke-width="3"/>
       <rect x="24" y="30" width="52" height="34" rx="10" fill="#1E2340"/>
-      <circle class="eye" cx="40" cy="45" r="5" fill="#9AF0FF"/><circle class="eye" cx="60" cy="45" r="5" fill="#9AF0FF"/>
+      <g class="eye"><circle cx="40" cy="45" r="5" fill="none"/><circle class="pupil" data-max="3" cx="40" cy="45" r="5" fill="#9AF0FF"/></g>
+      <g class="eye"><circle cx="60" cy="45" r="5" fill="none"/><circle class="pupil" data-max="3" cx="60" cy="45" r="5" fill="#9AF0FF"/></g>
+      <path class="e-happy" d="M34 48 Q40 39 46 48 M54 48 Q60 39 66 48" fill="none" stroke="#9AF0FF" stroke-width="3.5" stroke-linecap="round"/>
       <path class="mouth" d="M41 54 Q50 61 59 54" fill="none" stroke="#9AF0FF" stroke-width="3" stroke-linecap="round"/>
+      <ellipse class="m-wow" cx="50" cy="57" rx="5.5" ry="6" fill="#9AF0FF"/>
+      <path class="m-oops" d="M40 58 Q45 53 50 58 Q55 63 60 58" fill="none" stroke="#9AF0FF" stroke-width="3" stroke-linecap="round"/>
       <rect x="43" y="74" width="14" height="7" fill="#9AA3C7" stroke="#1E2340" stroke-width="2.5"/>
       <path d="M24 88 L10 104" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
       <path class="arm-r" d="M76 88 L92 72" stroke="#1E2340" stroke-width="5" stroke-linecap="round"/>
@@ -619,21 +752,21 @@ button{font:inherit;color:inherit}
       <div class="card hero">
         <div>
           <h1>How does a <span class="blk">computer</span> work?</h1>
-          <p>A computer is made of small building blocks. Let's open them up one by one, and play with each one!</p>
+          <p>A computer is made of small building blocks. They are a friendly family! Let's meet them one by one.</p>
           <div class="row">
             <span class="k k-in">IN</span><span class="k k-think">THINK</span><span class="k k-out">OUT</span><span class="k k-store">STORE</span>
           </div>
           <p style="font-size:18px;margin-top:.6em" class="muted">Every colour means a job. You will see these colours in every level.</p>
-          <a class="btn" href="#parts" style="--c:var(--store);font-size:24px"><svg aria-hidden="true"><use href="#s-star"/></svg>Start Level 1</a>
+          <a class="btn" href="#parts" id="heroGo" style="--c:var(--store);font-size:24px"><svg aria-hidden="true"><use href="#s-star"/></svg>Start Level 1</a>
         </div>
          <svg class="hero-art" viewBox="0 0 440 372" role="img" aria-label="Computer parts dropping into place like building blocks">
           <polygon points="10,280 430,280 440,340 0,340" fill="#E6A873" stroke="#1E2340" stroke-width="3" stroke-linejoin="round"/>
           <rect x="0" y="340" width="440" height="16" rx="3" fill="#C9864F" stroke="#1E2340" stroke-width="3"/>
-          <g class="drop" style="--d:.1s"><use href="#s-tower" x="22" y="112" width="98" height="168"/></g>
+          <g class="drop" id="hTower" style="--d:.1s"><use href="#s-tower" x="22" y="112" width="98" height="168"/></g>
           <g class="drop" style="--d:.35s"><use href="#s-monitor" x="140" y="105" width="210" height="175"/>
-            <g class="appear" style="--d:1.45s;transform-origin:245px 175px"><circle cx="245" cy="175" r="30" fill="#FFC233" stroke="#1E2340" stroke-width="3"/><circle cx="235" cy="168" r="4" fill="#1E2340"/><circle cx="255" cy="168" r="4" fill="#1E2340"/><path d="M231 182 Q245 196 259 182" fill="none" stroke="#1E2340" stroke-width="3.5" stroke-linecap="round"/></g>
+            <g class="appear" id="hFace" style="--d:1.45s;transform-origin:245px 175px"></g>
           </g>
-          <g class="drop" style="--d:.6s"><use href="#s-speaker" x="362" y="172" width="60" height="108"/></g>
+          <g class="drop" id="hSpk" style="--d:.6s"><use href="#s-speaker" x="362" y="172" width="60" height="108"/></g>
           <g class="drop" style="--d:.85s"><use href="#s-keyboard" x="168" y="282" width="136" height="58"/></g>
           <g class="drop" style="--d:1.05s"><use href="#s-mouse" x="322" y="290" width="30" height="45"/></g>
           <g class="appear" style="--d:1.6s;transform-origin:71px 92px"><rect x="31" y="78" width="80" height="28" rx="14" fill="#FF7A45" stroke="#1E2340" stroke-width="2.5"/><text x="71" y="98" text-anchor="middle" class="lbl" font-size="17" fill="#1E2340">THINK</text></g>
@@ -641,7 +774,11 @@ button{font:inherit;color:inherit}
           <g class="appear" style="--d:2s;transform-origin:236px 358px"><rect x="212" y="344" width="48" height="28" rx="14" fill="#2F9BEA" stroke="#1E2340" stroke-width="2.5"/><text x="236" y="364" text-anchor="middle" class="lbl" font-size="17" fill="#1E2340">IN</text></g>
         </svg>
       </div>
-      <div class="levels" id="levels"></div>
+      <div class="card mapcard">
+        <h2 class="maptitle">Ayansh's adventure map</h2>
+        <p class="mapsub">Follow the road. Win a star at every stop, and get the trophy at the end!</p>
+        <div class="map" id="map"></div>
+      </div>
       <div class="card cert" id="cert" hidden>
         <div class="stars" id="certStars"></div>
         <h2>Certificate</h2>
@@ -649,7 +786,7 @@ button{font:inherit;color:inherit}
         <div class="who">Ayansh</div>
         <p style="font-size:24px;margin:.3em 0" class="lbl">is a Computer Explorer!</p>
         <ul>
-          <li>Knows the 6 parts</li><li>In, Think, Out</li><li>Found the CPU chip</li><li>Raced the computer</li><li>RAM and hard disk</li><li>Speaks ON and OFF</li><li>Wrote a program</li><li>Won the Big Quiz</li>
+          <li>Knows the 6 parts</li><li>In, Think, Out</li><li>Sorted IN and OUT</li><li>Found the CPU chip</li><li>Raced the computer</li><li>RAM and hard disk</li><li>Speaks ON and OFF</li><li>Wrote a program</li><li>Won the Big Quiz</li>
         </ul>
         <p class="muted" id="certDate" style="margin:0"></p>
       </div>
@@ -719,6 +856,7 @@ button{font:inherit;color:inherit}
 
     <!-- ================= LEVEL 2: IN THINK OUT ================= -->
     <section class="view" id="v-flow" data-ch="flow" hidden>
+      <div class="goals"><span class="goal" id="gLetters">Send 5 letters: <b>0</b>/5</span><span class="goal" id="gSort">Sorting game: <b>0</b>/8</span></div>
       <div class="card stage">
         <svg class="scene" id="flowScene" viewBox="0 0 800 322" role="img" aria-label="A letter travels from the keyboard, into the CPU box, and out to the monitor">
           <defs><clipPath id="fClip"><rect x="582" y="66" width="173" height="101" rx="4"/></clipPath></defs>
@@ -769,6 +907,15 @@ button{font:inherit;color:inherit}
             <svg viewBox="0 0 80 80" aria-hidden="true"><rect x="22" y="26" width="34" height="42" rx="14" fill="#F2C29B" stroke="#1E2340" stroke-width="3"/><rect x="12" y="38" width="16" height="10" rx="5" fill="#F2C29B" stroke="#1E2340" stroke-width="3" transform="rotate(-35 20 43)"/><path d="M30 26 V16 M38 26 V12 M46 26 V14" stroke="#1E2340" stroke-width="3" stroke-linecap="round"/><path d="M30 26 V16 M38 26 V12 M46 26 V14" stroke="#F2C29B" stroke-width="1" stroke-linecap="round"/><circle cx="58" cy="18" r="12" fill="#FF5C7A" stroke="#1E2340" stroke-width="3"/><path d="M50 12 Q58 18 66 12" fill="none" stroke="#FFFFFF" stroke-width="2"/></svg>
             <b>OUT</b><span>Your hands catch the ball!</span>
           </div>
+        </div>
+      </div>
+      <div class="card sort">
+        <h3>Sorting game: IN or OUT?</h3>
+        <p class="muted" style="margin:.1em 0 10px;font-size:18px">Drag each picture into the right box. Or tap a picture, then tap a box.</p>
+        <div class="tray" id="tray"></div>
+        <div class="bins">
+          <button class="bin in" type="button" data-bin="in"><span class="bh">IN</span><span class="bd">Puts things INTO the computer</span><span class="got"></span></button>
+          <button class="bin out" type="button" data-bin="out"><span class="bh">OUT</span><span class="bd">Gives things OUT to you</span><span class="got"></span></button>
         </div>
       </div>
     </section>
@@ -961,7 +1108,7 @@ const wait = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 60) : ms
 const tween = (ms, fn) => new Promise(res => {
   if (reduce) { fn(1); return res(); }
   const t0 = performance.now();
-  const step = t => { const p = Math.min(1, (t - t0) / ms); fn(p); p < 1 ? requestAnimationFrame(step) : res(); };
+  const step = t => { const p = Math.max(0, Math.min(1, (t - t0) / ms)); fn(p); p < 1 ? requestAnimationFrame(step) : res(); };
   requestAnimationFrame(step);
 });
 const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -997,18 +1144,25 @@ const sfx = {
   oops: () => { tone(260, .16, 'sawtooth', .06); tone(190, .26, 'sawtooth', .06, .13); },
   whirr: () => [300, 420, 560, 720].forEach((f, i) => tone(f, .08, 'square', .04, i * .06)),
   tune: () => [392, 440, 494, 587, 494, 587, 784].forEach((f, i) => tone(f, .2, 'triangle', .13, i * .17)),
-  star: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .22, 'sine', .15, i * .1))
+  star: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .22, 'sine', .15, i * .1)),
+  fanfare: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? .55 : .16, 'triangle', .15, .25 + i * .13)),
+  ding: () => { tone(1320, .35, 'sine', .12); tone(1760, .4, 'sine', .08, .12); }
 };
 
 /* ---------- Bit talks ---------- */
 let voices = [];
 const loadVoices = () => { try { voices = speechSynthesis.getVoices(); } catch (e) {} };
 if ('speechSynthesis' in window) { loadVoices(); try { speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {} }
-function speak(text) {
+function speak(text, spans = []) {
   if (!state.voice || !('speechSynthesis' in window)) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
+    u.onboundary = e => {
+      if (e.name && e.name !== 'word') return;
+      spans.forEach(sp => sp.classList.toggle('now', e.charIndex >= +sp.dataset.a && e.charIndex < +sp.dataset.b));
+    };
+    u.onend = () => spans.forEach(sp => sp.classList.remove('now'));
     const v = voices.find(v => /en[-_]IN/i.test(v.lang)) || voices.find(v => /en[-_]GB/i.test(v.lang)) || voices.find(v => /^en/i.test(v.lang));
     if (v) u.voice = v;
     u.rate = .92; u.pitch = 1.15;
@@ -1016,16 +1170,88 @@ function speak(text) {
   } catch (e) {}
 }
 const bit = $('#bit'), sayText = $('#sayText'), bubble = $('#bubble');
-let lastSaid = '', talkTimer = 0;
-function say(html) {
-  sayText.innerHTML = html;
-  lastSaid = sayText.textContent;
-  restart(bubble, 'pop'); restart(bit, 'hop');
-  bit.classList.add('talk'); clearTimeout(talkTimer);
-  talkTimer = setTimeout(() => bit.classList.remove('talk'), Math.min(6000, 600 + lastSaid.length * 45));
-  speak(lastSaid);
+let lastHTML = '', talkTimer = 0, moodTimer = 0;
+/* wrap every word in a span so it can light up while Bit reads it */
+function wordify(el) {
+  const spans = []; let pos = 0;
+  const walk = n => {
+    if (n.nodeType !== 3) { [...n.childNodes].forEach(walk); return; }
+    const frag = document.createDocumentFragment();
+    n.textContent.split(/(\s+)/).forEach(part => {
+      if (!part) return;
+      if (/^\s+$/.test(part)) frag.appendChild(document.createTextNode(part));
+      else {
+        const sp = document.createElement('span');
+        sp.className = 'w'; sp.textContent = part; sp.dataset.a = pos; sp.dataset.b = pos + part.length;
+        spans.push(sp); frag.appendChild(sp);
+      }
+      pos += part.length;
+    });
+    n.replaceWith(frag);
+  };
+  [...el.childNodes].forEach(walk);
+  return spans;
 }
-$('#againBtn').addEventListener('click', () => say(sayText.innerHTML));
+function mood(m) {
+  bit.classList.remove('mood-wow', 'mood-oops'); clearTimeout(moodTimer);
+  if (m === 'wow' || m === 'oops') { bit.classList.add('mood-' + m); moodTimer = setTimeout(() => bit.classList.remove('mood-' + m), 3200); }
+}
+function say(html, m) {
+  lastHTML = html;
+  sayText.innerHTML = html;
+  const text = sayText.textContent, spans = wordify(sayText);
+  spans.forEach((sp, i) => { sp.style.setProperty('--wd', Math.min(i * 30, 900) + 'ms'); sp.classList.add('in'); });
+  restart(bubble, 'pop'); restart(bit, 'hop'); mood(m);
+  bit.classList.add('talk'); clearTimeout(talkTimer);
+  talkTimer = setTimeout(() => bit.classList.remove('talk'), Math.min(6000, 600 + text.length * 45));
+  speak(text, spans);
+}
+$('#againBtn').addEventListener('click', () => say(lastHTML));
+bit.addEventListener('animationend', e => { if (e.animationName === 'dance') bit.classList.remove('dance'); });
+
+/* ---------- friendly faces whose eyes follow your finger ---------- */
+function face(x, y, sc = 1) {
+  return `<g class="face" transform="translate(${x},${y}) scale(${sc})" style="--bd:${(Math.random() * 4).toFixed(2)}s">
+    <g class="eyes">
+      <g><ellipse cx="-9" cy="0" rx="6" ry="7" fill="#FFFFFF" stroke="${INK}" stroke-width="2"/><circle class="pupil" cx="-9" cy="1" r="3.3" fill="${INK}"/></g>
+      <g><ellipse cx="9" cy="0" rx="6" ry="7" fill="#FFFFFF" stroke="${INK}" stroke-width="2"/><circle class="pupil" cx="9" cy="1" r="3.3" fill="${INK}"/></g>
+    </g>
+    <path class="hap" d="M-14 2 Q-9 -6 -4 2 M4 2 Q9 -6 14 2" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="-16" cy="10" r="3.3" fill="#FF8FA8" opacity=".85"/><circle cx="16" cy="10" r="3.3" fill="#FF8FA8" opacity=".85"/>
+    <path class="mo" d="M-5 11 Q0 15.5 5 11" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>
+    <path class="hap" d="M-7 9 Q0 20 7 9 Z" fill="#FF5C7A" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
+  </g>`;
+}
+function happy(el) {
+  $$('.face', el).forEach(f => { f.classList.add('happy'); clearTimeout(f._t); f._t = setTimeout(() => f.classList.remove('happy'), 1800); });
+}
+let lookX = innerWidth / 2, lookY = innerHeight / 3, lookRAF = 0, lookAt = null;
+function updateEyes() {
+  lookRAF = 0;
+  const tx = lookAt ? lookAt.x : lookX, ty = lookAt ? lookAt.y : lookY;
+  const view = $('#v-' + current);
+  for (const p of [...$$('.pupil', bit), ...(view ? $$('.pupil', view) : [])]) {
+    const r = (p.previousElementSibling || p).getBoundingClientRect();
+    if (!r.width) continue;
+    const dx = tx - (r.left + r.width / 2), dy = ty - (r.top + r.height / 2), d = Math.hypot(dx, dy) || 1;
+    const m = Math.min(1, d / 90) * (+p.dataset.max || 2.6);
+    p.setAttribute('transform', `translate(${(dx / d * m).toFixed(2)},${(dy / d * m).toFixed(2)})`);
+  }
+}
+const lookSoon = () => { if (!lookRAF) lookRAF = requestAnimationFrame(updateEyes); };
+addEventListener('pointermove', e => { lookX = e.clientX; lookY = e.clientY; lookSoon(); }, { passive: true });
+addEventListener('pointerdown', e => { lookX = e.clientX; lookY = e.clientY; lookSoon(); }, { passive: true });
+addEventListener('scroll', lookSoon, { passive: true });
+$('#hTower').insertAdjacentHTML('beforeend', face(71, 200, 1.3));
+$('#hSpk').insertAdjacentHTML('beforeend', face(392, 207, .9));
+$('#hFace').innerHTML = face(245, 168, 2.3);
+function sceneBubble(scene, x, y, text) {
+  $$('.sbubw', scene).forEach(g => g.remove());
+  const w = Math.round(text.length * 9.4 + 32), l = x - w / 2 + 16, r = x + w / 2 - 16;
+  const g = svgAdd(scene, `<g class="sbub" style="transform-origin:${x}px ${y}px"><path d="M${l} ${y - 44} H${r} A16 16 0 0 1 ${r} ${y - 12} H${x + 9} L${x} ${y} L${x - 9} ${y - 12} H${l} A16 16 0 0 1 ${l} ${y - 44} Z" fill="#FFFFFF" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/><text x="${x}" y="${y - 22}" text-anchor="middle" class="lbl" font-size="18" fill="${INK}">${text}</text></g>`);
+  g.classList.add('sbubw');
+  setTimeout(() => g.remove(), 2400);
+}
 
 function setToggle(btn, on) { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 setToggle($('#voiceBtn'), state.voice); setToggle($('#soundBtn'), state.sound);
@@ -1055,16 +1281,38 @@ function drawConfetti() {
   }
   if (bits.length) requestAnimationFrame(drawConfetti); else { confettiOn = false; cx.clearRect(0, 0, innerWidth, innerHeight); }
 }
-function toast(text) {
-  const t = document.createElement('div');
-  t.className = 'toast'; t.innerHTML = icon('star') + text;
-  document.body.appendChild(t); setTimeout(() => t.remove(), 2900);
+let wantCert = false;
+function party(id) {
+  if (current !== id) return;
+  const i = CH.findIndex(c => c.id === id), next = CH[i + 1], n = starCount(), all = n === CH.length;
+  $$('.party').forEach(x => x.remove());
+  const el = document.createElement('div');
+  el.className = 'party'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', `Level ${i + 1} done`);
+  const go = all ? `<a class="btn" href="#home" data-close data-cert style="--c:var(--store)">${icon('trophy')}See my certificate</a>`
+    : next ? `<a class="btn" href="#${next.id}" data-close style="--c:var(--store)">Next level ${icon('arrow')}</a>` : '';
+  el.innerHTML = `<div class="pbox"><div class="burst"></div>${icon('star', 'bigstar')}
+    <h2>Level ${i + 1} done!</h2>
+    <p class="lbl ptext">You won a star, Ayansh!</p>
+    <div class="pstars">${CH.map(c => icon('star', state.stars[c.id] ? '' : 'dim')).join('')}</div>
+    <p class="muted" style="margin:.2em 0 .4em">${n} of 8 stars</p>
+    <svg class="dancer" viewBox="0 0 100 120" aria-hidden="true"><use href="#s-bot"/></svg>
+    <div class="row" style="justify-content:center">${go}<button class="btn" type="button" data-close>Stay here</button></div></div>`;
+  document.body.appendChild(el);
+  const close = () => { el.remove(); removeEventListener('keydown', esc, true); };
+  const esc = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  addEventListener('keydown', esc, true);
+  el.addEventListener('click', e => {
+    if (e.target.closest('[data-cert]')) wantCert = true;
+    if (e.target === el || e.target.closest('[data-close]')) close();
+  });
+  const f = $('[data-close]', el); if (f) f.focus({ preventScroll: true });
+  sfx.fanfare(); confetti(180);
 }
 
 /* ---------- levels & stars ---------- */
 const CH = [
   { id: 'parts',  title: 'Meet the Computer',     blurb: 'Find its 6 parts',            icon: 'monitor',  color: '#2F9BEA' },
-  { id: 'flow',   title: 'In, Think, Out',        blurb: 'Watch a letter travel',       icon: 'keyboard', color: '#FF7A45' },
+  { id: 'flow',   title: 'In, Think, Out',        blurb: 'Send letters and sort parts', icon: 'keyboard', color: '#FF7A45' },
   { id: 'inside', title: 'Inside the Box',        blurb: 'Open the CPU box',            icon: 'fan',      color: '#21B3A0' },
   { id: 'speed',  title: 'Super-Fast Brain',      blurb: 'Race the computer',           icon: 'chip',     color: '#FF5C7A' },
   { id: 'memory', title: 'Desk and Cupboard',     blurb: 'How a computer remembers',    icon: 'disk',     color: '#F5B300' },
@@ -1074,23 +1322,72 @@ const CH = [
 ];
 const starCount = () => CH.filter(c => state.stars[c.id]).length;
 
-function renderLevels() {
-  $('#levels').innerHTML = CH.map((c, i) => `
-    <a class="level" href="#${c.id}" style="--c:${c.color}">
-      <div class="ibox">${icon(c.icon)}</div>
-      <div><div class="lv">Level ${i + 1}</div><h3>${c.title}</h3><p>${c.blurb}</p></div>
-      ${icon('star', 'star' + (state.stars[c.id] ? '' : ' dim'))}
-    </a>`).join('');
+const mapEl = $('#map');
+function renderMap() {
+  const W = mapEl.clientWidth || 900, narrow = W < 620, cols = 3;
+  const rowH = narrow ? 196 : 232, top = narrow ? 104 : 128, colW = W / cols, R = narrow ? 34 : 46;
+  mapEl.classList.toggle('narrow', narrow);
+  const nodes = [...CH, { id: 'trophy', title: 'Certificate', icon: 'trophy', color: '#FFD43B' }];
+  const pts = nodes.map((_, i) => { const r = Math.floor(i / cols), c0 = i % cols, c = r % 2 ? cols - 1 - c0 : c0; return { x: Math.round(colW * (c + .5)), y: top + r * rowH }; });
+  const H = pts[pts.length - 1].y + (narrow ? 96 : 112);
+  mapEl.style.height = H + 'px';
+  const all = starCount() === CH.length;
+  let next = CH.findIndex(c => !state.stars[c.id]); if (next < 0) next = CH.length;
+  const seg = (a, b) => {
+    if (a.y === b.y) { const dx = b.x - a.x; return `M${a.x} ${a.y} C${a.x + dx / 3} ${a.y - 34} ${a.x + 2 * dx / 3} ${b.y + 34} ${b.x} ${b.y}`; }
+    const dir = a.x > W / 2 ? 1 : -1, o = colW * .42;
+    return `M${a.x} ${a.y} C${a.x + dir * o} ${a.y} ${b.x + dir * o} ${b.y} ${b.x} ${b.y}`;
+  };
+  const sx = Math.round(pts[0].x - colW * .42);
+  const segs = [{ d: `M${sx} ${pts[0].y} L${pts[0].x} ${pts[0].y}`, done: starCount() > 0 }, ...pts.slice(1).map((b, i) => ({ d: seg(pts[i], b), done: !!state.stars[nodes[i].id] }))];
+  const rw = narrow ? 20 : 28, ds = narrow ? 30 : 52, kinds = ['tree', 'flower', 'house', 'tree', 'sun', 'flower'];
+  let deco = '', k = 0;
+  pts.slice(1).forEach((b, i) => {
+    const a = pts[i]; if (a.y !== b.y) return;
+    deco += `<use href="#s-stk-${kinds[k++ % kinds.length]}" x="${(a.x + b.x) / 2 - ds / 2}" y="${a.y - rowH * .36 - ds / 2}" width="${ds}" height="${ds}"/>`;
+  });
+  const fs = narrow ? .6 : 1;
+  const flag = `<g transform="translate(${sx},${pts[0].y}) scale(${fs})"><path d="M0 0 V-64" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M0 -64 L38 -53 L0 -42 Z" fill="#FF5C7A" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>${narrow ? '' : `<text x="0" y="34" text-anchor="middle" class="lbl" font-size="18" fill="${INK}">START</text>`}</g>`;
+  const road = `<svg class="road" viewBox="0 0 ${W} ${H}" aria-hidden="true"><g fill="none" stroke-linecap="round">
+      ${segs.map(g => `<path d="${g.d}" stroke="${INK}" stroke-width="${rw + 7}"/>`).join('')}
+      ${segs.map(g => `<path d="${g.d}" stroke="${g.done ? '#FFD43B' : '#F7E3BA'}" stroke-width="${rw}"/>`).join('')}
+      ${segs.map(g => `<path d="${g.d}" stroke="${g.done ? '#FFFFFF' : '#D9B97F'}" stroke-width="3" stroke-dasharray="10 12"/>`).join('')}
+    </g>${deco}${flag}</svg>`;
+  const stops = nodes.map((n, i) => {
+    const p = pts[i], isT = n.id === 'trophy', done = isT ? all : !!state.stars[n.id];
+    const cls = isT ? 'trophy' + (all ? ' done' : '') : done ? 'done' : i === next ? 'next' : 'todo';
+    const inner = `<span class="disc">${isT ? '' : `<span class="num">${i + 1}</span>`}${icon(n.icon, 'ic')}${isT ? '' : icon('star', 'st' + (done ? '' : ' dim'))}</span><span class="name">${n.title}</span>`;
+    const attrs = `class="stop ${cls}" style="left:${p.x}px;top:${p.y}px;--c:${n.color}"`;
+    return isT ? `<button type="button" id="trophyStop" ${attrs}>${inner}</button>`
+      : `<a href="#${n.id}" ${attrs} aria-label="Level ${i + 1}: ${n.title}${done ? ', star won' : ''}">${inner}</a>`;
+  }).join('');
+  const bp = pts[Math.min(next, nodes.length - 1)];
+  mapEl.innerHTML = road + stops + `<svg class="mapbot" style="left:${bp.x}px;top:${bp.y - R - 2}px" viewBox="0 0 100 120" aria-hidden="true"><use href="#s-bot"/></svg>`;
+}
+mapEl.addEventListener('click', e => {
+  if (!e.target.closest('#trophyStop')) return;
+  const n = starCount();
+  if (n === CH.length) { $('#cert').scrollIntoView({ behavior: 'smooth' }); sfx.fanfare(); confetti(); }
+  else { sfx.oops(); say(`The trophy opens when you have all 8 stars. You have <b>${n}</b> so far. Keep going!`, 'oops'); }
+});
+let rz = 0;
+addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (current === 'home') renderMap(); }, 150); });
+function renderHome() {
+  renderMap();
   const all = starCount() === CH.length;
   $('#cert').hidden = !all;
   if (all) {
     $('#certStars').innerHTML = CH.map(() => icon('star')).join('');
     $('#certDate').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   }
+  const nx = CH.findIndex(c => !state.stars[c.id]), hg = $('#heroGo');
+  if (all) { hg.href = '#home'; hg.innerHTML = icon('trophy') + 'See my certificate'; }
+  else { hg.href = '#' + CH[nx].id; hg.innerHTML = icon('star') + (starCount() ? `Go to Level ${nx + 1}` : 'Start Level 1'); }
 }
+$('#heroGo').addEventListener('click', e => { if (starCount() === CH.length) { e.preventDefault(); $('#cert').scrollIntoView({ behavior: 'smooth' }); } });
 function updateStars() {
   $('#starnum').textContent = starCount();
-  renderLevels();
+  renderHome();
   CH.forEach(c => {
     const v = $('#v-' + c.id);
     $('.ch-head .star', v).classList.toggle('dim', !state.stars[c.id]);
@@ -1100,9 +1397,10 @@ function updateStars() {
 function award(id) {
   if (state.stars[id]) return false;
   state.stars[id] = true; save();
-  sfx.star(); confetti(); toast('You won a star!');
-  restart($('#starcount'), 'bump');
+  sfx.star(); confetti();
+  restart($('#starcount'), 'bump'); mood('wow'); restart(bit, 'dance');
   updateStars();
+  setTimeout(() => party(id), 1500);
   return true;
 }
 
@@ -1110,7 +1408,7 @@ function award(id) {
 CH.forEach((c, i) => {
   const v = $('#v-' + c.id);
   v.style.setProperty('--c', c.color);
-  v.insertAdjacentHTML('afterbegin', `<div class="ch-head"><span class="lvchip">Level ${i + 1}</span><h2>${c.title}</h2>${icon('star', 'star dim')}</div>`);
+  v.insertAdjacentHTML('afterbegin', `<div class="ch-head"><span class="hdisc">${icon(c.icon)}</span><span class="lvchip">Level ${i + 1}</span><h2>${c.title}</h2>${icon('star', 'star dim')}</div>`);
   const next = CH[i + 1];
   v.insertAdjacentHTML('beforeend', `<nav class="ch-foot">
       <a class="btn" href="#home">Back to the map</a>
@@ -1125,6 +1423,7 @@ function route() {
   let id = location.hash.replace('#', '') || 'home';
   if (!$('#v-' + id)) id = 'home';
   $$('.view').forEach(v => { v.hidden = v.id !== 'v-' + id; });
+  $$('.party').forEach(x => x.remove());
   current = id;
   window.scrollTo(0, 0);
   if (views[id] && views[id].enter) views[id].enter();
@@ -1138,10 +1437,12 @@ addEventListener('keydown', e => {
 });
 
 views.home = { enter() {
+  renderHome();
+  if (wantCert) { wantCert = false; setTimeout(() => $('#cert').scrollIntoView({ behavior: 'smooth' }), 400); }
   const n = starCount();
   if (n === 0) say('Hi Ayansh! I am <b>Bit</b>, a little robot. A computer is made of small building blocks. Tap <b>Level 1</b> and let’s explore!');
-  else if (n < CH.length) say(`Welcome back, Ayansh! You have <b>${n} star${n > 1 ? 's' : ''}</b>. Pick a level to play.`);
-  else { say('WOW! You won all 8 stars! You are a real <b>Computer Explorer</b>. Here is your certificate!'); confetti(); }
+  else if (n < CH.length) say(`Welcome back, Ayansh! You have <b>${n} star${n > 1 ? 's' : ''}</b>. Bit is waiting at your next stop on the map!`);
+  else { say('WOW! You won all 8 stars! You are a real <b>Computer Explorer</b>. Here is your certificate!', 'wow'); confetti(); }
 } };
 
 let resetArmed = false;
@@ -1154,7 +1455,7 @@ $('#resetBtn').addEventListener('click', e => {
 /* ---------- part explorer (levels 1 and 3) ---------- */
 const KIND = { in: 'IN · input', think: 'THINK', out: 'OUT · output', store: 'STORE · memory', help: 'HELPER' };
 const SOFT = { in: 'var(--in-soft)', think: 'var(--think-soft)', out: 'var(--out-soft)', store: 'var(--store-soft)', help: 'var(--help-soft)' };
-function explorer({ id, scene, foundEl, infoEl, data, act, done, canPick = () => true }) {
+function explorer({ id, scene, foundEl, infoEl, data, act, done, talk, canPick = () => true }) {
   const found = new Set(), keys = Object.keys(data);
   foundEl.innerHTML = keys.map(k => `<span class="fchip" data-k="${k}">${icon(data[k].icon)}<span>?</span></span>`).join('');
   function pick(k) {
@@ -1166,12 +1467,13 @@ function explorer({ id, scene, foundEl, infoEl, data, act, done, canPick = () =>
     infoEl.style.setProperty('--soft', SOFT[d.kind]);
     infoEl.innerHTML = `<div class="big">${icon(d.icon)}</div><div><div class="row"><h3>${d.name}</h3><span class="k k-${d.kind}">${KIND[d.kind]}</span></div><p>${d.text}</p><p class="like">${d.like}</p></div>`;
     restart(infoEl, 'pop');
-    $$(`[data-part="${k}"]`, scene).forEach(el => restart(el, 'boing'));
+    $$(`[data-part="${k}"]`, scene).forEach(el => { restart(el, 'boing'); happy(el); });
+    if (talk && talk[k]) sceneBubble(scene, ...talk[k]);
     const tag = $(`[data-tag="${k}"]`, scene); if (tag) tag.classList.add('show');
     sfx.pop();
     if (act) act(k);
     const line = `This is the <b>${d.name}</b>. ${d.text} ${d.like}`;
-    if (isNew && found.size === keys.length) { say(line + ' ' + done); setTimeout(() => award(id), 900); }
+    if (isNew && found.size === keys.length) { say(line + ' ' + done, 'wow'); setTimeout(() => award(id), 900); }
     else say(line);
   }
   const hit = e => e.target.closest('[data-part]');
@@ -1191,20 +1493,20 @@ const PARTS = {
 const scr = $('#scr'), fx = $('#fx');
 let scrTok = 0;
 const BG = c => `<rect x="281" y="93" width="234" height="136" fill="${c}"/>`;
-const IDLE = BG('#8FD3FF') +
+const DESK = BG('#8FD3FF') +
   `<rect x="293" y="104" width="26" height="22" rx="4" fill="#FFC233" stroke="${INK}" stroke-width="2"/>` +
   `<rect id="appIcon" x="293" y="134" width="26" height="22" rx="4" fill="#FF7A45" stroke="${INK}" stroke-width="2"/>` +
   `<rect x="293" y="164" width="26" height="22" rx="4" fill="#3DBB5E" stroke="${INK}" stroke-width="2"/>` +
   `<rect x="281" y="214" width="234" height="15" fill="#2B3156"/><circle cx="293" cy="221.5" r="4.5" fill="#3DBB5E"/>`;
 function screen(mode) {
   const tok = ++scrTok;
-  if (mode === 'idle') scr.innerHTML = IDLE + `<text x="420" y="172" text-anchor="middle" class="lbl" font-size="32" fill="${INK}">Hello!</text>`;
+  if (mode === 'idle') scr.innerHTML = BG('#8FD3FF') + face(398, 150, 2.5) + `<rect x="281" y="214" width="234" height="15" fill="#2B3156"/><circle cx="293" cy="221.5" r="4.5" fill="#3DBB5E"/>`;
   if (mode === 'smile') scr.innerHTML = BG('#FFF1C7') + `<g class="appear" style="transform-origin:398px 158px"><circle cx="398" cy="158" r="48" fill="#FFC233" stroke="${INK}" stroke-width="3"/><circle cx="381" cy="146" r="6" fill="${INK}"/><circle cx="415" cy="146" r="6" fill="${INK}"/><path d="M374 168 Q398 194 422 168" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/></g>`;
   if (mode === 'think') scr.innerHTML = BG('#2B3156') + `<g class="spinner go"><use href="#s-gear" x="373" y="112" width="50" height="50"/></g><text x="398" y="196" text-anchor="middle" class="lbl" font-size="24" fill="#FFFFFF">Thinking…</text>`;
   if (mode === 'music') scr.innerHTML = BG('#2B3156') + [0, 1, 2, 3, 4, 5, 6].map(i => `<rect class="eqbar" style="--d:${(i % 3) * .15 + i * .04}s" x="${312 + i * 26}" y="${120 + (i % 2) * 14}" width="16" height="${86 - (i % 2) * 14}" rx="3" fill="${['#2F9BEA', '#3DBB5E', '#F5B300', '#FF7A45', '#FF5C7A', '#8C6BEB', '#21B3A0'][i]}"/>`).join('');
   if (mode === 'print') scr.innerHTML = BG('#FFFFFF') + `<text x="398" y="148" text-anchor="middle" class="lbl" font-size="26" fill="${INK}">Printing…</text><rect x="318" y="166" width="160" height="16" rx="8" fill="#EEF0F7" stroke="${INK}" stroke-width="2"/><rect id="pbar" x="318" y="166" width="0" height="16" rx="8" fill="#3DBB5E"/>`;
   if (mode === 'type') scr.innerHTML = BG('#F7F9FF') + `<text id="typed" x="300" y="170" class="lbl" font-size="34" fill="${INK}"></text>`;
-  if (mode === 'cursor') scr.innerHTML = IDLE + `<g id="arrowPtr"><path d="M0 0 L0 28 L7 21 L12 32 L18 29 L13 19 L22 19 Z" fill="#FFFFFF" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/></g>`;
+  if (mode === 'cursor') scr.innerHTML = DESK + `<g id="arrowPtr"><path d="M0 0 L0 28 L7 21 L12 32 L18 29 L13 19 L22 19 Z" fill="#FFFFFF" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/></g>`;
   return tok;
 }
 screen('idle');
@@ -1216,7 +1518,7 @@ function flashKey() { const k = kks[Math.floor(Math.random() * kks.length)]; k.s
 function svgAdd(parent, html) { const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.innerHTML = html; parent.appendChild(g); return g; }
 
 async function partAct(k) {
-  if (k === 'monitor') { screen('smile'); }
+  if (k === 'monitor') { screen('smile'); sfx.ding(); }
   if (k === 'tower') {
     const tok = screen('think'); const p = $('#pwrLight'); p.classList.add('blinky'); sfx.whirr();
     await wait(1800); p.classList.remove('blinky'); if (tok === scrTok) screen('idle');
@@ -1254,7 +1556,10 @@ async function partAct(k) {
     await wait(4000); if (tok === scrTok) { sh.classList.remove('out'); screen('idle'); }
   }
 }
+[['tower', [[108, 226, 1.15]]], ['speaker', [[216, 224, .85], [582, 224, .85]]], ['keyboard', [[400, 324, .8]]], ['mouse', [[586, 344, .6]]], ['printer', [[684, 244, .85]]]]
+  .forEach(([k, list]) => $$(`#partsScene [data-part="${k}"]`).forEach((g, i) => g.insertAdjacentHTML('beforeend', face(...(list[i] || list[0])))));
 explorer({ id: 'parts', scene: $('#partsScene'), foundEl: $('#partsFound'), infoEl: $('#partsInfo'), data: PARTS, act: partAct,
+  talk: { monitor: [530, 66, 'I show you things!'], tower: [108, 112, 'I do the thinking!'], keyboard: [400, 306, 'Tap tap! Type on me!'], mouse: [586, 310, 'Squeak! Click me!'], speaker: [216, 166, 'La la laaa!'], printer: [696, 160, 'Zzzt! A picture!'] },
   done: 'You found all 6 parts! Did you see the colours? Blue parts put things IN. The box THINKS. Green parts show things OUT.' });
 views.parts = { enter() { say('Here is a computer on a desk. It has <b>6 parts</b>. Tap each part to find out what it does!'); } };
 
@@ -1270,7 +1575,13 @@ function phase(which) {
   ['In', 'Think', 'Out'].forEach(p => $('#ph' + p).classList.toggle('on', p === which));
   $$('#v-flow .caption span').forEach(s => s.classList.toggle('on', !!which && s.classList.contains('c-' + which.toLowerCase())));
 }
-function along(path, p, s = 1) { const L = path.getTotalLength(), pt = path.getPointAtLength(L * p); ball.setAttribute('transform', `translate(${pt.x},${pt.y}) scale(${s})`); }
+$('#fTower').insertAdjacentHTML('beforeend', face(400, 116, 1.05));
+$('#fKb').insertAdjacentHTML('beforeend', face(129, 186, 1.1));
+function along(path, p, s = 1) {
+  const L = path.getTotalLength(), pt = path.getPointAtLength(L * p);
+  ball.setAttribute('transform', `translate(${pt.x},${pt.y}) scale(${s})`);
+  const r = ball.getBoundingClientRect(); lookAt = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; lookSoon();
+}
 async function sendLetter(l) {
   if (flowBusy) { if (flowQ.length < 5) flowQ.push(l); return; }
   flowBusy = true;
@@ -1286,14 +1597,17 @@ async function sendLetter(l) {
   $('#fGear').classList.remove('go'); $('#fTower').classList.remove('glowing');
   phase('Out'); $('#core2').classList.add('live');
   await tween(650, p => along(w2, ease(p), Math.min(1, p * 3)));
-  $('#core2').classList.remove('live'); ball.setAttribute('opacity', '0'); sfx.pop();
+  $('#core2').classList.remove('live'); ball.setAttribute('opacity', '0'); sfx.pop(); lookAt = null; lookSoon();
+  happy($('#fTower')); happy($('#fKb'));
   flowLine = (flowLine + l).slice(-11);
   $('#fBig').textContent = l; $('#fLine').textContent = flowLine;
   restart($('#fMon'), 'boing');
   await wait(250); phase(null);
   flowCount++;
   if (flowCount === 1) say(`You pressed <b>${l}</b>! The keyboard sent it IN. The CPU box THOUGHT about it. The monitor showed it OUT. Try more letters!`);
-  if (flowCount === 5) { say('Super! Every time, it goes the same way: <b>IN</b>, then <b>THINK</b>, then <b>OUT</b>. That is how every computer works!'); award('flow'); }
+  if (flowCount === 5) say(sortedN === SORT.length ? 'Super! Every time, it goes the same way: <b>IN</b>, then <b>THINK</b>, then <b>OUT</b>. That is how every computer works!'
+    : 'Super! Every time it goes <b>IN</b>, then <b>THINK</b>, then <b>OUT</b>. Now scroll down and play the <b>sorting game</b>!', 'wow');
+  checkFlow();
   flowBusy = false;
   if (flowQ.length) sendLetter(flowQ.shift());
 }
@@ -1301,6 +1615,79 @@ views.flow = {
   enter() { say('Every computer works in 3 steps: <b>IN</b>, <b>THINK</b> and <b>OUT</b>. Press a letter and watch it travel!'); },
   key(e) { const l = e.key.toUpperCase(); if (/^[A-Z]$/.test(l)) sendLetter(l); }
 };
+
+/* sorting game: IN or OUT? */
+const SORT = [['keyboard', 'Keyboard', 'in'], ['monitor', 'Monitor', 'out'], ['mic', 'Microphone', 'in'], ['speaker', 'Speakers', 'out'],
+  ['mouse', 'Mouse', 'in'], ['printer', 'Printer', 'out'], ['cam', 'Webcam', 'in'], ['headphones', 'Headphones', 'out']];
+const SORT_WHY = { keyboard: 'The keyboard puts letters IN.', monitor: 'The monitor shows pictures OUT.', mic: 'The microphone puts your voice IN.',
+  speaker: 'Speakers send sounds OUT.', mouse: 'The mouse puts your clicks IN.', printer: 'The printer gives paper OUT.',
+  cam: 'The webcam puts your picture IN.', headphones: 'Headphones send sounds OUT, right into your ears.' };
+const tray = $('#tray');
+let sortedN = 0, selTok = null, drag = null, justDragged = false;
+tray.innerHTML = SORT.map(([k, n]) => `<button type="button" class="tok" data-k="${k}">${icon(k)}<span>${n}</span></button>`).join('');
+function updGoals() {
+  $('#gLetters b').textContent = Math.min(flowCount, 5); $('#gLetters').classList.toggle('ok', flowCount >= 5);
+  $('#gSort b').textContent = sortedN; $('#gSort').classList.toggle('ok', sortedN === SORT.length);
+}
+function checkFlow() { updGoals(); if (flowCount >= 5 && sortedN === SORT.length) award('flow'); }
+function placeTok(tok, kind) {
+  const item = SORT.find(x => x[0] === tok.dataset.k), bin = $(`.bin[data-bin="${kind}"]`);
+  selTok = null; $$('.tok', tray).forEach(t => t.classList.remove('sel'));
+  if (item[2] !== kind) {
+    restart(tok, 'wrong'); sfx.oops();
+    return say(`Hmm, not that box. Does the <b>${item[1].toLowerCase()}</b> put things IN to the computer, or give things OUT to you?`, 'oops');
+  }
+  tok.remove(); $('.got', bin).insertAdjacentHTML('beforeend', icon(item[0]));
+  restart(bin, 'yum'); sfx.good(); sortedN++;
+  if (sortedN < SORT.length) say('Yes! ' + SORT_WHY[item[0]], 'wow');
+  else {
+    tray.innerHTML = '<span class="done-msg">All sorted. Great job!</span>';
+    say(flowCount >= 5 ? 'You sorted them all! IN parts send things into the computer. OUT parts give things back to you.'
+      : 'You sorted them all! Now send <b>5 letters</b> through the computer at the top.', 'wow');
+  }
+  checkFlow();
+}
+const binAt = (x, y) => $$('.bin').find(b => { const r = b.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+tray.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.tok'); if (!t) return;
+  drag = { t, id: e.pointerId, x0: e.clientX, y0: e.clientY, moved: false };
+  try { t.setPointerCapture(e.pointerId); } catch (err) {}
+});
+tray.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.moved) {
+    if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8) return;
+    const r = drag.t.getBoundingClientRect(), g = drag.t.cloneNode(true);
+    g.classList.remove('sel'); g.classList.add('drag'); g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g);
+    Object.assign(drag, { moved: true, g, ox: drag.x0 - r.left, oy: drag.y0 - r.top });
+    drag.t.style.opacity = '.3'; sfx.pop();
+  }
+  drag.g.style.left = (e.clientX - drag.ox) + 'px'; drag.g.style.top = (e.clientY - drag.oy) + 'px';
+  const over = binAt(e.clientX, e.clientY);
+  $$('.bin').forEach(b => b.classList.toggle('over', b === over));
+});
+const endDrag = e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  $$('.bin').forEach(b => b.classList.remove('over'));
+  if (!d.moved) return;
+  d.g.remove(); d.t.style.opacity = '';
+  justDragged = true; setTimeout(() => { justDragged = false; }, 60);
+  const over = e.type === 'pointerup' && binAt(e.clientX, e.clientY);
+  if (over) placeTok(d.t, over.dataset.bin);
+};
+tray.addEventListener('pointerup', endDrag);
+tray.addEventListener('pointercancel', endDrag);
+tray.addEventListener('click', e => {
+  const t = e.target.closest('.tok'); if (!t || justDragged) return;
+  selTok = t; $$('.tok', tray).forEach(x => x.classList.toggle('sel', x === t)); sfx.pop();
+  say(`Where does the <b>${SORT.find(x => x[0] === t.dataset.k)[1].toLowerCase()}</b> go? Tap the <b>IN</b> box or the <b>OUT</b> box.`);
+});
+$$('.bin').forEach(b => b.addEventListener('click', () => {
+  if (selTok) placeTok(selTok, b.dataset.bin);
+  else say('First pick a picture, then tap a box. Or drag the picture into a box!');
+}));
 
 /* ---------- LEVEL 3: inside the box ---------- */
 const INSIDE = {
@@ -1346,6 +1733,7 @@ async function startRace() {
   cd.hidden = true;
   race.st = 'go'; race.t0 = performance.now(); tapBtn.textContent = 'TAP! +1';
   $('#meter').hidden = false;
+  $('#compRunner').classList.add('zoom'); setTimeout(() => $('#compRunner').classList.remove('zoom'), 700);
   tween(260, p => { const n = Math.round(p * GOAL); $('#compCount').textContent = n; setRunner('#compRunner', n); });
   const tickNum = () => {
     if (race.st !== 'go') return;
@@ -1362,7 +1750,7 @@ function tapRace() {
   if (race.st === 'idle') return startRace();
   if (race.st === 'done') { resetRace(); return startRace(); }
   if (race.st !== 'go') return;
-  race.kid++; $('#kidCount').textContent = race.kid; setRunner('#kidRunner', race.kid); sfx.tick();
+  race.kid++; $('#kidCount').textContent = race.kid; setRunner('#kidRunner', race.kid); restart($('#kidRunner'), 'hop1'); tone(400 + race.kid * 30, .05, 'square', .05);
   if (race.kid >= GOAL) {
     race.st = 'done'; cancelAnimationFrame(race.raf);
     const s = (performance.now() - race.t0) / 1000;
@@ -1419,8 +1807,8 @@ function fly(fromEl, toEl) {
   return anim.finished.then(() => c.remove(), () => c.remove());
 }
 function addSticker(s) {
-  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.'); }
-  if (mem.desk.length >= 6) { sfx.oops(); return say('The paper is full! Press <b>Save</b>, or <b>Clear</b> the desk.'); }
+  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.', 'oops'); }
+  if (mem.desk.length >= 6) { sfx.oops(); return say('The paper is full! Press <b>Save</b>, or <b>Clear</b> the desk.', 'oops'); }
   mem.desk.push(s); sfx.pop();
   const sl = $$('.slot', paper)[mem.desk.length - 1];
   sl.className = 'slot new'; sl.style.setProperty('--r', rot(mem.desk.length - 1) + 'deg'); sl.innerHTML = icon('stk-' + s);
@@ -1428,8 +1816,8 @@ function addSticker(s) {
 }
 $('#palette').addEventListener('click', e => { const b = e.target.closest('button'); if (b) addSticker(b.dataset.s); });
 $('#saveBtn').addEventListener('click', async () => {
-  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.'); }
-  if (!mem.desk.length) { sfx.oops(); return say('The desk is empty. Tap some stickers first!'); }
+  if (!mem.power) { sfx.oops(); return say('The power is OFF! Switch it ON first.', 'oops'); }
+  if (!mem.desk.length) { sfx.oops(); return say('The desk is empty. Tap some stickers first!', 'oops'); }
   const target = $('.shelf', $('#cupboard'));
   sfx.whirr();
   await fly(paper, target);
@@ -1459,7 +1847,7 @@ $('#powerBtn').addEventListener('click', async e => {
 });
 $('#cupboard').addEventListener('click', async e => {
   const b = e.target.closest('.saved'); if (!b) return;
-  if (!mem.power) { sfx.oops(); return say('Switch the power ON first!'); }
+  if (!mem.power) { sfx.oops(); return say('Switch the power ON first!', 'oops'); }
   sfx.whirr();
   await fly(b, paper);
   mem.desk = mem.saved[+b.dataset.i].slice(); renderDesk(true); sfx.pop();
@@ -1561,7 +1949,7 @@ function renderProg(active = -1, bad = -1) {
 }
 function addCmd(c) {
   if (cg.running) return;
-  if (cg.prog.length >= MAXP) { sfx.oops(); return say(`That is a lot of steps! The most is ${MAXP}.`); }
+  if (cg.prog.length >= MAXP) { sfx.oops(); return say(`That is a lot of steps! The most is ${MAXP}.`, 'oops'); }
   cg.prog.push(c); renderProg(); sfx.tick();
 }
 $$('#v-code [data-cmd]').forEach(b => b.addEventListener('click', () => addCmd(b.dataset.cmd)));
@@ -1570,7 +1958,7 @@ $('#clearProg').addEventListener('click', () => { if (cg.running) return; cg.pro
 $('#nextPuzzle').addEventListener('click', () => { cg.lvl = Math.min(cg.lvl + 1, LEVELS.length - 1); setupPuzzle(); });
 async function runProg() {
   if (cg.running) return;
-  if (!cg.prog.length) { sfx.oops(); return say('Add some steps first! Tap the arrows.'); }
+  if (!cg.prog.length) { sfx.oops(); return say('Add some steps first! Tap the arrows.', 'oops'); }
   const L = LEVELS[cg.lvl], my = ++cg.run;
   cg.running = true; robot.classList.remove('bump', 'win');
   placeRobot(L.start, false); await wait(250);
@@ -1582,7 +1970,7 @@ async function runProg() {
     const wall = nx < 0 || ny < 0 || nx > 4 || ny > 4;
     if (wall || isRock(nx, ny)) {
       renderProg(-1, i); restart(robot, 'bump'); sfx.oops();
-      say(`Oops! Step ${i + 1} bumps into ${wall ? 'the edge' : 'a rock'}. The computer did exactly what you said. Let’s fix that step!`);
+      say(`Oops! Step ${i + 1} bumps into ${wall ? 'the edge' : 'a rock'}. The computer did exactly what you said. Let’s fix that step!`, 'oops');
       await wait(1300); if (my !== cg.run) return;
       placeRobot(L.start, false); robot.classList.remove('flip'); renderProg(); cg.running = false; return;
     }
@@ -1598,7 +1986,7 @@ function win() {
   cg.running = false; cg.solved.add(cg.lvl); restart(robot, 'win'); sfx.good(); confetti(60);
   renderProg();
   $('#lvls').innerHTML = LEVELS.map((_, i) => `<span class="lvdot${i === cg.lvl ? ' now' : cg.solved.has(i) ? ' done' : ''}">Puzzle ${i + 1}</span>`).join('');
-  if (cg.lvl < LEVELS.length - 1) { $('#nextPuzzle').hidden = false; say(`You did it in ${cg.prog.length} steps! You just wrote a <b>program</b>. Press <b>Next puzzle</b>.`); }
+  if (cg.lvl < LEVELS.length - 1) { $('#nextPuzzle').hidden = false; say(`You did it in ${cg.prog.length} steps! You just wrote a <b>program</b>. Press <b>Next puzzle</b>.`, 'wow'); }
   else { say('Hooray! You solved every puzzle. You are a <b>programmer</b>! People write programs, and computers follow them, step by step.'); award('code'); }
 }
 $('#goBtn').addEventListener('click', runProg);
@@ -1626,7 +2014,8 @@ const QUIZ = [
   { q: 'Which part puts things <b>IN</b> to the computer?', a: [['speaker', 'Speakers'], ['mouse', 'Mouse', 1], ['printer', 'Printer']] },
   { q: 'A computer understands lights that are…', a: [['bigsmall', 'Big and small'], ['redblue', 'Red and blue'], ['bulb', 'ON and OFF', 1]] },
   { q: 'What keeps the computer <b>cool</b>?', a: [['printer', 'Printer'], ['fan', 'Fan', 1], ['keyboard', 'Keyboard']] },
-  { q: 'A list of steps for a computer is called a…', a: [['speaker', 'Song'], ['list', 'Program', 1], ['stk-house', 'Picture']] }
+  { q: 'A list of steps for a computer is called a…', a: [['speaker', 'Song'], ['list', 'Program', 1], ['stk-house', 'Picture']] },
+  { q: 'Which one puts your <b>voice</b> IN to the computer?', a: [['headphones', 'Headphones'], ['printer', 'Printer'], ['mic', 'Microphone', 1]] }
 ];
 const CHEERS = ['Yes!', 'Super!', 'Well done!', 'Correct!', 'Brilliant!', 'You got it!'];
 const qz = { i: 0, tried: false, marks: [] };
@@ -1645,13 +2034,13 @@ quizEl.addEventListener('click', async e => {
   if (c[2]) {
     qz.marks[qz.i] = qz.tried ? 'try' : 'ok';
     b.classList.add('right'); $$('.choice', quizEl).forEach(x => { x.disabled = true; });
-    sfx.good(); say(CHEERS[qz.i % CHEERS.length] + ' It is the <b>' + c[1] + '</b>.');
+    sfx.good(); say(CHEERS[qz.i % CHEERS.length] + ' It is the <b>' + c[1] + '</b>.', 'wow');
     await wait(1500);
     qz.i++; qz.tried = false;
     if (qz.i < QUIZ.length) renderQ(); else endQuiz();
   } else {
     qz.tried = true; restart(b, 'wrong'); b.disabled = true; sfx.oops();
-    say('Not this one. Try again!');
+    say('Not this one. Try again!', 'oops');
   }
 });
 function endQuiz() {
@@ -1663,7 +2052,7 @@ function endQuiz() {
   $('#quizAgain').addEventListener('click', startQuiz);
   const won = award('quiz');
   say(n === QUIZ.length ? 'All correct! You are a computer expert!' : `Great work! You got ${n} on the first try.` + (won ? ' Here is your star!' : ''));
-  if (starCount() === CH.length) setTimeout(() => say('You have all 8 stars! Go to the map to see your <b>certificate</b>!'), 3500);
+  if (starCount() === CH.length) setTimeout(() => current === 'quiz' && say('You have all 8 stars! Go to the map to see your <b>certificate</b>!'), 3500);
 }
 function startQuiz() { qz.i = 0; qz.tried = false; qz.marks = []; renderQ(); }
 views.quiz = { enter() { startQuiz(); } };
