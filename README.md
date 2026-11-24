@@ -47,6 +47,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Explore → **Did you know?** | Taps the gold card on any world's info card to reveal amazing facts one at a time, each read out by Nova | Three more surprising facts for every world, each with a real-world comparison (below) |
 | Explore → the big moons | Flies close to Jupiter, Saturn, Neptune or Pluto and taps a moon, or picks one from the **Meet its big moons** buttons | Io, Europa, Ganymede, Callisto, Titan, Enceladus, Triton and Charon, each with its own facts and voice |
 | Explore → **Records** | Opens the record breakers and taps one to fly there | The hottest, coldest and windiest planets, the biggest volcano, storm and moon, the tallest cliff and more |
+| Explore → **Beyond** | Zooms out past Pluto in eight stops (below), pressing **Zoom out**, or taps **Keep zooming out** after zooming all the way out in Explore | Our neighbourhood in space: the Kuiper belt, the Sun's bubble, the Oort cloud, what a light-year is, the nearest stars, the Milky Way and Andromeda |
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
 | Explore → Earth → **Explore Earth** | Thirteen activities (below) | How our own planet works |
 | How it began | Follows the story of how the solar system was born, in ten chapters (below), pressing **Later** to move on | Where the Sun and planets came from, and why the inner planets are rocky and the outer ones are giants |
@@ -56,7 +57,7 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
-| Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of five games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures), the **Amazing Facts Quiz** (10 questions from 16, about the moons, the record breakers and the Did you know? facts) and **What If…?** | Goes over everything, with a star for each first-try answer |
+| Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of five games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures), the **Amazing Facts Quiz** (10 questions from 21, about the moons, the record breakers, the Did you know? facts and Beyond Pluto) and **What If…?** | Goes over everything, with a star for each first-try answer |
 
 ### Did you know?, the big moons and the record breakers
 
@@ -75,6 +76,23 @@ Every world in Explore has a gold **Did you know?** card. It starts as a surpris
 The eight big moons circle their planets in 3D, each with a short faint path. They can be tapped once you are close to their planet, and every planet with big moons has a **Meet its big moons** row on its card. A moon's card has its own facts, voice line, Did you know? facts and a **Next** button that walks through the family.
 
 **Records** (by **Planet tour**) lists ten record breakers. Tapping one flies to that world, puts a gold record badge on its card and Nova explains the record.
+
+### Beyond Pluto
+
+A zoom-out journey from Explore. Each stop is drawn at its own scale; **Zoom out** shrinks the picture to a dot while the next, much bigger one grows in, and a line on the screen always says how long light takes to cross it ("Light takes 5 hours to cross this line"). Gold names can be tapped.
+
+| Stop | What Ayansh sees |
+|---|---|
+| 1. Icy worlds | The Kuiper belt past Neptune, with Pluto, Eris, Haumea, Makemake and Arrokoth to tap |
+| 2. The Sun's bubble | The heliosphere blown by the Sun's wind, the wind from other stars flowing round it, and both Voyagers outside it |
+| 3. The comet cloud | The Oort cloud, with the Sun and all the planets in one tiny dot. **Send a flash of light** shows light reaching Earth in 8 minutes, Neptune in 4 hours, Voyager 1 in about a day, and one light-year after a year |
+| 4. How far is a star? | Light racing round the Earth (7½ times a second, shown slowed down), then the football model: the Sun a football in Delhi, Earth a mustard seed 24 m away, the nearest star another football in London |
+| 5. Our nearest star | Alpha Centauri and Proxima Centauri. **Send light to Proxima** counts the 4.2 years |
+| 6. Star neighbours | Every star within about 12 light-years, from their real directions and distances. Sirius, Alpha Centauri, Barnard's Star, Wolf 359 and Tau Ceti can be tapped |
+| 7. The Milky Way | Our spiral galaxy turning, with "You are here" and a clock of how many million years the Sun has travelled. **Akash Ganga** explains the Indian name |
+| 8. Andromeda | Andromeda, Triangulum and the two small galaxies near ours. **Fly back home** zooms back through every stop to Explore |
+
+Things that are simplified: the star map is turned so Alpha Centauri sits to one side of the Sun (the distances between stars are real), the Oort cloud has never been seen and is drawn from what scientists expect, and the galaxies are drawn by the app, not photographed.
 
 ### How it began
 
@@ -151,7 +169,7 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 ## Things to know
 
 - The Earth scenes (Earth's story, Volcano, Rain cycle, Storm, Earthquakes) share a "realism kit" in `solar-system/nature.js`: a sky with a sun and drifting clouds, ground that mixes grass, rock, sand or snow, water that ripples and reflects the sky, and leafy trees, ferns and grass. Everything is drawn from noise in the browser, so there are no extra picture files.
-- The glowing gas in **How it began** is drawn by `solar-system/gas.js`, and the story itself is in `solar-system/birth.js`. **India's story** is in `solar-system/indiastory.js`.
+- The glowing gas in **How it began** is drawn by `solar-system/gas.js`, and the story itself is in `solar-system/birth.js`. **India's story** is in `solar-system/indiastory.js`, and **Beyond Pluto** is in `solar-system/beyond.js`.
 - Planet pictures: see `solar-system/tex/CREDITS.md`. The 3D engine is three.js, included in `solar-system/vendor`.
 - **Settings** in the rail has the explorer's name, **Nova's voice** and **Sounds**. The two buttons beside Nova's words replay or stop what she is saying.
 - The name shows in the title, on buttons and labels, and on the quiz results. Nova's recorded voice can say "Ayansh". For any other name, the greeting is spoken by the device's own voice, and the few lines that mention the name use recordings that leave it out.

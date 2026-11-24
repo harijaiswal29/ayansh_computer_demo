@@ -251,6 +251,10 @@ body.clean .caption .nova,body.clean .caption .round{display:none}
 .seg.scrolly{overflow-x:auto;max-width:100%}
 input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
 #indiaAgeWrap input.yr{width:min(220px,40vw);height:24px}
+#view-beyond .over.top{flex-wrap:nowrap}
+#beyondSteps{flex:1;min-width:0}
+#beyondHint{position:absolute;left:50%;transform:translateX(-50%);bottom:88px;z-index:3;min-height:44px;padding:8px 16px;font-size:16px;box-shadow:0 0 0 4px rgba(89,224,232,.25);animation:hintbob 2.4s ease-in-out infinite}
+@keyframes hintbob{50%{transform:translate(-50%,-4px)}}
 .btn.small span:empty{display:none}
 .seg.scrolly button{flex:none}
 #view-visit .over.top,#view-earth .over.top{justify-content:flex-start}
@@ -437,6 +441,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       <div class="over top">
         <div class="cluster">
           <button class="btn small go" id="tourBtn" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Planet tour</span></button>
+          <button class="btn small" id="beyondBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 12.5a1.5 1.5 0 1 1 1.6 1.4c-2.6.1-4.1-1.9-4-4 .1-2.6 2.6-4.3 5.1-4 3.2.4 5.3 3.4 4.9 6.6"/><path d="M12 12.5c.1 3.3-2.3 5.8-5.4 5.7C3.8 18 2.2 15.4 3 12.6"/></svg><span>Beyond</span></button>
           <button class="btn small" id="recBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9 17h6"/></svg><span>Records</span></button>
           <span class="chip">Earth years <b id="yearCount">0</b></span>
         </div>
@@ -454,6 +459,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         </div>
       </div>
       <div class="over bottom" id="stripRow"><div class="strip" id="strip" aria-label="Jump to a planet"></div></div>
+      <button class="btn cyan" id="beyondHint" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 12.5a1.5 1.5 0 1 1 1.6 1.4c-2.6.1-4.1-1.9-4-4 .1-2.6 2.6-4.3 5.1-4 3.2.4 5.3 3.4 4.9 6.6"/><path d="M12 12.5c.1 3.3-2.3 5.8-5.4 5.7C3.8 18 2.2 15.4 3 12.6"/></svg>Keep zooming out, past Pluto</button>
       <aside class="info" id="info" hidden aria-live="polite">
         <button class="x" id="infoClose" type="button" aria-label="Close and zoom out">&times;</button>
         <div class="info-head">
@@ -598,6 +604,18 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       </div>
     </section>
 
+    <!-- Beyond Pluto: our neighbourhood in space (beyond.js), reached from Explore -->
+    <section class="view" id="view-beyond" hidden aria-label="Our neighbourhood in space">
+      <canvas class="full" id="beyondCv" aria-label="A 3D journey that zooms out from the Kuiper belt to the Andromeda galaxy. Drag to turn, pinch or scroll to zoom, tap a gold name."></canvas>
+      <div class="over top"><button class="btn small" id="beyondBack" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Planets</button><div class="picker" id="beyondSteps" role="group" aria-label="Stops on the journey"></div></div>
+      <div class="over bottom" id="beyondCtl">
+        <button class="btn small" id="beyondPrev" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Closer</button>
+        <button class="btn small go" id="beyondNext" type="button">Zoom out<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="btn small" id="beyondAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg>Again</button>
+        <button class="btn small cyan" id="beyondAct" type="button" hidden><span></span></button>
+      </div>
+    </section>
+
     <!-- India's story (indiastory.js) -->
     <section class="view" id="view-indiastory" hidden aria-label="How India was formed">
       <canvas class="full" id="indiaCv" aria-label="The story of how India was formed, in 3D. Drag to turn, pinch or scroll to zoom."></canvas>
@@ -635,7 +653,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
             <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span class="what">10 questions about the Sun, planets and Moon <span class="best" data-best="planets" hidden></span></span></button>
             <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span class="what">Spacecraft, Earth and everything we explored <span class="best" data-best="adventure" hidden></span></span></button>
             <button class="qpick" type="button" data-q="earth"><span class="qicon" id="qiEarth"></span><b>Earth's Story Quiz</b><span class="what">Baby Earth, dinosaurs, the asteroid and the Ice Age <span class="best" data-best="earth" hidden></span></span></button>
-            <button class="qpick" type="button" data-q="facts"><span class="qicon" id="qiFacts"></span><b>Amazing Facts Quiz</b><span class="what">Moons, record breakers and Did you know? facts <span class="best" data-best="facts" hidden></span></span></button>
+            <button class="qpick" type="button" data-q="facts"><span class="qicon" id="qiFacts"></span><b>Amazing Facts Quiz</b><span class="what">Moons, records, Did you know? facts and beyond Pluto <span class="best" data-best="facts" hidden></span></span></button>
             <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span class="what">Big imagination questions, then watch what happens <span class="best" data-best="whatif" hidden></span></span></button>
           </div>
         </div>
@@ -1181,7 +1199,7 @@ const Sfx = {
 /* ================================================================ Nova's voice
    Recorded neural voice clips in audio/<id>.mp3. If a clip cannot play, the browser's best-sounding voice reads the line instead.
    A claude.ai page can hold only 511 files, so the copy published there gets the newer clips (Did you know? facts, the big moons,
-   the records and the Amazing Facts Quiz) in small bundles of about three clips, made by tools/pack_audio.py. Publishing switches
+   the records, the Amazing Facts Quiz and Beyond Pluto) in small bundles of a few clips, made by tools/pack_audio.py. Publishing switches
    AUDIO_PACKS on; the folder version plays the separate mp3 files. */
 const AUDIO_PACKS = false;
 const Voice = {
@@ -1224,6 +1242,7 @@ const Voice = {
     if (!AUDIO_PACKS) return null;
     let m = /^(?:dyk_([a-z]+)_\d+|m_([a-z]+))$/.exec(id);
     if (m) return 'p_' + (m[1] || m[2]);
+    m = /^nb_([a-z]+)/.exec(id); if (m) return 'p_nb_' + m[1];
     m = /^(rec|fq)_/.exec(id); return m ? 'p_' + m[1] : null;
   },
   packs: {},
@@ -1344,7 +1363,7 @@ function show(name, quiet) {
   if (name !== current) views[current].leave?.();
   current = name;
   $$('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
-  const tab = { visit: 'explore', earth: 'explore', whatif: 'quiz' }[name] || name;
+  const tab = { visit: 'explore', earth: 'explore', beyond: 'explore', whatif: 'quiz' }[name] || name;
   $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === tab ? 'true' : 'false'));
   if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
   views[name].enter?.(quiet);
@@ -1893,7 +1912,12 @@ views.quiz = (() => {
     { id: 'fq_enceladus', o: [P('enceladus'), P('pluto'), P('mercury')] },
     { id: 'fq_io', o: [P('io'), P('europa'), P('moon')] },
     { id: 'fq_shrink', o: [P('mercury'), P('venus'), P('earth')] },
-    { id: 'fq_star', o: [P('jupiter'), P('mars'), P('venus')] }
+    { id: 'fq_star', o: [P('jupiter'), P('mars'), P('venus')] },
+    { id: 'fq_lightyear', o: [X('How far light travels in one year'), X('A very, very long year'), X('A year on another planet')] },
+    { id: 'fq_nearest', o: [X('Proxima Centauri'), X('Sirius'), X('The Pole Star')] },
+    { id: 'fq_galaxy', o: [X('The Milky Way'), X('Andromeda'), X('The Kuiper belt')] },
+    { id: 'fq_voyager', o: [C('voyager'), C('juno'), C('mangalyaan')] },
+    { id: 'fq_haumea', o: [X('Haumea'), X('Pluto'), X('Ceres')] }
   ];
   const QUIZ = {
     planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: () => `Space Expert ${prefs.name}!` },
@@ -2129,5 +2153,6 @@ function decodeTex(uri, alphaFromGrey) {
 <script src="gas.js"></script>
 <script src="birth.js"></script>
 <script src="indiastory.js"></script>
+<script src="beyond.js"></script>
 </body>
 </html>

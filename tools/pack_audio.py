@@ -1,8 +1,8 @@
 """Bundles some of Nova's voice clips into small script files for the claude.ai copy of the app.
 
 A claude.ai page can hold at most 511 files, and the app already has more than 400. So the newer
-clips (the Did you know? facts, the big moons, the record breakers and the Amazing Facts Quiz) are
-published as bundles of about three clips each: audio/packs/p_<name>.js. The published page sets
+clips (the Did you know? facts, the big moons, the record breakers, the Amazing Facts Quiz and
+Beyond Pluto) are published as bundles of a few clips each: audio/packs/p_<name>.js. The published page sets
 AUDIO_PACKS to true in index.html so Nova's voice fetches a bundle the first time it needs one.
 The folder version keeps using the separate mp3 files and never needs these bundles.
 
@@ -14,7 +14,7 @@ The grouping must match Voice.packOf() in solar-system/index.html.
 import base64, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "solar-system"
-GROUP = re.compile(r"^(?:dyk_([a-z]+)_\d+|m_([a-z]+)|(rec|fq)_.+)$")
+GROUP = re.compile(r"^(?:dyk_([a-z]+)_\d+|m_([a-z]+)|(rec|fq)_.+|nb_([a-z]+)(?:_.*)?)$")
 
 
 def main():
@@ -26,7 +26,8 @@ def main():
     for key in lines:
         m = GROUP.match(key)
         if m:
-            packs.setdefault("p_" + (m.group(1) or m.group(2) or m.group(3)), []).append(key)
+            name = "p_nb_" + m.group(4) if m.group(4) else "p_" + (m.group(1) or m.group(2) or m.group(3))
+            packs.setdefault(name, []).append(key)
     for name, keys in sorted(packs.items()):
         parts = ["(window.AUDIOPACK = window.AUDIOPACK || {});"]
         for key in keys:

@@ -42,6 +42,7 @@ views.explore = (() => {
   { const rr = rng(42); for (const id of ORDER) start[id] = rr() * TAU; }
   { const rr = rng(7); for (const id in MOONS) start[id] = rr() * TAU; }
   const moonLines = {};
+  let hintOn = false;
   let belt, kuiper, comet, sunLightObj;
   const infoSlot = makeSlot();
   const sparks = [];
@@ -140,6 +141,8 @@ views.explore = (() => {
       const ln = moonLines[id], par = MOONS[id][0]; ln.visible = fam === par;
       if (ln.visible) { posOf(par, ln.position); ln.material.color.set(sel === id ? 0xffb52e : 0x8ca0ff); ln.material.opacity = sel === id ? .7 : .3; }
     }
+    const wantHint = !sel && !tour && ctl.goalDist > 470;   // zoomed all the way out: offer to keep going
+    if (wantHint !== hintOn) { hintOn = wantHint; $('#beyondHint').hidden = !wantHint; }
     viewOffset(); ctl.update(dt); r.render(scene, cam);
     drawOverlay(dt);
     if (!info.hidden && sel) drawInfoPlanet();
@@ -315,6 +318,9 @@ views.explore = (() => {
   $('#recsGrid').addEventListener('click', e => { const b = e.target.closest('.rec'); if (!b) return; const [line, id, title] = RECORDS[+b.dataset.i]; stopTour(); select(id, { line, badge: title }); });
   $('#infoVisit').addEventListener('click', () => { if (!sel) return; stopTour(); Sfx.whoosh(); window.visitWorld?.(sel); });
   $('#tourBtn').addEventListener('click', () => { Sfx.tap(); if (tour) stopTour(); else startTour(); });
+  // Beyond Pluto: the zoom-out journey to the stars and galaxies (beyond.js)
+  const goBeyond = () => { stopTour(); closeRecs(); Sfx.whoosh(); show('beyond'); };
+  $('#beyondBtn').addEventListener('click', goBeyond); $('#beyondHint').addEventListener('click', goBeyond);
   window.addEventListener('keydown', e => { if (current !== 'explore' || !ctl) return; if (e.key === '+' || e.key === '=') ctl.zoom(.7); if (e.key === '-') ctl.zoom(1.4); });
 
   function buildStrip() {
