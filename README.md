@@ -44,6 +44,9 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Tab | What Ayansh does | What he learns |
 |---|---|---|
 | Explore | Watches the planets go round the Sun in 3D, taps any of them (or the comet or asteroid belt) to fly there, zooms right in to the surface, or presses **Planet tour** | Each world's size, day, year, moons and a fun fact with a real-world comparison, plus a trick for remembering the order |
+| Explore → **Did you know?** | Taps the gold card on any world's info card to reveal amazing facts one at a time, each read out by Nova | Three more surprising facts for every world, each with a real-world comparison (below) |
+| Explore → the big moons | Flies close to Jupiter, Saturn, Neptune or Pluto and taps a moon, or picks one from the **Meet its big moons** buttons | Io, Europa, Ganymede, Callisto, Titan, Enceladus, Triton and Charon, each with its own facts and voice |
+| Explore → **Records** | Opens the record breakers and taps one to fly there | The hottest, coldest and windiest planets, the biggest volcano, storm and moon, the tallest cliff and more |
 | Explore → **Visit as Ayansh** | Walks and jumps around that world in 3D in his space suit, with the world's real gravity, leaving footprints, and finds 3 or 4 glowing things to tap | What it's like to stand there: the sky, the gravity, the temperature, Valmiki crater on Mercury, the Apollo flag and Vikram lander on the Moon, blue sunsets on Mars, Saturn's rings across the sky, Pluto's heart and more |
 | Explore → Earth → **Explore Earth** | Thirteen activities (below) | How our own planet works |
 | How it began | Follows the story of how the solar system was born, in ten chapters (below), pressing **Later** to move on | Where the Sun and planets came from, and why the inner planets are rocky and the outer ones are giants |
@@ -53,7 +56,25 @@ Everything is in real 3D with real planet pictures made from NASA images: Earth 
 | Day & Night | Spins Earth and watches his home in India move into sunshine or night; then drags the Moon around Earth | Why we have day and night, and why the Moon changes shape |
 | Space race | Races a car, a rocket and a beam of light to the Moon, Mars, the Sun, Jupiter or Neptune | How far away space really is |
 | Missions | Flies ten real spacecraft in 3D (below) | How real space missions work |
-| Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of four games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures) and **What If…?** | Goes over everything, with a star for each first-try answer |
+| Quiz | Every quiz is marked: a question counts when it is right on the first try, **80% is a pass**, and the best mark for each quiz is kept on the menu. Picks one of five games: the **Planet Quiz**, the **Space Adventure Quiz** (10 questions picked at random from 20, about the missions, the worlds and Earth), the **Earth's Story Quiz** (10 questions from 19, about baby Earth, the dinosaurs, the asteroid and the Ice Age, many with pictures of the 3D creatures), the **Amazing Facts Quiz** (10 questions from 16, about the moons, the record breakers and the Did you know? facts) and **What If…?** | Goes over everything, with a star for each first-try answer |
+
+### Did you know?, the big moons and the record breakers
+
+Every world in Explore has a gold **Did you know?** card. It starts as a surprise ("Tap here for 3 amazing facts about Jupiter!") and each tap shows and reads the next fact, for example:
+
+| World | One of its facts |
+|---|---|
+| Mercury | It races round the Sun so fast it could go from Delhi to Mumbai in less than half a minute |
+| Venus | A day there is longer than a year |
+| Earth | Where you live in India, you are spinning at about 1,500 km an hour, faster than a jet plane |
+| Moon | It drifts away from Earth about 4 cm a year, as fast as fingernails grow |
+| Mars | Its giant canyon would stretch from Kashmir to Kanyakumari, and further |
+| Jupiter | About 80 times heavier, and it would have become a star |
+| Pluto | It was named by an 11-year-old girl |
+
+The eight big moons circle their planets in 3D, each with a short faint path. They can be tapped once you are close to their planet, and every planet with big moons has a **Meet its big moons** row on its card. A moon's card has its own facts, voice line, Did you know? facts and a **Next** button that walks through the family.
+
+**Records** (by **Planet tour**) lists ten record breakers. Tapping one flies to that world, puts a gold record badge on its card and Nova explains the record.
 
 ### How it began
 
@@ -135,7 +156,7 @@ Ten imagination questions, each with three choices. After the right answer, a 3D
 - **Settings** in the rail has the explorer's name, **Nova's voice** and **Sounds**. The two buttons beside Nova's words replay or stop what she is saying.
 - The name shows in the title, on buttons and labels, and on the quiz results. Nova's recorded voice can say "Ayansh". For any other name, the greeting is spoken by the device's own voice, and the few lines that mention the name use recordings that leave it out.
 - If a voice file is missing, Nova falls back to the best-sounding voice the browser has.
-- Distances in the Explore view are squeezed so everything fits on one screen; **How big?** shows the true sizes.
+- Distances in the Explore view are squeezed so everything fits on one screen, and the moons are drawn bigger and closer to their planets than they really are; **How big?** shows the true sizes.
 
 ## Changing what Nova says
 

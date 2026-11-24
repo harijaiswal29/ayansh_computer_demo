@@ -99,7 +99,43 @@ canvas.over2d{background:transparent}
 .facts dd{margin:1px 0 0;font-family:var(--display);font-weight:600;font-size:15px;line-height:1.2}
 .info-actions{display:flex;gap:6px;flex-wrap:wrap}
 .info-actions .btn{flex:1 1 120px;min-height:38px;padding:6px 10px;font-size:15px}
-.info-actions #infoVisit{flex-basis:100%}
+.info-actions #infoVisit{flex-basis:100%;order:3}
+.recbadge{margin:4px 0 0;display:inline-flex;align-items:center;gap:5px;padding:2px 10px 2px 7px;border-radius:999px;background:var(--sun);color:#2A1600;font:700 13px var(--display)}
+.recbadge svg{width:16px;height:16px;flex:none}
+/* "Did you know?": tap to reveal one amazing fact after another */
+.dyk{display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;font:inherit;color:var(--star);background:linear-gradient(135deg,rgba(255,181,46,.18),rgba(255,116,66,.08));border:2px solid rgba(255,181,46,.6);border-radius:14px;padding:7px 11px 8px}
+.dyk:hover,.dyk:focus-visible{border-color:var(--sun)}
+.dyk-h{display:flex;align-items:center;gap:6px;font:700 16px var(--display);color:var(--sun)}
+.dyk-h svg{width:19px;height:19px;flex:none}
+.dyk-dots{margin-left:auto;display:flex;gap:4px}
+.dyk-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,181,46,.28)}
+.dyk-dots i.on{background:var(--sun)}
+.dyk-t{font-size:15px;line-height:1.35}
+.dyk:not(.open) .dyk-t{color:var(--dim);font-family:var(--display);font-weight:600}
+.dyk-more{font-size:12px;font-weight:600;color:var(--cyan)}
+.dyk.pop{animation:dykpop .35s ease-out}
+@keyframes dykpop{from{transform:scale(.96)}}
+.moons{display:flex;flex-direction:column;gap:5px}
+.moons-h{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:600}
+.moons-row{display:flex;gap:5px;flex-wrap:wrap}
+.mchip{display:inline-flex;align-items:center;gap:5px;min-height:36px;padding:3px 11px 3px 3px;border-radius:999px;background:var(--deep);border:2px solid var(--line);color:var(--star);font:600 14px var(--display)}
+.mchip img{width:28px;height:28px;flex:none}
+.mchip:hover,.mchip:focus-visible{border-color:var(--cyan)}
+.mchip[aria-pressed="true"]{border-color:var(--sun);color:var(--sun)}
+/* record breakers */
+.info.recs{width:min(390px,48%)}
+.recs-head{display:flex;align-items:center;gap:10px;padding-right:40px}
+.recs-head svg{width:40px;height:40px;flex:none;color:var(--sun);background:var(--deep);border-radius:12px;padding:6px}
+.recs-head h2{font-size:24px;font-weight:700}
+.recs-head p{margin:0;color:var(--dim);font-size:14px}
+.recs-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rec{display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:auto auto auto;column-gap:4px;align-items:center;text-align:left;font:inherit;color:var(--star);background:var(--deep);border:2px solid var(--line);border-radius:12px;padding:6px 6px 6px 9px;min-height:64px}
+.rec:hover,.rec:focus-visible{border-color:var(--sun)}
+.rec .rt{grid-column:1/-1;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--sun);font-weight:700;line-height:1.2}
+.rec b{font:600 15px var(--display);line-height:1.2}
+.rec img{grid-column:2;grid-row:2/4;width:34px;height:34px}
+.rec .rv{font-size:12.5px;color:var(--dim);line-height:1.2}
+#recBtn[aria-pressed="true"]{background:var(--sun);color:#2A1600}
 
 /* Nova's words: one thin strip. Tap the words to open the whole message */
 .caption{grid-area:caption;display:flex;align-items:center;gap:10px;padding:4px var(--gut-r) 4px 12px;background:var(--deep);border-top:1px solid var(--line);min-height:50px}
@@ -314,7 +350,10 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
   @keyframes slideup{from{transform:translateY(30px);opacity:0}}
   .info-head canvas{width:84px;height:84px}
   .info-actions{order:1;margin-top:0}
-  .facts{order:2}
+  .dyk{order:2}
+  .moons{order:3}
+  .facts{order:4}
+  .info.recs{width:auto}
   .info-actions .btn{min-height:42px;padding:6px 12px;font-size:16px}
   .info-head h2{font-size:28px}
   .facts dd{font-size:15px}
@@ -398,6 +437,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
       <div class="over top">
         <div class="cluster">
           <button class="btn small go" id="tourBtn" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Planet tour</span></button>
+          <button class="btn small" id="recBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9 17h6"/></svg><span>Records</span></button>
           <span class="chip">Earth years <b id="yearCount">0</b></span>
         </div>
         <div class="cluster">
@@ -418,14 +458,21 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
         <button class="x" id="infoClose" type="button" aria-label="Close and zoom out">&times;</button>
         <div class="info-head">
           <canvas id="infoCv" width="240" height="240" aria-hidden="true"></canvas>
-          <div style="min-width:0"><p class="kind" id="infoKind"></p><h2 id="infoName"></h2><p class="nick" id="infoNick"></p></div>
+          <div style="min-width:0"><p class="kind" id="infoKind"></p><h2 id="infoName"></h2><p class="nick" id="infoNick"></p><p class="recbadge" id="infoRec" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9 17h6"/></svg><span></span></p></div>
         </div>
         <dl class="facts" id="infoFacts"></dl>
+        <button class="dyk" id="infoDyk" type="button" hidden><span class="dyk-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Did you know?<span class="dyk-dots" id="dykDots"></span></span><span class="dyk-t" id="dykText"></span><span class="dyk-more" id="dykMore"></span></button>
+        <div class="moons" id="infoMoons" hidden><span class="moons-h" id="infoMoonsH"></span><div class="moons-row" id="infoMoonsRow"></div></div>
         <div class="info-actions">
           <button class="btn" id="infoHear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>Hear again</button>
           <button class="btn go" id="infoVisit" type="button"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M14 3c4 3 5 8 4 13h-8C9 11 10 6 14 3z"/><path d="M10 16l-3 4h4M18 16l3 4h-4M12 22l2 3 2-3"/></svg><span>Visit as Ayansh</span></button>
           <button class="btn cyan" id="infoNext" type="button">Next</button>
         </div>
+      </aside>
+      <aside class="info recs" id="recs" hidden aria-label="Record breakers of the solar system">
+        <button class="x" id="recsClose" type="button" aria-label="Close">&times;</button>
+        <div class="recs-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9 17h6"/></svg><div><h2>Record breakers</h2><p>Tap one to fly there</p></div></div>
+        <div class="recs-grid" id="recsGrid"></div>
       </aside>
     </section>
 
@@ -588,6 +635,7 @@ input.yr{width:min(300px,44vw);accent-color:var(--sun);height:34px;margin:0}
             <button class="qpick" type="button" data-q="planets"><span class="qicon" id="qiPlanets"></span><b>Planet Quiz</b><span class="what">10 questions about the Sun, planets and Moon <span class="best" data-best="planets" hidden></span></span></button>
             <button class="qpick" type="button" data-q="adventure"><span class="qicon" id="qiAdv"></span><b>Space Adventure Quiz</b><span class="what">Spacecraft, Earth and everything we explored <span class="best" data-best="adventure" hidden></span></span></button>
             <button class="qpick" type="button" data-q="earth"><span class="qicon" id="qiEarth"></span><b>Earth's Story Quiz</b><span class="what">Baby Earth, dinosaurs, the asteroid and the Ice Age <span class="best" data-best="earth" hidden></span></span></button>
+            <button class="qpick" type="button" data-q="facts"><span class="qicon" id="qiFacts"></span><b>Amazing Facts Quiz</b><span class="what">Moons, record breakers and Did you know? facts <span class="best" data-best="facts" hidden></span></span></button>
             <button class="qpick" type="button" data-q="whatif"><span class="qicon" id="qiWhat"></span><b>What If…?</b><span class="what">Big imagination questions, then watch what happens <span class="best" data-best="whatif" hidden></span></span></button>
           </div>
         </div>
@@ -739,8 +787,26 @@ const BODIES = {
   belt:    { name: 'Asteroid belt', kind: 'Between Mars and Jupiter', nick: 'Millions of space rocks', size: .02, thumbOnly: true,
              facts: [['Where', 'Between Mars and Jupiter'], ['Made of', 'Rock and metal'], ['Biggest one', 'Ceres, a dwarf planet'], ['How many', 'Millions!']] },
   comet:   { name: 'Comet', kind: 'Visitor from far away', nick: 'A dirty space snowball', size: .006, thumbOnly: true,
-             facts: [['Made of', 'Ice, dust and rock'], ['Tail', 'Points away from the Sun'], ['Tail length', 'Millions of km'], ['Famous one', "Halley's Comet, back in 2061"]] }
+             facts: [['Made of', 'Ice, dust and rock'], ['Tail', 'Points away from the Sun'], ['Tail length', 'Millions of km'], ['Famous one', "Halley's Comet, back in 2061"]] },
+  // the big moons: they circle their planets in the 3D explorer (see MOONS in explore3d.js)
+  io:        { name: 'Io', kind: 'Moon of Jupiter', nick: 'The volcano moon', parent: 'jupiter', line: 'm_io', size: .006, spin: .05, color: [222, 196, 92],
+               facts: [['Size', 'A bit bigger than our Moon'], ['Trip around Jupiter', '1¾ Earth days'], ['Volcanoes', 'About 400 erupting'], ['Colours', 'Yellow sulphur']] },
+  europa:    { name: 'Europa', kind: 'Moon of Jupiter', nick: 'An ice ball with a hidden ocean', parent: 'jupiter', line: 'm_europa', size: .006, spin: .05, color: [214, 200, 176],
+               facts: [['Size', 'A bit smaller than our Moon'], ['Trip around Jupiter', '3½ Earth days'], ['Outside', 'A shell of ice'], ['Underneath', 'A salty ocean']] },
+  ganymede:  { name: 'Ganymede', kind: 'Moon of Jupiter', nick: 'The biggest moon of all', parent: 'jupiter', line: 'm_ganymede', size: .006, spin: .05, color: [150, 140, 125],
+               facts: [['Size', 'Bigger than Mercury!'], ['Trip around Jupiter', '7 Earth days'], ['Special power', 'Its own magnetic field'], ['Inside', 'An ocean under the ice']] },
+  callisto:  { name: 'Callisto', kind: 'Moon of Jupiter', nick: 'The most cratered moon', parent: 'jupiter', line: 'm_callisto', size: .006, spin: .05, color: [110, 100, 88],
+               facts: [['Size', 'Almost as big as Mercury'], ['Trip around Jupiter', '17 Earth days'], ['Ground', 'Craters everywhere'], ['Age of its ground', 'Billions of years']] },
+  titan:     { name: 'Titan', kind: 'Moon of Saturn', nick: 'The moon with thick air', parent: 'saturn', line: 'm_titan', size: .006, spin: .05, color: [217, 162, 74], atmo: [255, 190, 110],
+               facts: [['Size', 'Bigger than Mercury'], ['Trip around Saturn', '16 Earth days'], ['Air', 'Thicker than on Earth'], ['Lakes and rain', 'Liquid methane gas']] },
+  enceladus: { name: 'Enceladus', kind: 'Moon of Saturn', nick: 'The moon with ice fountains', parent: 'saturn', line: 'm_enceladus', size: .006, spin: .05, color: [236, 242, 250],
+               facts: [['Size', 'About 500 km across'], ['Trip around Saturn', '1⅓ Earth days'], ['Ground', 'The whitest ice'], ['Special', 'Fountains of water']] },
+  triton:    { name: 'Triton', kind: 'Moon of Neptune', nick: 'The moon that goes backwards', parent: 'neptune', line: 'm_triton', size: .006, spin: -.05, color: [222, 200, 190],
+               facts: [['Size', 'About ¾ of our Moon'], ['Trip around Neptune', '6 days, backwards!'], ['Temperature', 'About −235 °C'], ['Ground', 'Frozen nitrogen']] },
+  charon:    { name: 'Charon', kind: 'Moon of Pluto', nick: "Pluto's dance partner", parent: 'pluto', line: 'm_charon', size: .006, spin: .05, color: [160, 155, 148],
+               facts: [['Size', 'Half as wide as Pluto'], ['Trip around Pluto', '6 Earth days'], ['Made of', 'Ice and rock'], ['North pole', 'A reddish cap']] }
 };
+const MOON_IDS = ['io', 'europa', 'ganymede', 'callisto', 'titan', 'enceladus', 'triton', 'charon'];
 const ORDER = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'belt', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'comet'];
 const TOUR = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'belt', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
 
@@ -1789,10 +1855,30 @@ views.quiz = (() => {
     { id: 'eq_oxygen', o: [X('Tiny living things in the sea'), X('Volcanoes'), X('The Moon')] },
     { id: 'eq_mexico', o: [X('In the sea near Mexico'), X('In India'), X('On the Moon')] }
   ];
+  // Amazing Facts Quiz: from the "Did you know?" facts, the big moons and the record breakers in Explore
+  const FACT_QS = [
+    { id: 'fq_ganymede', o: [P('ganymede'), P('moon'), P('titan')] },
+    { id: 'fq_venusday', o: [P('venus'), P('earth'), P('jupiter')] },
+    { id: 'fq_europa', o: [P('europa'), P('io'), P('moon')] },
+    { id: 'fq_wind', o: [P('neptune'), P('earth'), P('mercury')] },
+    { id: 'fq_moons', o: [P('saturn'), P('earth'), P('mars')] },
+    { id: 'fq_titanfly', o: [P('titan'), P('moon'), P('io')] },
+    { id: 'fq_triton', o: [P('triton'), P('moon'), P('europa')] },
+    { id: 'fq_shooting', o: [X('Bits of comet dust burning up in our air'), X('Stars falling down'), X('Fireworks in space')] },
+    { id: 'fq_sunwhite', o: [X('White'), X('Yellow'), X('Green')] },
+    { id: 'fq_moonaway', o: [X('Moving away from Earth'), X('Coming closer to Earth'), X('Getting bigger')] },
+    { id: 'fq_cliff', o: [X('On Miranda, a moon of Uranus'), X('On our Moon'), X('On Mount Everest')] },
+    { id: 'fq_pluto', o: [X('An 11-year-old girl'), X('A king'), X('A robot')] },
+    { id: 'fq_enceladus', o: [P('enceladus'), P('pluto'), P('mercury')] },
+    { id: 'fq_io', o: [P('io'), P('europa'), P('moon')] },
+    { id: 'fq_shrink', o: [P('mercury'), P('venus'), P('earth')] },
+    { id: 'fq_star', o: [P('jupiter'), P('mars'), P('venus')] }
+  ];
   const QUIZ = {
     planets: { intro: 'quiz_intro', end: 'quiz_end', make: () => PLANET_QS, title: () => `Space Expert ${prefs.name}!` },
     adventure: { intro: 'aq_intro', end: 'aq_end', make: () => shuffle(ADV_QS.slice()).slice(0, 10), title: () => 'Space Adventure Champion!' },
-    earth: { intro: 'eq_intro', end: 'eq_end', make: () => { window.histIcons?.(); return shuffle(EARTH_QS.slice()).slice(0, 10); }, title: () => `Time Traveller ${prefs.name}!` }
+    earth: { intro: 'eq_intro', end: 'eq_end', make: () => { window.histIcons?.(); return shuffle(EARTH_QS.slice()).slice(0, 10); }, title: () => `Time Traveller ${prefs.name}!` },
+    facts: { intro: 'fq_intro', end: 'fq_end', make: () => shuffle(FACT_QS.slice()).slice(0, 10), title: () => `Fact Finder ${prefs.name}!` }
   };
   // marking: a question counts when it is right on the first try, and 80% is a pass
   const PASS = .8;
@@ -1913,6 +1999,7 @@ views.quiz = (() => {
     $('#qiPlanets').innerHTML = `<img src="${THUMB.saturn}" alt="">`;
     $('#qiAdv').innerHTML = `<img src="${(window.CRAFT_ICON || {}).chandrayaan || THUMB.moon}" alt="">`;
     $('#qiWhat').innerHTML = `<img src="${THUMB.earth}" alt="">`;
+    window.moonMapsReady?.then(() => { $('#qiFacts').innerHTML = `<img src="${THUMB.io || THUMB.jupiter}" alt="">`; });
     drawBest(); window.histIcons?.(); $('#qiEarth').innerHTML = `<img src="${(window.HIST_ICON || {}).trex || THUMB.earth}" alt="">`;
   }, 0));
   return {

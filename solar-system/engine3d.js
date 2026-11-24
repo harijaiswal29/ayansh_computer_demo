@@ -170,9 +170,10 @@ const E3 = (() => {
     earth: { earth: true }, moon: { map: 'moon', bump: 'moon_bump', bumpScale: .025 }, mars: { map: 'mars', bump: 'mars_bump', bumpScale: .02, atmo: [0xff9a70, .45] },
     jupiter: { map: 'jupiter', atmo: [0xffe2c0, .25] }, saturn: { map: 'saturn', rings: 'saturn', tilt: .47, atmo: [0xffeacc, .2] }, uranus: { map: 'uranus', rings: 'uranus', tilt: 1.71, atmo: [0xbff6ff, .5] },
     neptune: { map: 'neptune', atmo: [0x7aa4ff, .55] }, pluto: { map: 'pluto' }, ceres: { map: 'ceres' }, io: { map: 'io' }, europa: { map: 'europa' }, ganymede: { map: 'ganymede' },
-    titan: { color: 0xd9a24a, atmo: [0xffb35a, 1.2] }, charon: { map: 'moon', tint: 0x9a948c }, callisto: { map: 'moon', tint: 0x7a6e60 }
+    titan: { color: 0xd9a24a, atmo: [0xffb35a, 1.2] }, charon: { map: 'moon', tint: 0x9a948c }, callisto: { map: 'moon', tint: 0x7a6e60 },
+    enceladus: { map: 'moon', tint: 0xeef4ff, lift: 0x5a6676 }, triton: { map: 'moon', tint: 0xf2ddd2 }
   };
-  const BASE = { mercury: 0x9a9088, venus: 0xd9b070, earth: 0x3060b0, moon: 0x9a9a96, mars: 0xb5603a, jupiter: 0xc9a27a, saturn: 0xd9c08a, uranus: 0x9ad8e0, neptune: 0x4a70d8, pluto: 0xc8a080, ceres: 0x77706a, io: 0xd8c860, europa: 0xc8b8a0, ganymede: 0x8a8070 };
+  const BASE = { mercury: 0x9a9088, venus: 0xd9b070, earth: 0x3060b0, moon: 0x9a9a96, mars: 0xb5603a, jupiter: 0xc9a27a, saturn: 0xd9c08a, uranus: 0x9ad8e0, neptune: 0x4a70d8, pluto: 0xc8a080, ceres: 0x77706a, io: 0xd8c860, europa: 0xc8b8a0, enceladus: 0xe8eef8, triton: 0xd8c8c0, callisto: 0x6e6458, charon: 0x9a948c, ganymede: 0x8a8070 };
   function planet(id, r, opts = {}) {
     const L = LOOK[id] || {}, g = new T.Group(), spin = new T.Group();
     g.add(spin); g.spin = spin; g.radius = r; g.pid = id;
@@ -187,7 +188,7 @@ const E3 = (() => {
     if (L.earth) mat = earthMaterial();
     else {
       mat = new T.MeshStandardMaterial({ color: L.map ? 0xffffff : (L.color || 0x888888), roughness: L.rough ?? .95, metalness: 0 });
-      if (L.map) { mat.color.set(BASE[id] || 0x888888); const t = tex(L.map); mat.map = null; t.ready.then(() => { mat.map = t; mat.color.set(L.tint || 0xffffff); mat.needsUpdate = true; }); }
+      if (L.map) { mat.color.set(BASE[id] || 0x888888); const t = tex(L.map); mat.map = null; t.ready.then(() => { mat.map = t; mat.color.set(L.tint || 0xffffff); if (L.lift) { mat.emissive.set(L.lift); mat.emissiveMap = t; } mat.needsUpdate = true; }); }
       if (L.bump && !opts.noBump) { const b = tex(L.bump); b.ready.then(() => { mat.bumpMap = b; mat.bumpScale = (L.bumpScale || .02) * r; mat.needsUpdate = true; }); }
     }
     const body = new T.Mesh(new T.SphereGeometry(r, seg, seg / 2), mat); spin.add(body); g.body = body;

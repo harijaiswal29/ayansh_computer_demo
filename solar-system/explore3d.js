@@ -8,9 +8,40 @@ views.explore = (() => {
   const RAD = { sun: 8.5, mercury: 1.2, venus: 1.9, earth: 2, moon: .62, mars: 1.5, jupiter: 4.8, saturn: 4, uranus: 2.8, neptune: 2.7, pluto: .7 };
   const SPIN = { sun: .04, mercury: .05, venus: -.03, earth: .35, moon: .02, mars: .34, jupiter: .8, saturn: .75, uranus: -.5, neptune: .55, pluto: .06 };
   const HOME = { dist: 186, pitch: .58, yaw: .35 };
+  // the big moons: [planet, distance from the planet's centre, seconds for one trip round (minus: it goes backwards)]
+  const MOONS = { io: ['jupiter', 6.6, 8], europa: ['jupiter', 8.3, 12], ganymede: ['jupiter', 10.4, 18], callisto: ['jupiter', 12.8, 28],
+    enceladus: ['saturn', 10.2, 7], titan: ['saturn', 13.4, 24], triton: ['neptune', 5.4, -15], charon: ['pluto', 1.9, 13] };
+  Object.assign(RAD, { io: .6, europa: .52, ganymede: .84, callisto: .78, titan: .8, enceladus: .24, triton: .44, charon: .34 });
+  Object.assign(SPIN, { io: .06, europa: .05, ganymede: .04, callisto: .03, titan: .03, enceladus: .08, triton: -.05, charon: .05 });
+  const MTILT = { saturn: .47, neptune: .35 };   // Saturn's moons go round in the same tilted plane as its rings
+  const FAMILY = { earth: ['moon'] };
+  for (const m in MOONS) (FAMILY[MOONS[m][0]] = FAMILY[MOONS[m][0]] || []).push(m);
+  const parentOf = id => MOONS[id] ? MOONS[id][0] : id === 'moon' ? 'earth' : null;
+  const nextOf = id => {
+    const m = MOONS[id];
+    if (m) { const fam = FAMILY[m[0]], i = fam.indexOf(id); return i < fam.length - 1 ? fam[i + 1] : m[0]; }
+    return ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
+  };
+  const shortName = id => BODIES[id].name.replace('Asteroid belt', 'Asteroids');
+  const aboutName = id => ({ sun: 'the Sun', moon: 'the Moon', belt: 'the asteroid belt', comet: 'comets' })[id] || BODIES[id].name;
+  // record breakers: [voice line, where to fly, the record, a short number]
+  const RECORDS = [
+    ['rec_hot', 'venus', 'Hottest planet', 'About 465 °C'],
+    ['rec_cold', 'uranus', 'Coldest planet', 'About −224 °C'],
+    ['rec_wind', 'neptune', 'Fastest winds', '2,000 km an hour'],
+    ['rec_volcano', 'mars', 'Biggest volcano', 'Olympus Mons'],
+    ['rec_storm', 'jupiter', 'Biggest storm', 'The Great Red Spot'],
+    ['rec_spin', 'jupiter', 'Shortest day', 'Under 10 hours'],
+    ['rec_moons', 'saturn', 'Most moons', 'More than 270'],
+    ['rec_moonbig', 'ganymede', 'Biggest moon', 'Wider than Mercury'],
+    ['rec_cliff', 'uranus', 'Tallest cliff', 'On its moon Miranda'],
+    ['rec_dwarf', 'pluto', 'Biggest dwarf planet', '2,377 km wide']
+  ];
   let r, scene, cam, ctl, built = false, W = 0, H = 0, t = 0, simT = 0, speed = 1, names = true, sel = null, tour = null, lastYrs = -1, offKey = '';
   const P = {}, orbitLines = {}, start = {};
   { const rr = rng(42); for (const id of ORDER) start[id] = rr() * TAU; }
+  { const rr = rng(7); for (const id in MOONS) start[id] = rr() * TAU; }
+  const moonLines = {};
   let belt, kuiper, comet, sunLightObj;
   const infoSlot = makeSlot();
   const sparks = [];
@@ -34,6 +65,14 @@ views.explore = (() => {
       orbitLines[id] = line; scene.add(line);
     }
     P.moon = E3.planet('moon', RAD.moon, { seg: 64 }); scene.add(P.moon);
+    // the big moons, each with a faint path round its planet that shows when you visit that family
+    for (const id in MOONS) {
+      P[id] = E3.planet(id, RAD[id], { seg: 48 }); scene.add(P[id]);
+      const Rm = MOONS[id][1], pts = [];
+      for (let i = 0; i <= 128; i++) { const a = i / 128 * TAU; pts.push(new T.Vector3(Math.cos(a) * Rm, 0, -Math.sin(a) * Rm)); }
+      const ln = new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0x8ca0ff, transparent: true, opacity: .3, depthWrite: false }));
+      ln.rotation.z = MTILT[MOONS[id][0]] || 0; ln.visible = false; moonLines[id] = ln; scene.add(ln);
+    }
     // asteroid belt and Kuiper belt: thousands of little rocks
     const dots = (n, r0, r1, thick, size, color, opacity) => {
       const pos = new Float32Array(n * 3), rr = rng(n);
@@ -55,6 +94,8 @@ views.explore = (() => {
   function posOf(id, out) {
     if (id === 'sun') return out.set(0, 0, 0);
     if (id === 'moon') { posOf('earth', out); const a = start.moon + simT * TAU / 4; return out.add(wp.set(Math.cos(a) * 4.6, Math.sin(a) * .5, -Math.sin(a) * 4.6)); }
+    const m = MOONS[id];
+    if (m) { posOf(m[0], out); const a = start[id] + simT * TAU / m[2], c = Math.cos(a) * m[1], tl = MTILT[m[0]] || 0; return out.add(wp.set(c * Math.cos(tl), c * Math.sin(tl), -Math.sin(a) * m[1])); }
     if (id === 'comet') return out.copy(comet.head.position);
     if (id === 'belt') return out.set(0, 0, 0);
     const a = start[id] + simT * orbitSpeed(BODIES[id].period), R = ORB[id];
@@ -94,6 +135,11 @@ views.explore = (() => {
     const toCam = cam.position.clone().sub(mid), zAx = toCam.sub(dir.clone().multiplyScalar(toCam.dot(dir))).normalize(), yAx = new T.Vector3().crossVectors(zAx, dir);
     c.tail.position.copy(mid); c.tail.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(dir, yAx, zAx)); c.tail.scale.set(len, len * .16, 1);
     for (const id in orbitLines) { const m = orbitLines[id].material; m.color.set(sel === id ? 0xffb52e : 0x8ca0ff); m.opacity = sel === id ? .75 : id === 'pluto' ? .12 : .2; }
+    const fam = sel && (FAMILY[sel] ? sel : parentOf(sel));
+    for (const id in moonLines) {
+      const ln = moonLines[id], par = MOONS[id][0]; ln.visible = fam === par;
+      if (ln.visible) { posOf(par, ln.position); ln.material.color.set(sel === id ? 0xffb52e : 0x8ca0ff); ln.material.opacity = sel === id ? .7 : .3; }
+    }
     viewOffset(); ctl.update(dt); r.render(scene, cam);
     drawOverlay(dt);
     if (!info.hidden && sel) drawInfoPlanet();
@@ -121,10 +167,15 @@ views.explore = (() => {
       posOf(id, v); const p = E3.toScreen(v, cam, W, H), rad = id === 'comet' ? .35 : RAD[id] * (BODIES[id].rings ? (id === 'saturn' ? 2.27 : 2) : 1);
       SP[id] = { x: p.x, y: p.y, r: Math.max(2, screenR(v, rad)), ok: p.front && !hidden(v, id) };
     }
+    for (const id in MOONS) {
+      const par = MOONS[id][0], near = sel === id || sel === par || parentOf(sel) === par || (SP[par] && SP[par].r > 30);
+      posOf(id, v); const p = E3.toScreen(v, cam, W, H);
+      SP[id] = { x: p.x, y: p.y, r: Math.max(2, screenR(v, RAD[id])), ok: near && p.front && !hidden(v, id) };
+    }
     if (names) {
       ctx.font = '600 13px Fredoka, "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       const placed = [];
-      for (const id of new Set([sel, 'earth', 'sun', 'jupiter', 'saturn', 'mars', 'venus', 'mercury', 'uranus', 'neptune', 'pluto', 'moon', 'comet'])) {
+      for (const id of new Set([sel, 'earth', 'sun', 'jupiter', 'saturn', 'mars', 'venus', 'mercury', 'uranus', 'neptune', 'pluto', 'moon', 'comet', ...MOON_IDS])) {
         const q = SP[id]; if (!id || !q || !q.ok || q.r > 140) continue;
         if (id === 'moon' && SP.earth && SP.earth.r < 14) continue;
         const y = q.y + q.r * (id === 'saturn' ? .55 : 1) + 6, tw = ctx.measureText(BODIES[id].name).width + 10, box = [q.x - tw / 2, y - 1, tw, 17];
@@ -169,24 +220,53 @@ views.explore = (() => {
     const b = BODIES[id];
     $('#infoKind').textContent = b.kind; $('#infoName').textContent = b.name; $('#infoNick').textContent = b.nick;
     $('#infoFacts').innerHTML = b.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
-    const nextId = ORDER[(ORDER.indexOf(id) + 1) % ORDER.length];
-    $('#infoNext').textContent = 'Next: ' + BODIES[nextId].name;
+    $('#infoNext').textContent = 'Next: ' + shortName(nextOf(id));
     $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : `Visit as ${prefs.name}`;
-    info.hidden = false; offKey = '';
-    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === id ? 'true' : 'false'));
-    const tb = $(`.thumb[data-id="${id}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+    $('#infoVisit').hidden = !!MOONS[id];
+    const badge = $('#infoRec'); badge.hidden = !opts.badge; if (opts.badge) badge.lastChild.textContent = opts.badge;
+    closeRecs(); setDyk(id); setFamily(id);
+    info.hidden = false; offKey = ''; info.scrollTop = 0;
+    const tid = MOONS[id] ? MOONS[id][0] : id;
+    $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === tid ? 'true' : 'false'));
+    const tb = $(`.thumb[data-id="${tid}"]`); if (tb) tb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
     if (id === 'belt') { ctl.follow = null; ctl.goal.set(0, 0, 0); ctl.goalDist = 115; ctl.goalPitch = .9; ctl.min = 3; }
     else {
       ctl.follow = g => posOf(id, g);
       const rad = id === 'comet' ? 1.2 : RAD[id];
-      ctl.min = rad * (id === 'sun' ? 2.2 : 1.9); ctl.goalDist = rad * (b.rings ? 7.5 : id === 'sun' ? 4.2 : 4.4); ctl.goalPitch = b.rings ? .38 : .22;
+      ctl.min = rad * (id === 'sun' ? 2.2 : 1.9); ctl.goalDist = MOONS[id] ? Math.min(rad * 6, (MOONS[id][1] - RAD[MOONS[id][0]]) * .85) : rad * (b.rings ? 7.5 : id === 'sun' ? 4.2 : 4.4);   // a moon's camera stays outside its planet ctl.goalPitch = b.rings ? .38 : .22;
       // come in from the sunny side, a little to one side so you can see day turning into night
       if (id !== 'sun') { const p = posOf(id, new T.Vector3()); const ys = Math.atan2(-p.x, -p.z); let dy = ys + .75 - ctl.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); ctl.goalYaw = ctl.yaw + dy; }
     }
     ctl.retarget();
     Sfx.whoosh();
-    if (!opts.silent) Voice.say(id, opts.done);
+    if (!opts.silent) Voice.say(opts.line || b.line || id, opts.done);
   }
+  // "Did you know?": the card starts as a surprise, and each tap shows and reads the next amazing fact
+  let dyk = { list: [], i: -1 };
+  function setDyk(id) {
+    const list = []; for (let n = 1; window.LINES && LINES[`dyk_${id}_${n}`]; n++) list.push(`dyk_${id}_${n}`);
+    dyk = { list, i: -1 }; $('#infoDyk').hidden = !list.length; showDyk();
+  }
+  function showDyk() {
+    const open = dyk.i >= 0, n = dyk.list.length;
+    $('#infoDyk').classList.toggle('open', open);
+    $('#dykText').textContent = open ? LINES[dyk.list[dyk.i]].text : `Tap here for ${n} amazing facts about ${aboutName(sel)}!`;
+    $('#dykMore').textContent = open ? (dyk.i < n - 1 ? `Tap for another fact (${dyk.i + 1} of ${n})` : 'Tap to hear them again') : '';
+    $('#dykDots').innerHTML = dyk.list.map((_, k) => `<i class="${k <= dyk.i ? 'on' : ''}"></i>`).join('');
+  }
+  // a planet's big moons, or a moon's family, as little buttons
+  function setFamily(id) {
+    const par = parentOf(id), host = par || id, fam = FAMILY[host], box = $('#infoMoons');
+    box.hidden = !fam; if (!fam) return;
+    $('#infoMoonsH').textContent = host === 'earth' ? (par ? 'Earth and its Moon' : 'Meet its Moon') : par ? `${BODIES[host].name} and its big moons` : fam.length > 1 ? 'Meet its big moons' : 'Meet its big moon';
+    $('#infoMoonsRow').innerHTML = (par ? [host, ...fam] : fam).map(m => `<button class="mchip" type="button" data-id="${m}" aria-pressed="${m === id}">${THUMB[m] ? `<img src="${THUMB[m]}" alt="">` : ''}${BODIES[m].name}</button>`).join('');
+  }
+  function openRecs() {
+    stopTour(); closeInfo();
+    $('#recsGrid').innerHTML = RECORDS.map(([, id, title, value], i) => `<button class="rec" type="button" data-i="${i}"><span class="rt">${title}</span><b>${BODIES[id].name}</b><span class="rv">${value}</span>${THUMB[id] ? `<img src="${THUMB[id]}" alt="">` : ''}</button>`).join('');
+    $('#recs').hidden = false; $('#recs').scrollTop = 0; $('#recBtn').setAttribute('aria-pressed', 'true'); Sfx.tap(); Voice.say('rec_intro');
+  }
+  function closeRecs() { $('#recs').hidden = true; $('#recBtn').setAttribute('aria-pressed', 'false'); }
   function closeInfo() {
     sel = null; info.hidden = true; offKey = ''; ctl.follow = null; ctl.goal.set(0, 0, 0); ctl.goalDist = HOME.dist; ctl.goalPitch = HOME.pitch; ctl.min = 3; ctl.retarget();
     $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', 'false'));
@@ -221,8 +301,18 @@ views.explore = (() => {
   $('#zoomIn').addEventListener('click', () => { ctl.zoom(.55); Sfx.tap(); });
   $('#zoomOut').addEventListener('click', () => { ctl.zoom(1.8); Sfx.tap(); });
   $('#infoClose').addEventListener('click', () => { stopTour(); Voice.stop(); closeInfo(); Sfx.tap(); });
-  $('#infoHear').addEventListener('click', () => { if (sel) { Sfx.tap(); Voice.say(sel); } });
-  $('#infoNext').addEventListener('click', () => { stopTour(); select(ORDER[(ORDER.indexOf(sel) + 1) % ORDER.length]); });
+  $('#infoHear').addEventListener('click', () => { if (sel) { Sfx.tap(); Voice.say(BODIES[sel].line || sel); } });
+  $('#infoNext').addEventListener('click', () => { stopTour(); select(nextOf(sel)); });
+  $('#infoDyk').addEventListener('click', () => {
+    if (!dyk.list.length) return; stopTour();
+    dyk.i = (dyk.i + 1) % dyk.list.length; showDyk(); Sfx.twinkle();
+    const el = $('#infoDyk'); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    Voice.say(dyk.list[dyk.i]);
+  });
+  $('#infoMoonsRow').addEventListener('click', e => { const b = e.target.closest('.mchip'); if (b && b.dataset.id !== sel) { stopTour(); select(b.dataset.id); } });
+  $('#recBtn').addEventListener('click', () => { if ($('#recs').hidden) openRecs(); else { closeRecs(); Voice.stop(); Sfx.tap(); } });
+  $('#recsClose').addEventListener('click', () => { closeRecs(); Voice.stop(); Sfx.tap(); });
+  $('#recsGrid').addEventListener('click', e => { const b = e.target.closest('.rec'); if (!b) return; const [line, id, title] = RECORDS[+b.dataset.i]; stopTour(); select(id, { line, badge: title }); });
   $('#infoVisit').addEventListener('click', () => { if (!sel) return; stopTour(); Sfx.whoosh(); window.visitWorld?.(sel); });
   $('#tourBtn').addEventListener('click', () => { Sfx.tap(); if (tour) stopTour(); else startTour(); });
   window.addEventListener('keydown', e => { if (current !== 'explore' || !ctl) return; if (e.key === '+' || e.key === '=') ctl.zoom(.7); if (e.key === '-') ctl.zoom(1.4); });
@@ -233,7 +323,35 @@ views.explore = (() => {
   }
   return {
     frame, layout, buildStrip, select, stopTour,
+    spot: id => SP[id],   // where a body is on screen (used by the tests)
     enter(quiet) { if (built) E3.attach(ov); layout(); if (!quiet) intro('explore', 'explore_intro'); },
-    leave() { stopTour(); }
+    leave() { stopTour(); closeRecs(); }
   };
 })();
+
+// pictures of the big moons for the info card, the moon buttons and the quiz: real maps where we have them,
+// our Moon's map tinted for the others, and a hazy orange ball for Titan
+window.moonMapsReady = new Promise(done => readyHooks.push(async () => {
+  try {
+    for (const id of ['io', 'europa', 'ganymede']) {
+      await E3.loadScript('tex/' + id + '.js');
+      if (window.TEXDATA && TEXDATA[id]) TEX[id] = await decodeTex(TEXDATA[id]);
+    }
+    const tint = (src, id, k) => {
+      const s = TEX[src]; if (!s) return;
+      const d = new Uint8ClampedArray(s.data.length);
+      for (let i = 0; i < d.length; i += 4) { d[i] = s.data[i] * k[0]; d[i + 1] = s.data[i + 1] * k[1]; d[i + 2] = s.data[i + 2] * k[2]; d[i + 3] = 255; }
+      TEX[id] = { w: s.w, h: s.h, data: d };
+    };
+    tint('moon', 'callisto', [.7, .62, .52]); tint('moon', 'charon', [.86, .82, .78]); tint('moon', 'triton', [1.18, 1.04, .98]); tint('moon', 'enceladus', [1.55, 1.62, 1.75]);
+    const w = 128, h = 64, d = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const a = x / w * TAU, lat = y / h, n = fbm(Math.cos(a) * 1.5 + 3, Math.sin(a) * 1.5 + 3, lat * 4, 3) - .5;
+      const k = .9 + .05 * Math.sin(lat * 20) + n * .16 - (lat < .16 ? (.16 - lat) * 2.4 : 0), i = (y * w + x) * 4;
+      d[i] = 228 * k; d[i + 1] = 158 * k; d[i + 2] = 70 * k; d[i + 3] = 255;
+    }
+    TEX.titan = { w, h, data: d };
+  } catch (e) { console.error(e); }
+  for (const id of MOON_IDS) THUMB[id] = renderThumb(id);
+  done();
+}));
