@@ -1179,7 +1179,11 @@ const Sfx = {
 };
 
 /* ================================================================ Nova's voice
-   Recorded neural voice clips in audio/<id>.mp3. If a clip cannot play, the browser's best-sounding voice reads the line instead. */
+   Recorded neural voice clips in audio/<id>.mp3. If a clip cannot play, the browser's best-sounding voice reads the line instead.
+   A claude.ai page can hold only 511 files, so the copy published there gets the newer clips (Did you know? facts, the big moons,
+   the records and the Amazing Facts Quiz) in small bundles of about three clips, made by tools/pack_audio.py. Publishing switches
+   AUDIO_PACKS on; the folder version plays the separate mp3 files. */
+const AUDIO_PACKS = false;
 const Voice = {
   audio: new Audio(), busy: false, cur: null, token: 0, words: [], marks: [], raf: 0, fallback: false, errors: 0, lastId: null,
   init() {
@@ -1211,9 +1215,26 @@ const Voice = {
     if (!prefs.voice) { const ms = 1200 + this.line(id).text.length * 45; this.timer = setTimeout(() => this.finish(tok), ms); return; }
     this.busy = true; $('#caption').classList.add('talking');
     if (this.fallback || id === '@') { this.speakTTS(id, tok); return; }
+    const pk = this.packOf(id);
+    if (pk && !(window.AUDIOPACK && AUDIOPACK[id])) { this.pack(pk).then(() => { if (tok === this.token) this.play(id, tok); }); return; }
+    this.play(id, tok);
+  },
+  // which bundle holds a clip (only on the claude.ai copy)
+  packOf(id) {
+    if (!AUDIO_PACKS) return null;
+    let m = /^(?:dyk_([a-z]+)_\d+|m_([a-z]+))$/.exec(id);
+    if (m) return 'p_' + (m[1] || m[2]);
+    m = /^(rec|fq)_/.exec(id); return m ? 'p_' + m[1] : null;
+  },
+  packs: {},
+  pack(name) {
+    return this.packs[name] || (this.packs[name] = new Promise(res => { const s = document.createElement('script'); s.src = 'audio/packs/' + name + '.js'; s.onload = s.onerror = () => res(); document.head.appendChild(s); }));
+  },
+  prefetch(id) { const pk = this.packOf(id); if (pk) this.pack(pk); },
+  play(id, tok) {
     const a = this.audio;
     a.onerror = () => { if (tok === this.token) { if (++this.errors >= 3) this.fallback = true; this.speakTTS(id, tok); } };
-    a.src = 'audio/' + id + '.mp3';
+    a.src = (window.AUDIOPACK && AUDIOPACK[id]) || 'audio/' + id + '.mp3';
     const p = a.play();
     if (p && p.catch) p.catch(err => {
       if (tok !== this.token) return;

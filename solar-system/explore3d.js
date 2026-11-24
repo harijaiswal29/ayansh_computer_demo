@@ -224,7 +224,7 @@ views.explore = (() => {
     $('#infoVisit').lastChild.textContent = id === 'earth' ? 'Explore Earth' : id === 'sun' ? 'Fly near the Sun' : `Visit as ${prefs.name}`;
     $('#infoVisit').hidden = !!MOONS[id];
     const badge = $('#infoRec'); badge.hidden = !opts.badge; if (opts.badge) badge.lastChild.textContent = opts.badge;
-    closeRecs(); setDyk(id); setFamily(id);
+    closeRecs(); setDyk(id); setFamily(id); Voice.prefetch(`dyk_${id}_1`);
     info.hidden = false; offKey = ''; info.scrollTop = 0;
     const tid = MOONS[id] ? MOONS[id][0] : id;
     $$('.thumb').forEach(tb => tb.setAttribute('aria-pressed', tb.dataset.id === tid ? 'true' : 'false'));
